@@ -1,92 +1,127 @@
-# NLP_API
+# NLP Server
 
-
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://git.ukp.informatik.tu-darmstadt.de/zyska/nlp_api.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://git.ukp.informatik.tu-darmstadt.de/zyska/nlp_api/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!).  Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+## DISCLAIMER
+This component is under continuous development and refactoring. Specifically, the following features are not implemented
+yet, although they might be referenced in the following documentation:
+* adding a gunicorn (or any WSGI server) in-front of the flask app
+* structuring of the server components using:
+  * Blueprints for flask routes (checkout documentation on that)
+  * Celery task registry (checkout documentation on that)
+  * Flower does not connect properly yet (for monitoring Celery)
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+### Prerequisites
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+Docker and docker-compose are required to run the NLP server. Please install them according to the official documentation.
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+### Build
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+To build the NLP server, run the following command in the root directory of the project:
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+    make build-nlp
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+This will build the docker image for the NLP server.
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+## Server Infrastructure
+### Technologies
+The NLP server uses Flask, SocketIO and Celery to manage requests via web sockets. RabbitMQ is used as a message broker,
+Redis as a persistent result backend and for session management, Flower for Celery surveilance. Additionally, the
+official GROBID server runs to process PDFs.
 
-## License
-For open source projects, say how it is licensed.
+### Monitoring Services
+The RabbitMQ status monitor and Flower for surveilance of celery workers are used. To check-in on the RabbitMQ instance 
+you should visit in your browser:
+```
+localhost:15672
+```
+You can access the server via providing username and password. Per default these are both `guest`.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+The Flower monitor is accessible at port 8888. To check-in on the Celery tasks visit in your browser:
+(currently, there are connection problems -- so no proper updates to jobs show)
+```
+localhost:8888
+```
+
+### Process Architecture
+The following figure outlines the architecture of the NLP server, where a request is passed to a flask instance, which 
+establishes a socketio connection. Upon request a celery worker is requestes via the celery client and broker. The 
+pool worker then performs the task while optionally sending messages via socketio (and indirectly the message queue) to
+the client. The result is written to the redis backend and can be grabbed from there.
+
+![Overview](docs/tech.png?raw=true "Process Architecture")
+
+Note that the celery worker has no application context (of the flask app) and all necessary parameters have to be passed
+by value or read from disk/backend. This should inform the design of the task architecture
+
+### Dataflow 
+The following figure makes the data and call flow explicit. The flask app spans a celery process via the broker interface
+to the worker. The worker performs the task and the result can be read from the flask app (or the celery workers).
+
+![Overview](docs/flow.png?raw=true "Process Architecture")
+
+## Adding Components
+Warning: This is WIP and will be specified in more detail later. This is the first proposal to approach the issue.
+
+### Data and Task Model
+Any task that requires computing or IO waiting time should be realized within a celery worker and hence specified as
+a celery task. These tasks are decorated methods that can be specified under the celery task path (TODO!).
+
+To manage the connection the flask app maintains a session. The session management should be realized within the flask
+app. This includes keeping track of results, running celery tasks etc. The session object contains all relevant data
+or pointers to the result backend to perform tasks. As of now, we do not provide any particular endpoint via flask, but
+authentication would need to be required through a flask end-point (not supported by WS). This should be realized via
+so-called blueprints.
+
+To have an easy to manage web socket you can use Namespaces. After registering them (one should be enough) on the 
+socketio server, requests on the specified path will be forwarded to the respective class. The class can import 
+the session object and socketio convenience methods as usually. The session management should evolve around this 
+Namespace class.
+
+### Life Cycle
+Generally speaking the NLP server receives a sequence of inputs -- a document, annotations, etc. -- as well as the
+hyper-parameters for performing some task -- like model type, expected output type, task type etc. -- and upon 
+request performs the task. After the request there are status updates (if necessary) and finally a result is 
+pushed via the websocket to the client. The connection remains open to get new partial inputs and re-run the task or
+to provide the results again. After some time the connection is closed and the session discarded.
+
+### Server Components
+There is a session manager running on the flask app. It is responsible for managing inputs in the session and providing
+the required information to submodules. There is a module responsible for cleaning celery tasks and results. There is a
+moduler responsible for managing inputs and one for results. There is a module managing NLP models.
+
+### Websocket
+Test: `curl "http://localhost:6000/socket.io/?EIO=4&transport=polling"`
+
+## Interface
+
+The nlp server is based on socket.io offering a message interface. The following list of message types is kept up-to-date
+and should be exhaustive. For each message type the response type (if existent) and the dataformat are outlined.
+
+Generally, the pattern of the provided message channels are:
+  * `req_`<message-type>   = requesting something from the server
+  * `res_`<message-type>   = if there is a response, the response for a previous request
+
+The parameters are always passed as jsons. They may point to objects in the database which the NLP server needs
+to load from.
+
+### tag_annotation(annotation)
+|     | name               | data            | description                                             | 
+|-----|--------------------|-----------------|---------------------------------------------------------|
+| req | req_tag_annotation | annotation.json | Sends and annotation incl. text and anchors to process. | 
+| res | res_tag_annotation | tags.json       | Responds with the model generated tags                  | 
+
+
+### generate_report(document_id, user_id)
+|     | name                | data            | description                                             | 
+|-----|---------------------|-----------------|---------------------------------------------------------|
+| req | req_generate_report | annotation.json | Sends and annotation incl. text and anchors to process. | 
+| res | res_generate_report | tags.json       | Responds with the model generated tags                  | 
+
+#### Resources
+
+- [Grobid](https://github.com/kermitt2/grobid) for document parsing in the NLP server
+- [Flask](https://flask.palletsprojects.com/en/2.1.x/) as a basic http server 
+- [socketio](https://flask-socketio.readthedocs.io/en/latest/) for websocket communication
+- [Celery](https://docs.celeryq.dev/en/stable/getting-started/introduction.html) for running
+  compute tasks
