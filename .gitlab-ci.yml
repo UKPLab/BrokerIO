@@ -27,4 +27,4 @@ build:
     - docker-compose version
     - apt update && apt install make -y
   script:
-    - make nlp_services
+    - make build_nlp
