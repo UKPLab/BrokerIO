@@ -18,14 +18,13 @@ services:
 
 build:
   image:
-    name: docker/compose:latest
-    entrypoint: [ "/bin/sh", "-c" ]
+    name: docker/compose:debian-1.29.2
   stage: build
   needs: []
   before_script:
     - docker info
     - docker version
     - docker-compose version
-    - apt-get update -qq && apt-get install -y -qq make
+    - apt update && apt install make -y
   script:
     - make nlp_services
