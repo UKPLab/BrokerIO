@@ -12,7 +12,7 @@ import WebConfiguration
 import sys
 from celery import Celery
 from flask_socketio import SocketIO
-from grobid_client.grobid_client import GrobidClient, ServerUnavailableException
+from frameworks.grobid_client_python.grobid_client.grobid_client import GrobidClient, ServerUnavailableException
 
 # check if dev mode
 DEV_MODE = len(sys.argv) > 1 and sys.argv[1] == "--dev"

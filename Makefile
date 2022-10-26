@@ -23,8 +23,7 @@ clean:
 .PHONY: dev
 dev:
 	@echo "$(GROBID_HOST)"
-	export PYTHON_PATH="$(CURDIR)"
-	python3 ./src/app.py --dev
+	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./src/app.py --dev
 
 .PHONY: nlp_celery
 nlp_celery:

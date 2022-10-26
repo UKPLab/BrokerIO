@@ -12,4 +12,3 @@ dependencies:
     - celery>=5.2.7
     - redis>=4.1.4
     - flask_session>=0.4.0
-    - grobid-client>=0.8.2

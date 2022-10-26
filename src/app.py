@@ -11,12 +11,13 @@ Author: Nils Dycke (dycke@ukp...)
 from eventlet import monkey_patch  # mandatory! leave at the very top
 monkey_patch()
 
+
 from celery.result import AsyncResult
 
 from flask import Flask, session, request
 from flask_socketio import SocketIO, join_room, emit
 
-from frameworks.grobid_client_python.grobid_client import GrobidClient, ServerUnavailableException
+from frameworks.grobid_client_python.grobid_client.grobid_client import GrobidClient, ServerUnavailableException
 
 import WebConfiguration
 
