@@ -16,7 +16,7 @@ from celery.result import AsyncResult
 from flask import Flask, session, request
 from flask_socketio import SocketIO, join_room, emit
 
-from grobid_client.grobid_client import GrobidClient, ServerUnavailableException
+from frameworks.grobid_client_python.grobid_client import GrobidClient, ServerUnavailableException
 
 import WebConfiguration
 

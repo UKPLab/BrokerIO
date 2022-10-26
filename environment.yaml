@@ -1,0 +1,15 @@
+name: nlp_api
+channels:
+  - defaults
+dependencies:
+  - python>=3.8.5
+  - pip>=22.1.2
+  - numpy>=1.23.1
+  - pip:
+    - Flask>=2.1.3
+    - flask-socketio>=5.1.1
+    - eventlet>=0.33.1
+    - celery>=5.2.7
+    - redis>=4.1.4
+    - flask_session>=0.4.0
+    - grobid-client>=0.8.2

@@ -23,6 +23,20 @@ To build the NLP server, run the following command in the root directory of the 
 
 This will build the docker image for the NLP server.
 
+### Development
+
+
+[Miniconda](https://docs.conda.io/en/latest/miniconda.html) is recommended for installation. 
+The following commands will create a new conda environment and install all required packages:
+
+```shell
+conda env create -f environment.yaml
+conda activate nlp_api
+conda env update --file environment.yaml --name nlp_api --prune # update environment
+```
+
+
+
 ## Server Infrastructure
 ### Technologies
 The NLP server uses Flask, SocketIO and Celery to manage requests via web sockets. RabbitMQ is used as a message broker,
