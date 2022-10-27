@@ -9,6 +9,7 @@ default: help
 help:
 	@echo "make clean             	Delete development files"
 	@echo "make dev          		Run the flask app. Requires you to run make nlp_services in another terminal first"
+	@echo "make test				Run unittests"
 	@echo "make build      			Build NLP services"
 	@echo "make env_create			Create a virtual environment"
 	@echo "make env_activate		Activate the virtual environment"
@@ -18,21 +19,24 @@ help:
 clean:
 	docker-compose rm -f -s -v
 	docker network rm nlp_api_default
-	rm -r nlp/grobid_client_python
 
 .PHONY: dev
 dev:
 	@echo "$(GROBID_HOST)"
-	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./src/app.py --dev
+	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev
 
-.PHONY: nlp_celery
-nlp_celery:
+.PHONY: test
+test:
+	python -m unittest discover test
+
+.PHONY: celery
+celery:
 	export C_FORCE_ROOT=true
 	set -a
-	source .env
+	#source .env
 
-	cd ./nlp/src && \
-	celery --app app.celery worker -l INFO -E
+	#cd ./nlp/broker && \
+	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && cd ./broker && celery --app celery_app.celery worker -l INFO -E
 
 .PHONY: build
 build:

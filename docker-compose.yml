@@ -7,11 +7,8 @@ services:
     depends_on:
       - rabbitmq
       - celery-worker
-      - grobid
       - redis
     command: python3 app.py
-  grobid:
-    image: lfoppiano/grobid:0.7.0
   rabbitmq:
     image: rabbitmq:3.9-management-alpine
   redis:

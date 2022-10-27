@@ -93,8 +93,9 @@ def instance(**kwargs):
 
     if _singleton is None:
         _singleton = WebConfiguration(**kwargs)
-    else:
-        _singleton.update(**kwargs)
+
+    if len(kwargs) > 0:
+        print("WARNING: Singleton WebConfiguration already exists; you are trying to reconfigure it, which failed.")
 
     return _singleton
 

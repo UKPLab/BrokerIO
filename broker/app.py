@@ -17,8 +17,6 @@ from celery.result import AsyncResult
 from flask import Flask, session, request
 from flask_socketio import SocketIO, join_room, emit
 
-from frameworks.grobid_client_python.grobid_client.grobid_client import GrobidClient, ServerUnavailableException
-
 import WebConfiguration
 
 from celery_app import *
@@ -48,14 +46,6 @@ def init():
     """
     # update config
     app.config.update(config.grobid)
-
-    # check connection to GROBID (ignore object, use just the test)
-    try:
-        GrobidClient(**config.grobid)
-        print("SUCCESS: GROBID client reached GROBID server")
-    except ServerUnavailableException as e:
-        print("WARNING: GROBID server seems unavailable for the given config. Probably cannot process PDFs!")
-        print(e)
 
 ### SOCKETIO ###################################
 

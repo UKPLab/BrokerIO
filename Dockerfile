@@ -1,14 +1,6 @@
-FROM python:3.10.2-alpine
+FROM continuumio/miniconda3
 
 #ARG env=.env
-
-# INSTALL REQUIREMENTS
-RUN apk add git gcc build-base
-
-# INSTALL GROBID CLIENT FROM GIT
-ADD frameworks/grobid_client_python /grobid_client_python
-WORKDIR grobid_client_python
-RUN python3 setup.py install
 
 # COPY SERVER CODE
 # ASSUMING ENTRYPOINT: ../nlp
@@ -18,9 +10,12 @@ ADD . /nlp-server
 
 # INSTALL REQUIREMENTS
 WORKDIR nlp-server
-RUN python3 -m pip install -r requirements.txt
 
-# RUN SERVER
-WORKDIR src
-RUN export PYTHON_PATH=/nlp-server/src
-CMD python3 app.py
+RUN set -x && \
+#   apt-get update && apt-get -y install gcc && \
+    conda install -n base -c defaults conda=4.* && \
+    conda env create -f environment.yaml # Installs environment.yml && \
+    conda clean -a \
+
+ENV PATH /opt/conda/envs/condaenv/bin:$PATH
+ENTRYPOINT ["python", "-m", "/nlp-server/broker/app.py"]

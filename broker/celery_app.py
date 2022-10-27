@@ -2,8 +2,6 @@ import hashlib
 import json
 import os
 
-from models.emotionality import classify as classify_emtion
-
 from eventlet import monkey_patch  # mandatory! leave at the very top
 monkey_patch()
 
@@ -12,7 +10,6 @@ import WebConfiguration
 import sys
 from celery import Celery
 from flask_socketio import SocketIO
-from frameworks.grobid_client_python.grobid_client.grobid_client import GrobidClient, ServerUnavailableException
 
 # check if dev mode
 DEV_MODE = len(sys.argv) > 1 and sys.argv[1] == "--dev"
@@ -24,29 +21,6 @@ config = WebConfiguration.instance(dev=DEV_MODE)
 celery = Celery("peer_nlp", **config.celery)
 celery.conf.update(config.flask)
 celery.conf.update(config.session)
-
-
-def parse_pdf(filepath):
-    """
-    This auxiliary method instantiates a grobid client and sends a request to parse the given
-    PDF on the filepath.
-
-    :param filepath: filepath of the PDF to parse
-    :return:
-    """
-    client = GrobidClient(**config.grobid)
-
-    _, status, parsed = client.process_pdf("processFulltextDocument",
-                                           filepath,
-                                           generateIDs=False,
-                                           consolidate_header=True,
-                                           consolidate_citations=False,
-                                           include_raw_citations=False,
-                                           include_raw_affiliations=False,
-                                           tei_coordinates=False,
-                                           segment_sentences=False)
-
-    return status, parsed
 
 
 @celery.task
