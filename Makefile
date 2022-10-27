@@ -40,8 +40,7 @@ celery:
 
 .PHONY: build
 build:
-	docker-compose up grobid \
- 					  rabbitmq \
+	docker-compose up rabbitmq \
  					  redis \
  					  celery-worker
 
