@@ -12,5 +12,9 @@ if __name__ == '__main__':
         print('connect ', sid)
         print('auth ', auth)
 
+    @sio.on('register_skill')
+    def register_skill(sid, data):
+        print('register_skill ', data)
+
     eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 4852)), app)
 
