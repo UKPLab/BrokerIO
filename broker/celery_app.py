@@ -1,9 +1,9 @@
+from eventlet import monkey_patch  # mandatory! leave at the very top
+monkey_patch()
+
 import hashlib
 import json
 import os
-
-from eventlet import monkey_patch  # mandatory! leave at the very top
-monkey_patch()
 
 import WebConfiguration
 

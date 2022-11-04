@@ -6,7 +6,7 @@ import socketio
 class TestSocketIO(unittest.TestCase):
     def test_connect(self):
         sio = socketio.Client()
-        sio.connect("http://localhost:4852")
+        sio.connect("http://localhost:4852", auth={"token": "this_is_a_random_token_to_verify"})
         connected = sio.sid is not None
         sio.disconnect()
 
@@ -24,7 +24,7 @@ class TestSocketIO(unittest.TestCase):
 
         sio.connect("http://localhost:4852")
         connected = sio.sid is not None
-        sio.emit("hello", "testdata")
+        sio.emit("register_skill", {"uid": "uid", "name": "someskill", "config": "config", })
         time.sleep(20)
 
         self.assertTrue(len(result) == 1)
