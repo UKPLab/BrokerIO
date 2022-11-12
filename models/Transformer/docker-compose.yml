@@ -1,0 +1,7 @@
+version: "3"
+services:
+  transformer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python3 app.py

@@ -1,0 +1,3 @@
+model_name: allenai/scibert_scivocab_uncased
+name: ClassificationTask
+description: This is a classification task
