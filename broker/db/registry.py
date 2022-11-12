@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 from db.skill import Announcement, Skill, NetNode
@@ -21,7 +22,7 @@ class Registry:
 
     def announce_skill(self, skill: Skill, owner: NetNode):
         print(f"Registered a new skill: {skill.uid} ({skill.name}) by {owner.session_id}")
-        self.rows.append(Announcement(uuid4(), skill, owner))
+        self.rows.append(Announcement(str(uuid4()), skill, owner))
 
     def un_announce_skill(self, announcement_id: str):
         try:
@@ -32,6 +33,12 @@ class Registry:
         print(f"Unteregistered a skill: {a.skill.uid} ({a.skill.name}) by {a.owner.session_id}")
         del self.rows[i]
         return a
+
+    def get_entries(self, as_json=False):
+        if as_json:
+            return json.dumps([a.to_dict() for a in self.rows])
+        else:
+            return self.rows
 
 
 registry = Registry()

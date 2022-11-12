@@ -1,4 +1,5 @@
 import io
+import json
 from typing import List
 from datetime import datetime as Timestamp
 
@@ -23,15 +24,20 @@ class Skill:
 
         self._parse_config(config)
 
-    def _parse_config(self, config):
+    def _parse_config(self, config: str):
         # parse yaml (savely)
         with io.StringIO(config) as f:
             config = yaml.safe_load(f)
+
+        # config can be none at this point
 
         # populate attributes from config dict
         self.input = "implement _parse_config first"
         self.output = "implement _parse_config first"
         self.requires = ["implement _parse_config first"]
+
+    def to_dict(self):
+        return self.__dict__
 
 
 class NetNode:
@@ -42,6 +48,9 @@ class NetNode:
 
     def __init__(self, session_id):
         self.session_id = session_id
+
+    def to_dict(self):
+        return self.__dict__
 
 
 class Announcement:
@@ -65,3 +74,12 @@ class Announcement:
 
     def __eq__(self, other):
         return self.uid == other.uid
+
+    def to_dict(self):
+        return {
+            "uid": self.uid,
+            "created_at": self.created_at.strftime("%Y/%m/%dT%H:%M:%S%Z"),
+            "updated_at": self.created_at.strftime("%Y/%m/%dT%H:%M:%S%Z"),
+            "skill": self.skill.to_dict(),
+            "owner": self.owner.to_dict()
+        }

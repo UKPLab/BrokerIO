@@ -35,6 +35,12 @@ conda activate nlp_api
 conda env update --file environment.yaml --name nlp_api --prune # update environment
 ```
 
+To have a fully running development setup run (each command in different terminal):
+```shell
+make build
+make celery
+make dev
+```
 
 
 ## Server Infrastructure

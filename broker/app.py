@@ -61,9 +61,12 @@ def init():
 
         :return: the sid of the connection
         """
+        if data is None:
+            raise ConnectionRefusedError('Authentication data required on connect!')
+
         dtoken = data["token"]
         if dtoken != token:
-            raise ConnectionRefusedError('Authentication failed: Token incorrect!')
+            raise ConnectionRefusedError('Authentication failed: Token invalid!')
 
         sid = request.sid
         session["sid"] = sid
@@ -85,6 +88,7 @@ def init():
         # clear pending results
 
         sid = request.sid
+        socketio.close_room(sid)
         print(f"Socket connection teared down for sid: {sid}")
 
 
