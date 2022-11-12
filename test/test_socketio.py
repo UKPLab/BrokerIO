@@ -12,7 +12,28 @@ class TestSocketIO(unittest.TestCase):
 
         self.assertTrue(connected)
 
-    def test_simple_message(self):
+    def test_register_skill(self):
+        with open("resources/test.yaml", "r") as f:
+            config = f.read()
+
+        print(f"Testing register with mock config:\n{config}")
+
+        sio = socketio.Client()
+
+        sio.connect("http://localhost:4852", auth={"token": "this_is_a_random_token_to_verify"})
+        connected = sio.sid is not None
+
+        sio.emit("register_skill",
+                 {"uid": "stance_classifier1",
+                  "name": "stance_classification",
+                  "config": config})
+        time.sleep(5)
+
+        sio.disconnect()
+
+        self.assertTrue(connected)
+
+    def ignore_test_simple(self):
         result = []
 
         def set_result(r):

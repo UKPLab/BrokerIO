@@ -1,5 +1,8 @@
+import io
 from typing import List
 from datetime import datetime as Timestamp
+
+import yaml
 
 
 class Skill:
@@ -21,7 +24,11 @@ class Skill:
         self._parse_config(config)
 
     def _parse_config(self, config):
-        #todo
+        # parse yaml (savely)
+        with io.StringIO(config) as f:
+            config = yaml.safe_load(f)
+
+        # populate attributes from config dict
         self.input = "implement _parse_config first"
         self.output = "implement _parse_config first"
         self.requires = ["implement _parse_config first"]

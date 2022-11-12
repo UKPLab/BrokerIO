@@ -9,15 +9,13 @@ celery + socketio can work together.
 Author: Nils Dycke (dycke@ukp...)
 """
 from eventlet import monkey_patch  # mandatory! leave at the very top
-
-from db.registry import registry
-
 monkey_patch()
 
 from flask import Flask, session, request
 from flask_socketio import SocketIO, join_room, emit
 from celery_app import *
 
+from db.registry import registry
 from sockets.register import RegisterRoute
 
 # config loaded in celery_app
@@ -41,7 +39,15 @@ def init():
 
     # connect to registry
     registry.connect()
-    token = "this_is_a_random_token_to_verify"
+
+    # load token
+    token = os.getenv("SECRET_TOKEN")
+    if not token:
+        print("No secret token provided in environment. Loading default token...")
+    else:
+        print("Initialized secret token from environment...")
+
+    token = token if token else "this_is_a_random_token_to_verify"
 
     # add socket routes
     RegisterRoute("register", socketio, celery)
@@ -57,13 +63,13 @@ def init():
         """
         dtoken = data["token"]
         if dtoken != token:
-            raise ConnectionRefusedError('authentication failed')
+            raise ConnectionRefusedError('Authentication failed: Token incorrect!')
 
         sid = request.sid
         session["sid"] = sid
         join_room(sid)
 
-        print(f"New socket connectione established with sid: {sid}")
+        print(f"New socket connection established with sid: {sid}")
 
         return sid
 
