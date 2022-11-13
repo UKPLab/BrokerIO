@@ -12,10 +12,11 @@ from celery import Celery
 from flask_socketio import SocketIO
 
 # check if dev mode
-DEV_MODE = len(sys.argv) > 1 and sys.argv[1] == "--dev"
+DEV_MODE = "--dev" in sys.argv
+DEBUG_MODE = "--debug" in sys.argv
 
 # load default web server configuration
-config = WebConfiguration.instance(dev=DEV_MODE)
+config = WebConfiguration.instance(dev=DEV_MODE, debug=DEBUG_MODE)
 
 # celery
 celery = Celery("peer_nlp", **config.celery)

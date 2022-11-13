@@ -5,3 +5,4 @@ services:
       context: .
       dockerfile: Dockerfile
     command: python3 app.py
+    network_mode: host

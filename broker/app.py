@@ -41,7 +41,7 @@ def init():
     registry.connect()
 
     # load token
-    token = os.getenv("SECRET_TOKEN")
+    token = os.getenv("BROKER_TOKEN")
     if not token:
         print("No secret token provided in environment. Loading default token...")
     else:

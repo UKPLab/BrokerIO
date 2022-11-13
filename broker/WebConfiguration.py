@@ -100,6 +100,12 @@ class WebConfiguration:
         else:
             self.conf = DEFAULT.copy()
 
+        if "debug" in kwargs and kwargs["debug"]:
+            self.conf["debug"] = True
+            self.debug = True
+        else:
+            self.debug = False
+
         print(self.conf)
 
         self.flask = None

@@ -22,9 +22,12 @@ clean:
 
 
 .PHONY: dev
-dev_nlp:
-	@echo "$(GROBID_HOST)"
+dev:
 	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev
+
+.PHONY: debug
+debug:
+	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev --debug
 
 .PHONY: test
 test:
