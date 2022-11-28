@@ -1,0 +1,1 @@
+In this directory, you will find some examples for Skill Definition Files (SDF)!
