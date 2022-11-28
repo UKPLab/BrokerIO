@@ -2,6 +2,7 @@
 
 stages:          # List of stages for jobs, and their order of execution
   - build
+  - deploy
 
 variables:
   DOCKER_HOST: tcp://docker:2375
@@ -12,9 +13,17 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   TAG_LATEST: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:latest
   TAG_COMMIT: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
+  DEBIAN_MIRROR: http://debian.tu-bs.de/debian/
 
 services:
   - docker:dind
+
+.debian-mirror-template: &add-debian-mirror
+  - echo "deb ${DEBIAN_MIRROR} stretch-updates main" >> /etc/apt/sources.list
+  - echo "deb-src ${DEBIAN_MIRROR} stretch-updates main" >> /etc/apt/sources.list
+  - echo "deb ${DEBIAN_MIRROR} stretch main" >> /etc/apt/sources.list
+  - echo "deb-src ${DEBIAN_MIRROR} stretch main" >> /etc/apt/sources.list
+  - cat /etc/apt/sources.list
 
 build:
   image:
@@ -22,6 +31,7 @@ build:
   stage: build
   needs: []
   before_script:
+    - *add-debian-mirror
     - docker info
     - docker version
     - docker-compose version
@@ -29,3 +39,25 @@ build:
   script:
     - docker-compose -f docker-compose.yml -p "nlp_build" --env-file ".env"  up --build -d
     - docker-compose -p "nlp_build"  rm -f -s -v
+
+.setup-deploy-ssh-template: &setup-ssh
+  - apk update && apk add openssh-client
+  - mkdir -p ~/.ssh
+  - echo "PubkeyAcceptedAlgorithms +ssh-rsa" > ~/.ssh/config
+  - echo "HostKeyAlgorithms +ssh-rsa" >> ~/.ssh/config
+  - echo "StrictHostKeyChecking no" >> ~/.ssh/config
+
+deploy:
+  stage: deploy
+  image: alpine:3.16
+  needs: ["build"]
+  script:
+    - chmod og= $PEER_RSAKEY
+    - *setup-ssh
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git fetch"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git checkout $CI_COMMIT_SHORT_SHA"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git submodule update --init"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make build-dev-clean"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=dev build-dev"
+  only:
+  - main
