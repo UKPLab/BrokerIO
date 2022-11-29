@@ -39,6 +39,7 @@ def init():
 
     # connect to registry
     registry.connect()
+    registry.clean()
 
     # load token
     token = os.getenv("BROKER_TOKEN")
