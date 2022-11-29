@@ -20,10 +20,9 @@ clean:
 	docker-compose rm -f -s -v
 	docker network rm nlp_api_default
 
-
 .PHONY: dev
-dev:
-	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev
+dev: docker
+	make celery & export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev
 
 .PHONY: debug
 debug:
@@ -35,18 +34,19 @@ test:
 
 .PHONY: celery
 celery:
-	export C_FORCE_ROOT=true
-	set -a
-	#source .env
-
-	#cd ./nlp/broker && \
 	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && cd ./broker && celery --app celery_app.celery worker -l INFO -E
 
 .PHONY: build
 build:
-	docker-compose up rabbitmq \
+	docker-compose up --build rabbitmq \
  					  redis \
- 					  celery-worker
+ 					  celery-worker \
+ 					  broker
+
+.PHONY: docker
+docker:
+	docker-compose up -d rabbitmq \
+ 					  redis
 
 .PHONY: env_create
 env_create:

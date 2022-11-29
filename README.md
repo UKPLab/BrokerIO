@@ -15,6 +15,10 @@ yet, although they might be referenced in the following documentation:
 
 Docker and docker-compose are required to run the NLP server. Please install them according to the official documentation.
 
+Make sure that your local installation of Celery is either
+compatible (see environment.yaml) or does not over-shadow
+the conda-installed version. Check location with `which celery` and version with `celery --version`.
+
 ### Build
 
 To build the NLP server, run the following command in the root directory of the project:
@@ -40,6 +44,14 @@ To have a fully running development setup run (each command in different termina
 make build
 make celery
 make dev
+```
+
+### Redis CLI
+
+```bash
+sudo apt-get install redis-tools
+redis-cli --stat 
+redis-cli --scan | head -10
 ```
 
 ### Debugging

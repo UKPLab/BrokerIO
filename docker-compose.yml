@@ -1,6 +1,6 @@
 version: "3"
 services:
-  nlp:
+  broker:
     build:
       context: .
       dockerfile: Dockerfile
@@ -8,7 +8,7 @@ services:
       - rabbitmq
       - celery-worker
       - redis
-    command: python3 app.py
+    command: python3 broker/app.py
   rabbitmq:
     image: rabbitmq:3.9-management-alpine
     ports:
@@ -27,7 +27,7 @@ services:
     depends_on:
       - rabbitmq
       - redis
-    command: celery -A app.celery worker -l INFO -E
+    command: celery -A celery_app.celery worker -l INFO -E
   flower:
     image: mher/flower
     depends_on:

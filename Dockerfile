@@ -5,11 +5,11 @@ FROM continuumio/miniconda3
 # COPY SERVER CODE
 # ASSUMING ENTRYPOINT: ../nlp
 WORKDIR /
-ADD . /nlp-server
+ADD . /broker
 #ADD ./$env /nlp-server/$env
 
 # INSTALL REQUIREMENTS
-WORKDIR nlp-server
+WORKDIR broker
 
 RUN set -x && \
 #   apt-get update && apt-get -y install gcc && \
@@ -18,4 +18,4 @@ RUN set -x && \
     conda clean -a \
 
 ENV PATH /opt/conda/envs/condaenv/bin:$PATH
-ENTRYPOINT ["python", "-m", "/nlp-server/broker/app.py"]
+#ENTRYPOINT ["python", "-m", "/broker/app.py"]
