@@ -20,10 +20,14 @@ clean:
 	docker-compose rm -f -s -v
 	docker network rm nlp_api_default
 
+
 .PHONY: dev
 dev:
-	@echo "$(GROBID_HOST)"
 	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev
+
+.PHONY: debug
+debug:
+	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev --debug
 
 .PHONY: test
 test:

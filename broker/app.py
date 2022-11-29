@@ -11,23 +11,14 @@ Author: Nils Dycke (dycke@ukp...)
 from eventlet import monkey_patch  # mandatory! leave at the very top
 monkey_patch()
 
-
-from celery.result import AsyncResult
-
 from flask import Flask, session, request
 from flask_socketio import SocketIO, join_room, emit
-
-import WebConfiguration
-
 from celery_app import *
 
-from sockets.test import TestRoute
-from sockets.document import DocumentRoute
-from sockets.report import ReportRoute
+from db.registry import registry
+from sockets.register import RegisterRoute
 
-# load default web server configuration
-DEV_MODE = len(sys.argv) > 1 and sys.argv[1] == "--dev"
-config = WebConfiguration.instance(dev=DEV_MODE)
+# config loaded in celery_app
 
 # flask server
 app = Flask("peer_nlp")
@@ -44,52 +35,62 @@ def init():
     Initialize the flask app and check for the connection to the GROBID client.
     :return:
     """
-    # update config
-    app.config.update(config.grobid)
+    print("Initializing server")
 
-### SOCKETIO ###################################
+    # connect to registry
+    registry.connect()
+    registry.clean()
 
-@socketio.on("connect")
-def connect(data):
-    """
-    Example connection event. Upon connection on "/" the sid is loaded, stored in the session object
-    and the connection is added to the room of that SID to enable an e2e connection.
+    # load token
+    token = os.getenv("BROKER_TOKEN")
+    if not token:
+        print("No secret token provided in environment. Loading default token...")
+    else:
+        print("Initialized secret token from environment...")
 
-    :return: the sid of the connection
-    """
-    print("new Connection to websocket ...")
-    print(data)
-    sid = request.sid
-    session["sid"] = sid
-    join_room(sid)
+    token = token if token else "this_is_a_random_token_to_verify"
 
-    return sid
+    # add socket routes
+    RegisterRoute("register", socketio, celery)
 
+    # socketio
+    @socketio.on("connect")
+    def connect(data):
+        """
+        Example connection event. Upon connection on "/" the sid is loaded, stored in the session object
+        and the connection is added to the room of that SID to enable an e2e connection.
 
-@socketio.on("disconnect")
-def disconnect():
-    """
-    Place holder for disconnection event.
+        :return: the sid of the connection
+        """
+        if data is None:
+            raise ConnectionRefusedError('Authentication data required on connect!')
 
-    :return:
-    """
-    # terminate running jobs
-    # clear pending results
-    # clear session
-    print("Disconnected!")
+        dtoken = data["token"]
+        if dtoken != token:
+            raise ConnectionRefusedError('Authentication failed: Token invalid!')
 
+        sid = request.sid
+        session["sid"] = sid
+        join_room(sid)
 
-# add socket routes
-TestRoute("test", socketio)
-DocumentRoute("pdf", socketio, celery)
-ReportRoute("report", socketio, celery)
+        print(f"New socket connection established with sid: {sid}")
 
-### FLASK ######################################
+        return sid
 
-# add flask routes here (for now, until Blueprints are realized)
-# at the moment there are not flask routes
+    @socketio.on("disconnect")
+    def disconnect():
+        """
+        Disconnection event
 
-#################################################
+        :return: void
+        """
+        # todo
+        # terminate running jobs
+        # clear pending results
+
+        sid = request.sid
+        socketio.close_room(sid)
+        print(f"Socket connection teared down for sid: {sid}")
 
 
 if __name__ == '__main__':

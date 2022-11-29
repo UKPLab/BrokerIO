@@ -1,9 +1,9 @@
+from eventlet import monkey_patch  # mandatory! leave at the very top
+monkey_patch()
+
 import hashlib
 import json
 import os
-
-from eventlet import monkey_patch  # mandatory! leave at the very top
-monkey_patch()
 
 import WebConfiguration
 
@@ -12,10 +12,11 @@ from celery import Celery
 from flask_socketio import SocketIO
 
 # check if dev mode
-DEV_MODE = len(sys.argv) > 1 and sys.argv[1] == "--dev"
+DEV_MODE = "--dev" in sys.argv
+DEBUG_MODE = "--debug" in sys.argv
 
 # load default web server configuration
-config = WebConfiguration.instance(dev=DEV_MODE)
+config = WebConfiguration.instance(dev=DEV_MODE, debug=DEBUG_MODE)
 
 # celery
 celery = Celery("peer_nlp", **config.celery)
@@ -24,85 +25,19 @@ celery.conf.update(config.session)
 
 
 @celery.task
-def simple_task(input, sid):
-    statussocket = SocketIO(message_queue=config.celery["broker"])
-
-    print("Simple task -- inner workings")
-
-    statussocket.emit("result_simple_task", "this is a celery result", room=sid)
-
-
-@celery.task
-def store_pdf(raw_pdf, title, sid):
-    """
-    Celery task for storing a given PDF in raw binary format.
-
-    :param raw_pdf: the binary pdf (pickled)
-    :param title: the title of the PDF
-    :param sid: the session id to respond to via socketio
-    :return: the filepath where the pdf can be found
-    """
-    filename = hashlib.sha256((title + sid).encode("utf-8")).hexdigest() + ".pdf"
-    filepath = os.path.join(config['UPLOAD_FOLDER'], filename)
-
-    with open(filepath, "wb+") as file:
-        file.write(raw_pdf)
-
-    return filepath
-
-
-@celery.task
-def process_pdf(raw_pdf_path, sid):
-    """
-    Celery task for processing a given PDF. The pdf is loaded from the passed file path,
-    processed using grobid and an answer is emitted on the channel.
-
-    You can chain this task with the store_pdf task to process a raw, binary pdf stream.
-
-    :param raw_pdf_path: path to the pdf
-    :param sid: the session id to respond to via socketio
-    :return:the parsed result
-    """
-    statussocket = SocketIO(message_queue=app.config["broker"])
-
-    # call grobid
-    status, parsed = parse_pdf(raw_pdf_path)
-
-    statussocket.emit("req_pdf", parsed, room=sid)
-
-    # return result
-    return parsed
-
-
-@celery.task(bind=True)
-def example_binded_method(self, input):
-    # if you need to access app parameters (note: you cannot access the app itself, as celery processes are decoupled)
-    with app.app_context():
-        # do stuff
-        ...
-
-        # binded tasks allow to push updates on the state to the celery server (and hereby AsyncResult calls)
-        self.update_state(state='PROGRESS', meta={'current': 10, 'total': 100})
-
-
-@celery.task
-def generate_report(data, sid, out_msg):
+def request_skill_by_uid(sid, req):
     socket = SocketIO(message_queue=config.celery["broker"])
 
-    if data is not None:
-        emotionality = {}
-        for anno in data:
-            if "comment" not in anno or anno["comment"] is None or "text" not in anno["comment"] or anno["comment"]["text"] is None:
-                continue
+    # connect to the registry
+    from db.registry import registry
+    registry.connect()
 
-            comment = anno["comment"]["text"]
+    # get the skill and associated owner
+    skill = registry.get_entry(req["skill_uid"])
+    osid = skill.owner
 
-            emo_score = classify_emtion(comment)
-            emotionality[anno["id"]] = emo_score
+    # request and wait #todo check that this works properly
+    res = socket.call("request", req, namespace=osid)
 
-    result = {
-        "success": True,
-        "report": json.dumps(emotionality)
-    }
-
-    socket.emit(out_msg, result, room=sid)
+    # send response and terminate
+    socket.emit("result", res, room=sid)

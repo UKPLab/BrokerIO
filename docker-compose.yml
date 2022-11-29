@@ -11,8 +11,13 @@ services:
     command: python3 app.py
   rabbitmq:
     image: rabbitmq:3.9-management-alpine
+    ports:
+      - 5672:5672
+      - 15673:15673
   redis:
     image: redis
+    ports:
+      - 6379:6379
   celery-worker:
     build:
       context: .

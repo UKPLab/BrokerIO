@@ -20,8 +20,6 @@ RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
 RABBITMQ_PORT = os.getenv("RABBITMQ_PORT")
 REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = os.getenv("REDIS_PORT")
-GROBID_HOST = os.getenv("GROBID_HOST")
-GROBID_PORT = os.getenv("GROBID_PORT")
 NLP_PORT = os.getenv("NLP_PORT")
 
 
@@ -42,16 +40,7 @@ DEFAULT = {
     "app": {
         "host": "0.0.0.0",
         "port": NLP_PORT,
-    },
-
-    "grobid": {
-        "grobid_server": GROBID_HOST,
-        "grobid_port": GROBID_PORT,
-        "batch_size": 1000,
-        "coordinates": ["persName", "figure", "ref", "biblStruct", "formula", "s" ],
-        "sleep_time": 5,
-        "timeout": 60
-    },
+    }
 }
 
 DEFAULT_DEV = {
@@ -68,15 +57,6 @@ DEFAULT_DEV = {
     "app": {
         "host": "127.0.0.1",
         "port": NLP_PORT
-    },
-
-    "grobid": {
-        "grobid_server": GROBID_HOST,
-        "grobid_port": GROBID_PORT,
-        "batch_size": 1000,
-        "coordinates": ["persName", "figure", "ref", "biblStruct", "formula", "s"],
-        "sleep_time": 5,
-        "timeout": 60
     }
 }
 
@@ -120,6 +100,12 @@ class WebConfiguration:
         else:
             self.conf = DEFAULT.copy()
 
+        if "debug" in kwargs and kwargs["debug"]:
+            self.conf["debug"] = True
+            self.debug = True
+        else:
+            self.debug = False
+
         print(self.conf)
 
         self.flask = None
@@ -136,7 +122,6 @@ class WebConfiguration:
                      broker: str = None,
                      resources_dir: str = None,
                      app: dict = None,
-                     grobid: dict = None,
                      debug: bool = None,
                      log: bool = None):
         # update config
@@ -154,8 +139,6 @@ class WebConfiguration:
             self.conf["debug"] = debug
         if log is not None:
             self.conf["log"] = log
-        if grobid is not None:
-            self.conf["grobid"] = grobid
         if resources_dir is not None:
             self.conf["resources_dir"] = resources_dir
 
@@ -195,5 +178,3 @@ class WebConfiguration:
             "debug": self.conf["debug"]
         }
         self.app.update(self.conf["app"])
-
-        self.grobid = self.conf["grobid"]

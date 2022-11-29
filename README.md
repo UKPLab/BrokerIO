@@ -35,7 +35,33 @@ conda activate nlp_api
 conda env update --file environment.yaml --name nlp_api --prune # update environment
 ```
 
+To have a fully running development setup run (each command in different terminal):
+```shell
+make build
+make celery
+make dev
+```
 
+### Debugging
+
+To setup debugging for the Flask app -- so everything that happens outside of celery jobs, but
+inside of any socketio/flask operations, you can directly use PyCharm Pro.
+
+1. Configure Python Debugger to be compatible with eventlet: 
+   File > Settings > Build, Execution, Development > Python Debugger. Tick: "Geevent compatible"
+2. If you want seamless loading of the env file, install the [EnvFile](https://plugins.jetbrains.com/plugin/7861-envfile)
+   Plugin. Restart your IDE.
+3. Create a new Run/Debug config as a regular Python run. Select the "app.py" as the script path.
+   If you have EnvFile plugin installed, select the "EnvFile" tab, hit the plus and select the 
+   file ".env" in the basefolder (might need to enter the path manually, as it is hidden). If you
+   do not have the EnvFile plugin install, just pass all environment variables of the ".env" file
+   in the "Configuration" tab as environment files.
+4. Pass "--dev" and "--debug" as parameters.
+5. Use the new config and hit debug. It should stop on all breakpoints in you set in PyCharm now.
+   If you want to know variable values, you might need to query for them in the debug window (under
+   "evaluate expression or add a watch").
+
+If you so prefer, 
 
 ## Server Infrastructure
 ### Technologies
