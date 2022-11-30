@@ -4,11 +4,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        ENV: ${ENV}
     depends_on:
       - rabbitmq
       - celery-worker
       - redis
-    command: python3 broker/app.py
+    command: conda run -n nlp_api --no-capture-output make ENV=${ENV} broker
   rabbitmq:
     image: rabbitmq:3.9-management-alpine
     ports:
@@ -22,12 +24,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        ENV: ${ENV}
     environment:
       - C_FORCE_ROOT=true
     depends_on:
       - rabbitmq
       - redis
-    command: celery -A celery_app.celery worker -l INFO -E
+    command: conda run -n nlp_api --no-capture-output make ENV=${ENV} celery
+    #celery -A celery_app.celery worker -l INFO -E
   flower:
     image: mher/flower
     depends_on:

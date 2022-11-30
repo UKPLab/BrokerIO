@@ -1,5 +1,10 @@
 #!make
 include .env
+ifdef ENV
+	include .env.${ENV}
+endif
+export
+
 export
 
 .PHONY: default
@@ -36,12 +41,17 @@ test:
 celery:
 	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && cd ./broker && celery --app celery_app.celery worker -l INFO -E
 
+.PHONY: broker
+broker:
+	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py
+
 .PHONY: build
 build:
-	docker-compose up --build rabbitmq \
- 					  redis \
- 					  celery-worker \
- 					  broker
+	docker-compose -f docker-compose.yml -p "nlp_api" --env-file ".env.main" up --build -d --no-cache
+
+.PHONY: run
+run:
+	export ENV=main && docker-compose -f docker-compose.yml up
 
 .PHONY: docker
 docker:
