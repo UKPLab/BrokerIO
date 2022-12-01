@@ -53,7 +53,7 @@ build-dev:
 .PHONY: build-dev-clean
 build-dev-clean:
 	docker-compose rm -f -s -v
-	docker network rm nlp_api_dev_default
+	docker network rm nlp_api_dev_default || echo "IGNORING ERROR"
 
 .PHONY: build-clean
 build-clean: clean
@@ -61,7 +61,7 @@ build-clean: clean
 .PHONY: clean
 clean:
 	docker-compose rm -f -s -v
-	docker network rm nlp_api_main_default
+	docker network rm nlp_api_main_default || echo "IGNORING ERROR"
 
 .PHONY: run
 run:
