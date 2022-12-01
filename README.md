@@ -46,6 +46,15 @@ make celery
 make run
 ```
 
+### Test
+
+To test if the server is available and running, run the following command:
+
+```shell
+cd broker
+python test.py --url "http://127.0.0.1:4853" --token "see .env"
+```
+
 ### Debugging
 
 #### Redis CLI
