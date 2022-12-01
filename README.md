@@ -41,12 +41,14 @@ conda env update --file environment.yaml --name nlp_api --prune # update environ
 
 To have a fully running development setup run (each command in different terminal):
 ```shell
-make build
+make docker
 make celery
-make dev
+make run
 ```
 
-### Redis CLI
+### Debugging
+
+#### Redis CLI
 
 ```bash
 sudo apt-get install redis-tools
@@ -54,7 +56,7 @@ redis-cli --stat
 redis-cli --scan | head -10
 ```
 
-### Debugging
+#### Geevent
 
 To setup debugging for the Flask app -- so everything that happens outside of celery jobs, but
 inside of any socketio/flask operations, you can directly use PyCharm Pro.

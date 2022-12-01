@@ -5,9 +5,6 @@ ifdef ENV
 endif
 export
 
-
-export
-
 .PHONY: default
 default: help
 
@@ -20,11 +17,15 @@ help:
 	@echo "make env_create			Create a virtual environment"
 	@echo "make env_activate		Activate the virtual environment"
 	@echo "make env_update			Update the virtual environment"
-
+	@echo "make docker		  	    Start docker images for local development"
 
 .PHONY: dev
 dev: docker
-	make celery & export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev
+	make celery & make run
+
+.PHONY: run
+run:
+	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev
 
 .PHONY: debug
 debug:
@@ -44,33 +45,30 @@ broker:
 
 .PHONY: build
 build:
-	docker-compose -f docker-compose.yml -p "nlp_api_main" --env-file ".env.main" up --build -d --no-cache
+	docker-compose -f docker-compose.yml -p "nlp_api_main" --env-file ".env.main" up --build -d
 
 .PHONY: build-dev
 build-dev:
-	docker-compose -f docker-compose.yml -p "nlp_api_dev" --env-file ".env.dev" up --build -d --no-cache
+	docker-compose -f docker-compose.yml -p "nlp_api_dev" --env-file ".env.dev" up --build -d
 
 .PHONY: build-dev-clean
 build-dev-clean:
-	docker-compose rm -f -s -v
+	docker-compose -p "nlp_api_dev" rm -f -s -v
 	docker network rm nlp_api_dev_default || echo "IGNORING ERROR"
 
 .PHONY: build-clean
 build-clean: clean
+	docker-compose -p "nlp_api_main" rm -f -s -v
+	docker network rm nlp_api_main_default || echo "IGNORING ERROR"
 
 .PHONY: clean
 clean:
 	docker-compose rm -f -s -v
-	docker network rm nlp_api_main_default || echo "IGNORING ERROR"
-
-.PHONY: run
-run:
-	export ENV=main && docker-compose -f docker-compose.yml up
+	docker network rm nlp_api_default || echo "IGNORING ERROR"
 
 .PHONY: docker
 docker:
-	docker-compose up -d rabbitmq \
- 					  redis
+	docker-compose -f docker-dev.yml up rabbitmq redis
 
 .PHONY: env_create
 env_create:
