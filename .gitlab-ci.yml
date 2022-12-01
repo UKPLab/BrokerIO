@@ -37,8 +37,7 @@ build:
     - docker-compose version
     - apt update && apt install make -y
   script:
-    - docker-compose -f docker-compose.yml -p "nlp_build" --env-file ".env"  up --build -d
-    - docker-compose -p "nlp_build"  rm -f -s -v
+    - make build
 
 .setup-deploy-ssh-template: &setup-ssh
   - apk update && apk add openssh-client
