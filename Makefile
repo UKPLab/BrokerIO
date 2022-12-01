@@ -27,6 +27,10 @@ dev: docker
 run:
 	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev
 
+.PHONY: test
+test:
+	cd test && python -m unittest discover
+
 .PHONY: debug
 debug:
 	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev --debug
