@@ -47,20 +47,21 @@ build:
 	docker-compose -f docker-compose.yml -p "nlp_api_main" --env-file ".env.main" up --build -d --no-cache
 
 .PHONY: build-dev
-build:
+build-dev:
 	docker-compose -f docker-compose.yml -p "nlp_api_dev" --env-file ".env.dev" up --build -d --no-cache
+
+.PHONY: build-dev-clean
+build-dev-clean:
+	docker-compose rm -f -s -v
+	docker network rm nlp_api_dev_default
+
+.PHONY: build-clean
+build-clean: clean
 
 .PHONY: clean
 clean:
 	docker-compose rm -f -s -v
 	docker network rm nlp_api_main_default
-
-.PHONY: clean
-clean:
-	docker-compose rm -f -s -v
-	docker network rm nlp_api_dev_default
-
-
 
 .PHONY: run
 run:
