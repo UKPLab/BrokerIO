@@ -1,9 +1,10 @@
 #!make
-include .env
+include .env  #default env
 ifdef ENV
 	include .env.${ENV}
 endif
 export
+
 
 export
 
@@ -20,10 +21,6 @@ help:
 	@echo "make env_activate		Activate the virtual environment"
 	@echo "make env_update			Update the virtual environment"
 
-.PHONY: clean
-clean:
-	docker-compose rm -f -s -v
-	docker network rm nlp_api_default
 
 .PHONY: dev
 dev: docker
@@ -47,7 +44,23 @@ broker:
 
 .PHONY: build
 build:
-	docker-compose -f docker-compose.yml -p "nlp_api" --env-file ".env.main" up --build -d --no-cache
+	docker-compose -f docker-compose.yml -p "nlp_api_main" --env-file ".env.main" up --build -d --no-cache
+
+.PHONY: build-dev
+build:
+	docker-compose -f docker-compose.yml -p "nlp_api_dev" --env-file ".env.dev" up --build -d --no-cache
+
+.PHONY: clean
+clean:
+	docker-compose rm -f -s -v
+	docker network rm nlp_api_main_default
+
+.PHONY: clean
+clean:
+	docker-compose rm -f -s -v
+	docker network rm nlp_api_dev_default
+
+
 
 .PHONY: run
 run:

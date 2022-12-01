@@ -46,7 +46,7 @@ build:
   - echo "HostKeyAlgorithms +ssh-rsa" >> ~/.ssh/config
   - echo "StrictHostKeyChecking no" >> ~/.ssh/config
 
-deploy:
+deploy-dev:
   stage: deploy
   image: alpine:3.16
   needs: ["build"]
@@ -56,7 +56,20 @@ deploy:
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git fetch"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git checkout $CI_COMMIT_SHORT_SHA"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git submodule update --init"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make build-dev-clean"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=dev build-dev"
+  only:
+  - dev
+
+deploy-main:
+  stage: deploy
+  image: alpine:3.16
+  needs: ["build"]
+  script:
+    - chmod og= $PEER_RSAKEY
+    - *setup-ssh
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git fetch"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git checkout $CI_COMMIT_SHORT_SHA"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git submodule update --init"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=main build"
   only:
   - main
