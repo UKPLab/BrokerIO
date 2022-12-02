@@ -18,10 +18,15 @@ help:
 	@echo "make env_activate		Activate the virtual environment"
 	@echo "make env_update			Update the virtual environment"
 	@echo "make docker		  	    Start docker images for local development"
+	@echo "make doc 			 	Generate documentation"
 
 .PHONY: dev
 dev: docker
 	make celery & make run
+
+.PHONY: doc
+doc:
+	docker run --rm -it -v ${PWD}/docs:/app/docs -v ${PWD}/docs/html:/app/output asyncapi/generator https://bit.ly/asyncapi @asyncapi/html-template -o ./output
 
 .PHONY: run
 run:
@@ -34,10 +39,6 @@ test:
 .PHONY: debug
 debug:
 	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev --debug
-
-.PHONY: test
-test:
-	python -m unittest discover test
 
 .PHONY: celery
 celery:
