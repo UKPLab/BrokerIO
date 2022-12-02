@@ -1,5 +1,0 @@
-name: text-classification
-description: This is a classification task
-pipeline: # see https://huggingface.co/docs/transformers/main/en/main_classes/pipelines for more information
-  task: text-classification
-  model: allenai/scibert_scivocab_uncased
