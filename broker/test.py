@@ -1,6 +1,7 @@
 import socketio
 import argparse
 import logging
+import time
 
 logging.basicConfig(level=logging.INFO)
 
@@ -9,8 +10,8 @@ if __name__ == '__main__':
     parser.add_argument("--url",  help="The url of the broker")
     parser.add_argument("--token", help="The token to authenticate at the broker")
     parser.set_defaults(
-        url="http://localhost:5672",
-        token="TestToken"
+        url="http://localhost:4852",
+        token="this_is_a_random_token_to_verify"
     )
 
     args = parser.parse_args()
@@ -26,4 +27,7 @@ if __name__ == '__main__':
         logging.info('Received info: {}'.format(data))
 
     sio.connect(args.url, auth={"token": args.token})
-    sio.wait()
+
+    while True:
+        new_input = input("Send string to broker as new task: ")
+        sio.emit('task', {'task_id': 1, 'data': new_input})

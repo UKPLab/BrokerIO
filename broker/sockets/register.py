@@ -27,7 +27,7 @@ class RegisterRoute(SocketRoute):
         sid = session["sid"]
 
         # currently we simply copy everything trusting the source
-        skill = Skill(data["uid"], data["name"], data["config"])
+        skill = Skill(data["name"], data)
         owner = NetNode(sid)
 
         registry.announce_skill(skill, owner)
