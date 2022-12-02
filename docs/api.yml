@@ -2,10 +2,82 @@ asyncapi: 2.5.0
 info:
     title: NLP API Broker
     version: 0.1.0
+    description: |
+        This is the API Broker for the NLP API. It is possible to publish skills to the broker and send task to the skills.
+servers:
+    broker:
+        url: http://peer.ukp.informatik.tu-darmstadt.de:4853
+        protocol: wss
+
 channels:
-  skill:
+  /:
     publish:
       message:
+        oneOf:
+          - $ref: "#/components/messages/register_skill"
+    subscribe:
+      message:
+        oneOf:
+          - $ref: "#/components/messages/request_skill"
+          - $ref: "#/components/messages/get_info"
+
+
+components:
+  messages:
+    request_skill:
+      name: request_skill
+      title: Request Skill
+      summary: Request a skill to process a task.
+      payload:
+        type: object
+        properties:
+          skill:
+            type: string
+            description: The name of the skill.
+          task:
+            type: object
+            description: The task to be processed.
+    register_skill:
+      name: register_skill
+      title: Register Skill
+      summary: Register a new skill at the broker.
+      payload:
+        type: object
+        properties:
+          name:
+            type: string
+            description: The name of the skill.
+          description:
+            type: string
+            description: A description of the skill.
+          input:
+            type: string
+            description: The input type of the skill.
+          output:
+            type: string
+            description: The output type of the skill.
+          url:
+            type: string
+            description: The URL of the skill.
+          version:
+            type: string
+            description: The version of the skill.
+    get_info:
+        name: get_info
+        title: Get Info
+        summary: Get information about the broker.
         payload:
-          type: string
-          pattern: '^[a-zA-Z0-9]+$'
+            type: object
+            properties:
+              name:
+                  type: string
+                  description: The name of the broker.
+              description:
+                  type: string
+                  description: A description of the broker.
+              version:
+                  type: string
+                  description: The version of the broker.
+              skills:
+                  type: array
+                  description: A list of all skills registered at the broker.

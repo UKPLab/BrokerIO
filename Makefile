@@ -27,6 +27,7 @@ dev: docker
 .PHONY: doc
 doc:
 	docker run --rm -it  -v ${PWD}/docs/api.yml:/app/api.yml -v ${PWD}/docs/html:/app/output asyncapi/generator --force-write -o ./output api.yml @asyncapi/html-template
+	cd docs && make html
 
 .PHONY: run
 run:
