@@ -38,6 +38,16 @@ build:
     - apt update && apt install make -y
   script:
     - make build
+    - docker cp nlp_api_main_broker_1:/broker/docs/build/html /tmp/docs/main
+    - tar czf /tmp/doc_main.tar.gz /tmp/docs/main
+    - docker cp nlp_api_main_broker_1:/broker/docs/html /tmp/docs/api
+    - tar czf /tmp/doc_api.tar.gz /tmp/docs/api
+  artifacts:
+      name: "documentation"
+      paths:
+      - "/tmp/doc_main.tar.gz"
+      - "/tmp/doc_api.tar.gz"
+
 
 .setup-deploy-ssh-template: &setup-ssh
   - apk update && apk add openssh-client
