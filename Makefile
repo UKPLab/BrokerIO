@@ -1,5 +1,8 @@
 #!make
-include .env
+include .env  #default env
+ifdef ENV
+	include .env.${ENV}
+endif
 export
 
 .PHONY: default
@@ -14,35 +17,66 @@ help:
 	@echo "make env_create			Create a virtual environment"
 	@echo "make env_activate		Activate the virtual environment"
 	@echo "make env_update			Update the virtual environment"
-
-.PHONY: clean
-clean:
-	docker-compose rm -f -s -v
-	docker network rm nlp_api_default
+	@echo "make docker		  	    Start docker images for local development"
+	@echo "make doc 			 	Generate documentation"
 
 .PHONY: dev
-dev:
-	@echo "$(GROBID_HOST)"
+dev: docker
+	make celery & make run
+
+.PHONY: doc
+doc: docs/api.yml
+	cd docs && make html
+
+docs/api.yml:
+	docker run --rm -it  -v ${PWD}/docs/api.yml:/app/api.yml -v ${PWD}/docs/html:/app/output asyncapi/generator --force-write -o ./output api.yml @asyncapi/html-template
+
+.PHONY: run
+run:
 	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev
 
 .PHONY: test
 test:
-	python -m unittest discover test
+	cd test && python -m unittest discover
+
+.PHONY: debug
+debug:
+	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev --debug
 
 .PHONY: celery
 celery:
-	export C_FORCE_ROOT=true
-	set -a
-	#source .env
-
-	#cd ./nlp/broker && \
 	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && cd ./broker && celery --app celery_app.celery worker -l INFO -E
+
+.PHONY: broker
+broker:
+	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py
 
 .PHONY: build
 build:
-	docker-compose up rabbitmq \
- 					  redis \
- 					  celery-worker
+	docker-compose -f docker-compose.yml -p "nlp_api_main" --env-file ".env.main" up --build -d
+
+.PHONY: build-dev
+build-dev:
+	docker-compose -f docker-compose.yml -p "nlp_api_dev" --env-file ".env.dev" up --build -d
+
+.PHONY: build-dev-clean
+build-dev-clean:
+	docker-compose -p "nlp_api_dev" rm -f -s -v
+	docker network rm nlp_api_dev_default || echo "IGNORING ERROR"
+
+.PHONY: build-clean
+build-clean: clean
+	docker-compose -p "nlp_api_main" rm -f -s -v
+	docker network rm nlp_api_main_default || echo "IGNORING ERROR"
+
+.PHONY: clean
+clean:
+	docker-compose rm -f -s -v
+	docker network rm nlp_api_default || echo "IGNORING ERROR"
+
+.PHONY: docker
+docker:
+	docker-compose -f docker-dev.yml up rabbitmq redis
 
 .PHONY: env_create
 env_create:

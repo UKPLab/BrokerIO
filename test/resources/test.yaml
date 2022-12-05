@@ -1,0 +1,29 @@
+name: "StanceClassification"
+description: "Classifies given review sentences according to their stance towards the paper."
+
+config: 
+ data:
+  labels:
+    - "pro"
+    - "con"
+    - "neutral"
+ model:
+  name: "allenai/scibert_scivocab_uncased"
+
+input:
+ data:
+  text_input:
+   type: <type_string>
+   required: true
+ example: {text_input: "The proposed method is good!"}
+
+output:
+ data:
+  score: 
+   type: <type_float>
+   default: 0
+   description: "Predicted value"
+  answer:
+   type: <type_string>
+   description: "Answer of the task"
+ example: {score: 1.0, answer: "pro"}

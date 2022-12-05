@@ -1,15 +1,16 @@
 FROM continuumio/miniconda3
-
-#ARG env=.env
+ARG ENV
+ENV ENV=$ENV
 
 # COPY SERVER CODE
-# ASSUMING ENTRYPOINT: ../nlp
 WORKDIR /
-ADD . /nlp-server
-#ADD ./$env /nlp-server/$env
+ADD . /broker
 
 # INSTALL REQUIREMENTS
-WORKDIR nlp-server
+WORKDIR broker
+
+# Install make
+RUN apt update && apt install make
 
 RUN set -x && \
 #   apt-get update && apt-get -y install gcc && \
@@ -17,5 +18,13 @@ RUN set -x && \
     conda env create -f environment.yaml # Installs environment.yml && \
     conda clean -a \
 
+SHELL ["conda", "run", "-n", "nlp_api", "/bin/bash", "-c"]
+RUN conda init bash
+
 ENV PATH /opt/conda/envs/condaenv/bin:$PATH
-ENTRYPOINT ["python", "-m", "/nlp-server/broker/app.py"]
+
+# add celery
+RUN pip install celery
+
+# echo build type
+RUN echo $ENV
