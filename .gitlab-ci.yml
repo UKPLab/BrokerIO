@@ -74,7 +74,7 @@ deploy-main:
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make build-clean"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=main build"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make doc"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cp -r nlp_api/docs/build/html $DOCS_PATH"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cp -r nlp_api/docs/html $DOCS_PATH_ASYNC_API"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "docker cp nlp_api_main_broker_1:/broker/docs/build/html $DOCS_PATH"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "docker cp nlp_api_main_broker_1:/broker/docs/html $DOCS_PATH_ASYNC_API"
   only:
   - main

@@ -38,7 +38,6 @@ autodoc_default_options = {
 }
 autoclass_content = 'both'  # Include both class docstring and __init__ docstring in class documentation.
 
-
 templates_path = ['_templates']
 exclude_patterns = []
 
@@ -47,3 +46,9 @@ exclude_patterns = []
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
+
+# Replacements
+
+rst_epilog = """
+.. |BROKER_WEBURL| replace:: {weburl}:{port}
+""".format(weburl=os.environ.get('BROKER_WEBURL'), port=os.environ.get('NLP_PORT'))
