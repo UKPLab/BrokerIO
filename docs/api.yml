@@ -1,9 +1,4 @@
-asyncapi: 2.5.0
-info:
-    title: NLP API Broker
-    version: 0.1.0
-    description: |
-        This is the API Broker for the NLP API. It is possible to publish skills to the broker and send task to the skills.
+
 servers:
     broker:
         url: http://peer.ukp.informatik.tu-darmstadt.de:4853
@@ -14,7 +9,7 @@ channels:
     publish:
       message:
         oneOf:
-          - $ref: "#/components/messages/register_skill"
+          - $ref: "#/components/messages/skillRegister"
     subscribe:
       message:
         oneOf:
@@ -24,6 +19,22 @@ channels:
 
 components:
   messages:
+    skillRegister:
+      name: skillRegister
+      title: Register a skill
+      summary: Register a new skill at the broker for further usage.
+      payload:
+        type: object
+        properties:
+          skill:
+            type: string
+            description: The name of the skill.
+          description:
+            type: string
+            description: A short description of the skill.
+          version:
+            type: string
+            description: The version of the skill.
     request_skill:
       name: request_skill
       title: Request Skill

@@ -5,7 +5,7 @@ import hashlib
 import json
 import os
 
-import WebConfiguration
+from broker.config.WebConfiguration import WebConfiguration, instance as WebInstance
 
 import sys
 from celery import Celery
@@ -16,7 +16,7 @@ DEV_MODE = "--dev" in sys.argv
 DEBUG_MODE = "--debug" in sys.argv
 
 # load default web server configuration
-config = WebConfiguration.instance(dev=DEV_MODE, debug=DEBUG_MODE)
+config = WebInstance(dev=DEV_MODE, debug=DEBUG_MODE)
 
 # celery
 celery = Celery("peer_nlp", **config.celery)

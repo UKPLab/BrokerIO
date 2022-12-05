@@ -4,7 +4,7 @@ import os
 import redis
 from typing import List
 
-from db.skill import Announcement, Skill, NetNode
+from broker.db.skill import Announcement, Skill, NetNode
 
 from uuid import uuid4
 

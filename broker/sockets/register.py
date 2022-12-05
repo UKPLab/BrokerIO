@@ -8,10 +8,10 @@ from flask import session
 from celery import chain
 from celery.result import AsyncResult
 
-from celery_app import request_skill_by_uid
+from broker.celery_app import request_skill_by_uid
 
-from db.registry import registry
-from db.skill import Skill, NetNode
+from broker.db.registry import registry
+from broker.db.skill import Skill, NetNode
 
 
 class RegisterRoute(SocketRoute):
@@ -19,11 +19,24 @@ class RegisterRoute(SocketRoute):
         super().__init__(name, socketio, celery)
 
     def _init(self):
-        self.socketio.on_event("register_skill", self.register)
-        self.socketio.on_event("get_info", self.inform)
-        self.socketio.on_event("request_skill", self.request)
+        self.socketio.on_event("skillRegister", self.register)
+        self.socketio.on_event("skillGetAll", self.inform)
+        self.socketio.on_event("skillRequest", self.request)
 
     def register(self, data):
+        """
+        Registers a skill on the broker.
+
+        .. asyncapi_channels::
+            :format: yaml
+
+            skillRegister:
+             publish:
+              summary: Registers a skill on the broker.
+
+
+        :param data: Data Object
+        """
         sid = session["sid"]
 
         # currently we simply copy everything trusting the source
