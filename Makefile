@@ -25,11 +25,15 @@ dev: docker
 	make celery & make run
 
 .PHONY: doc
-doc: docs/api.yml
-	cd docs && make html
+doc: doc_asyncapi doc_sphinx
 
-docs/api.yml:
+.PHONY: doc_asyncapi
+doc_asyncapi:
 	docker run --rm -it  -v ${PWD}/docs/api.yml:/app/api.yml -v ${PWD}/docs/html:/app/output asyncapi/generator --force-write -o ./output api.yml @asyncapi/html-template
+
+.PHONY: doc_sphinx
+doc_sphinx:
+	cd docs && make html
 
 .PHONY: run
 run:
