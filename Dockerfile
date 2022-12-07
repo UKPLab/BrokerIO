@@ -28,7 +28,7 @@ RUN pip install celery
 
 # generate documentation
 SHELL ["conda", "run", "-n", "nlp_api",  "/bin/bash", "-c"]
-RUN make doc
+RUN make doc_sphinx
 
 # echo build type
 RUN echo $ENV

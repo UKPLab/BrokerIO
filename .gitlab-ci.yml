@@ -42,9 +42,8 @@ build:
     - mkdir /tmp/docs/main
     - docker cp nlp_api_main_broker_1:/broker/docs/build/html /tmp/docs/main
     - tar czf /tmp/doc_main.tar.gz /tmp/docs/main
-    - mkdir /tmp/docs/api
-    - docker cp nlp_api_main_broker_1:/broker/docs/html /tmp/docs/api
-    - tar czf /tmp/doc_api.tar.gz /tmp/docs/api
+    - make doc_asyncapi
+    - tar czf /tmp/doc_api.tar.gz ./docs/html
   artifacts:
       name: "documentation"
       paths:
