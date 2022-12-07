@@ -29,7 +29,7 @@ doc: doc_asyncapi doc_sphinx
 
 .PHONY: doc_asyncapi
 doc_asyncapi:
-	docker run --rm -it  -v ${PWD}/docs/api.yml:/app/api.yml -v ${PWD}/docs/html:/app/output asyncapi/generator --force-write -o ./output api.yml @asyncapi/html-template
+	docker run --rm -v ${PWD}/docs/api.yml:/app/api.yml -v ${PWD}/docs/html:/app/output asyncapi/generator --force-write -o ./output api.yml @asyncapi/html-template
 
 .PHONY: doc_sphinx
 doc_sphinx:
