@@ -51,4 +51,6 @@ html_static_path = ['_static']
 
 rst_epilog = """
 .. |BROKER_WEBURL| replace:: {weburl}:{port}
-""".format(weburl=os.environ.get('BROKER_WEBURL'), port=os.environ.get('NLP_PORT'))
+.. |BROKER_APIURL| replace:: {apiurl}
+""".format(weburl=os.environ.get('BROKER_WEBURL'), port=os.environ.get('NLP_PORT'),
+           apiurl="{}/doc_nlp_api/index.html".format(os.environ.get('BROKER_WEBURL')))

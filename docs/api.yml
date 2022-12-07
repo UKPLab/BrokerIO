@@ -15,12 +15,12 @@ channels:
       message:
         oneOf:
           - $ref: "#/components/messages/skillRegister"
+          - $ref: "#/components/messages/skillGetAll"
+          - $ref: "#/components/messages/skillRequest"
     subscribe:
       message:
         oneOf:
-          - $ref: "#/components/messages/request_skill"
-          - $ref: "#/components/messages/get_info"
-
+          - $ref: "#/components/messages/skillUpdate"
 
 components:
   messages:
@@ -30,70 +30,43 @@ components:
       summary: Register a new skill at the broker for further usage.
       payload:
         type: object
-        properties:
-          skill:
-            type: string
-            description: The name of the skill.
-          description:
-            type: string
-            description: A short description of the skill.
-          version:
-            type: string
-            description: The version of the skill.
-    request_skill:
-      name: request_skill
-      title: Request Skill
-      summary: Request a skill to process a task.
+        description: Object from the Skill Definition File (SDF), see documentation for more information!
+    skillGetAll:
+      name: skillGetAll
+      title: Get all skills
+      summary: Get all skills currently registered at the broker
+      payload:
+        type: array
+        description: Array of all skills currently registered at the broker
+        items:
+          type: object
+          description: Object from the Skill Definition File (SDF), see documentation for more information!
+    skillRequest:
+      name: skillRequest
+      title: Request a skill
+      summary: Request a skill to be executed
       payload:
         type: object
         properties:
           skill:
             type: string
-            description: The name of the skill.
-          task:
-            type: object
-            description: The task to be processed.
-    register_skill:
-      name: register_skill
-      title: Register Skill
-      summary: Register a new skill at the broker.
-      payload:
-        type: object
-        properties:
-          name:
-            type: string
-            description: The name of the skill.
-          description:
-            type: string
-            description: A description of the skill.
+            description: Name of the skill to be executed
           input:
-            type: string
-            description: The input type of the skill.
-          output:
-            type: string
-            description: The output type of the skill.
-          url:
-            type: string
-            description: The URL of the skill.
-          version:
-            type: string
-            description: The version of the skill.
-    get_info:
-        name: get_info
-        title: Get Info
-        summary: Get information about the broker.
-        payload:
             type: object
-            properties:
-              name:
-                  type: string
-                  description: The name of the broker.
-              description:
-                  type: string
-                  description: A description of the broker.
-              version:
-                  type: string
-                  description: The version of the broker.
-              skills:
-                  type: array
-                  description: A list of all skills registered at the broker.
+            description: Input for the skill defined in the Skill Definition File (SDF), see documentation for more information!
+    skillUpdate:
+      name: skillUpdate
+      title: Update information about a skill
+      summary: Update information about a skill on client side, send by the server
+      payload:
+        type: object
+        properties:
+          id:
+            type: string
+            description: unique ID of the skill
+          status:
+            type: string
+            description: Status of the skill
+          config:
+            type: object
+            description: Skill Definition File (SDF), see documentation for more information!

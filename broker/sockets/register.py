@@ -27,14 +27,6 @@ class RegisterRoute(SocketRoute):
         """
         Registers a skill on the broker.
 
-        .. asyncapi_channels::
-            :format: yaml
-
-            skillRegister:
-             publish:
-              summary: Registers a skill on the broker.
-
-
         :param data: Data Object
         """
         sid = session["sid"]
@@ -45,11 +37,19 @@ class RegisterRoute(SocketRoute):
 
         registry.announce_skill(skill, owner)
 
+        # todo: send skill information to all connected clients
+
     def inform(self):
+        """
+        Informs the client about all skills currently registered on the broker.
+
+        This should be called after a client connects to the broker. Further updates are provided by the
+        "skillRegister" event.
+        """
         #todo could get quite large, if we transfer the whole config on inform call...
 
         announcements = registry.get_entries()
-        self.socketio.emit("info", json.dumps([a.to_dict() for a in announcements]), room=session["sid"])
+        self.socketio.emit("skillUpdate", json.dumps([a.to_dict() for a in announcements]), room=session["sid"])
 
     def request(self, data):
         sid = session["sid"]

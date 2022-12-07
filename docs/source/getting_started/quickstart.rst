@@ -13,4 +13,7 @@ Usage
 -----
 
 The NLP Broker is a websocket service.
+The full documentation of the websocket api is available under:
+
+- |BROKER_APIURL|
 

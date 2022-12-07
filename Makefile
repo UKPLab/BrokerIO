@@ -33,6 +33,7 @@ doc_asyncapi:
 
 .PHONY: doc_sphinx
 doc_sphinx:
+	cd docs && make clean
 	cd docs && make html
 
 .PHONY: run
