@@ -27,6 +27,11 @@ dev: docker
 .PHONY: doc
 doc: doc_asyncapi doc_sphinx
 
+.PHONY: clean_doc
+clean_doc:
+	cd ./docs && make clean
+	rm -rf docs/docs
+
 .PHONY: doc_asyncapi
 doc_asyncapi:
 	docker run --rm -v ${PWD}/docs/api.yml:/app/api.yml -v ${PWD}/docs/html:/app/output asyncapi/generator --force-write -o ./output api.yml @asyncapi/html-template
@@ -78,7 +83,6 @@ build-clean: clean
 clean:
 	docker-compose rm -f -s -v
 	docker network rm nlp_api_default || echo "IGNORING ERROR"
-	cd ./docs && make clean
 
 .PHONY: docker
 docker:
