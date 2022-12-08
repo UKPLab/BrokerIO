@@ -1,69 +1,14 @@
-# NLP Server
+# NLP Broker
 
-## DISCLAIMER
-This component is under continuous development and refactoring. Specifically, the following features are not implemented
-yet, although they might be referenced in the following documentation:
-* adding a gunicorn (or any WSGI server) in-front of the flask app
-* structuring of the server components using:
-  * Blueprints for flask routes (checkout documentation on that)
-  * Celery task registry (checkout documentation on that)
-  * Flower does not connect properly yet (for monitoring Celery)
-
-## Installation
-
-### Prerequisites
-
-Docker and docker-compose are required to run the NLP server. Please install them according to the official documentation.
-
-Make sure that your local installation of Celery is either
-compatible (see environment.yaml) or does not over-shadow
-the conda-installed version. Check location with `which celery` and version with `celery --version`.
-
-### Build
-
-To build the NLP server, run the following command in the root directory of the project:
-
-    make build-nlp
-
-This will build the docker image for the NLP server.
-
-### Development
-
-
-[Miniconda](https://docs.conda.io/en/latest/miniconda.html) is recommended for installation. 
-The following commands will create a new conda environment and install all required packages:
+Welcome to the NLP Broker. To build the complete documentation, use the following command:
 
 ```shell
-conda env create -f environment.yaml
-conda activate nlp_api
-conda env update --file environment.yaml --name nlp_api --prune # update environment
+make docs
 ```
 
-To have a fully running development setup run (each command in different terminal):
-```shell
-make docker
-make celery
-make run
-```
+or visit our website at https://peer.ukp.informatik.tu-darmstadt.de/doc_nlp_broker/index.html
 
-### Test
 
-To test if the server is available and running, run the following command:
-
-```shell
-cd broker
-python test.py --url "http://127.0.0.1:4853" --token "see .env"
-```
-
-### Debugging
-
-#### Redis CLI
-
-```bash
-sudo apt-get install redis-tools
-redis-cli --stat 
-redis-cli --scan | head -10
-```
 
 #### Geevent
 

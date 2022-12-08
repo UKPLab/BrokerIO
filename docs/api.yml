@@ -30,7 +30,8 @@ components:
       summary: Register a new skill at the broker for further usage.
       payload:
         type: object
-        description: Object from the Skill Definition File (SDF), see documentation for more information!
+        description: Object from the Skill Definition File (SDF)
+        $ref: "#/components/schemas/SDF"
     skillGetAll:
       name: skillGetAll
       title: Get all skills
@@ -40,7 +41,8 @@ components:
         description: Array of all skills currently registered at the broker
         items:
           type: object
-          description: Object from the Skill Definition File (SDF), see documentation for more information!
+          description: Object from the Skill Definition File (SDF)
+          $ref: "#/components/schemas/SDF"
     skillRequest:
       name: skillRequest
       title: Request a skill
@@ -53,7 +55,8 @@ components:
             description: Name of the skill to be executed
           input:
             type: object
-            description: Input for the skill defined in the Skill Definition File (SDF), see documentation for more information!
+            description: Input for the skill defined in the Skill Definition File (SDF)
+            $ref: "#/components/schemas/SDFInput"
     skillUpdate:
       name: skillUpdate
       title: Update information about a skill
@@ -69,4 +72,55 @@ components:
             description: Status of the skill
           config:
             type: object
-            description: Skill Definition File (SDF), see documentation for more information!
+            description: Skill Definition File (SDF)
+            $ref: "#/components/schemas/SDF"
+  schemas:
+    SDFInput:
+      type: object
+      description: Input object that should be processed by the skill
+      properties:
+        data:
+          type: object
+          description: The actual data that should be processed
+        example:
+          description: Please provide an example of this entry as a json
+          format: json
+    SDF:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the Skill
+        description:
+          type: string
+          description: Description of the Skill
+        needs:
+          type: array
+          description: Array of pre executed skills before sending it to the current task
+          default: []
+        config:
+          type: object
+          description: Configuration that can be set by the user
+          properties:
+            data:
+              type: object
+              description: Object with the data that can be set by the user
+            example:
+              description: Please provide an example of this entry as a json
+              format: json
+            required:
+              type: boolean
+              default: false
+              description: Does the user have to send the config in each request?
+        input:
+          $ref: "#/components/schemas/SDFInput"
+        output:
+          type: object
+          description: Structure of the output object that is returned by the skill
+          properties:
+            data:
+              type: object
+              description: The actual data object that is returned by the skill
+            example:
+              description: Please provide an example of this entry as a json
+              format: json

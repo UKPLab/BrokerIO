@@ -78,6 +78,7 @@ build-clean: clean
 clean:
 	docker-compose rm -f -s -v
 	docker network rm nlp_api_default || echo "IGNORING ERROR"
+	cd ./docs && make clean
 
 .PHONY: docker
 docker:

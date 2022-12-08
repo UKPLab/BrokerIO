@@ -1,12 +1,10 @@
-Skill Definition File
-=====================
+Skill Definition File (SDF)
+===========================
 
 Skill Definition File (SDF) is a file format for defining skills for use in this API.
 The files describe the basic input and output of a model provided by a skill.
 It also describes the skill's metadata, such as the name, description, and version in
 a human-readable and machine-readable format.
-
-**Examples:** A list of example SDF files can be found in the `sdf` directory of the repository.
 
 SDF Basics
 ----------
@@ -19,6 +17,8 @@ The SDF should be easily readable by humans and machines, therefore is is based 
 * YAML supports also references, which are useful for defining the same data in multiple places
 * YAML is supported by Python through `PyYAML <http://pyyaml.org/>`_
 
+For describing the input and output of a skill, the SDF is oriented on the `AsyncAPI Schema <https://www.asyncapi.com/docs/reference/specification/v2.0.0>`_.
+
 SDF Template
 ------------
 
@@ -30,44 +30,45 @@ The SDF template is a YAML file that contains the basic structure of an SDF file
     name: <name of the task>
     description: <description of the task>
     needs: []
-    config: # see sections
-     data:
-      labels:
-       type: <type_array>
+    config: # optional
+      firstParameter:
+       type: array
+       description: <description of the this config parameter>
        required: true
-       default: [true, false]
-       array:
-        type: <type_boolean>
+       default: <default value of this parameter if not set>
+       items:
+        type: string
         required: true
-     example: [true, false]
+     example: {firstParameter: ["first", "second"]}
      required: false # only if config needed for each request from frontend
     input:
      data:
-      text_input:
-       type: <type_object>
+       type: object
        required: true
-       object:
+       properties:
         key:
-         type: <type_string>
+         type: string
          description: Object element with key "key"
          default: "value"
          required: True
-     example: {text_input: {key: "value"}}
+     example: {key: "value"}
     output:
      data:
-      score:
-       type: <type_float>
-       default: 0
-       description: Prediction Score
-      start:
-       type: <type_int>
-       description: Start position
-      end:
-       type: <type_int>
-       description: End position
-      answer:
-       type: <type_string>
-       description: Answer of the task
+      type: object
+      properties:
+       score:
+        type: float
+        default: 0
+        description: Prediction Score
+       start:
+        type: int
+        description: Start position
+       end:
+        type: int
+        description: End position
+       answer:
+        type: <type_string>
+        description: Answer of the task
      example: {score: 1.0, start: 2, end: 10, answer: "Yes of course"}
 
 .. note::
@@ -79,20 +80,59 @@ The SDF template is a YAML file that contains the basic structure of an SDF file
 Types
 -----
 
-The SDF template uses the following types:
+The SDF template uses the following types (see also `AsyncAPI Schema <https://www.asyncapi.com/docs/reference/specification/v2.0.0>`_):
 
-* ``<type_string>``: A string
-* ``<type_int>``: An integer
-* ``<type_float>``: A float
-* ``<type_boolean>``: A boolean
-* ``<type_array>``: An array
-* ``<type_object>``: An object
+.. list-table::
+    :header-rows: 1
 
-.. note::
-
-    The types are not defined in the YAML specification. They are only used in this API to describe the types of the data.
-
-    The types for arrays and objects needs further definitions, for array with key array and for objects with key object (see example).
+    * - Common Name
+      - Type
+      - Format
+      - Description
+    * - integer
+      - integer
+      - int32
+      - signed 32 bits
+    * - long
+      - integer
+      - int64
+      - signed 64 bits
+    * - float
+      - number
+      - float
+      - 32-bit single precision
+    * - double
+      - number
+      - double
+      - 64-bit double precision
+    * - string
+      - string
+      -
+      -
+    * - byte
+      - string
+      - byte
+      - base64 encoded characters
+    * - binary
+      - string
+      - binary
+      - any sequence of octets
+    * - boolean
+      - boolean
+      -
+      -
+    * - date
+      - string
+      - date
+      - As defined by `full-date <https://tools.ietf.org/html/rfc3339#section-5.6>`_ - `RFC3339 <https://tools.ietf.org/html/rfc3339>`_
+    * - dateTime
+      - string
+      - date-time
+      - As defined by `date-time <https://tools.ietf.org/html/rfc3339#section-5.6>`_ - `RFC3339 <https://tools.ietf.org/html/rfc3339>`_
+    * - password
+      - string
+      - password
+      - Used to hint UIs the input needs to be obscured.
 
 Sections
 --------

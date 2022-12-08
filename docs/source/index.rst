@@ -7,12 +7,22 @@ Welcome to NLP Broker's documentation!
 ======================================
 
 The NLP Broker should provide a simple interface to a variety of NLP tools and models.
-It is designed to be used by the NLP Broker API based on websockets.
+It is designed to be used by the NLP Broker API based on websockets to keep the inference times as low as possible.
 
-NLP tools and models are registered as skills and can then be used by the API.
+The goal is to give as many clients as possible access to models at the same time.
+The models should therefore connect to the NLP Broker independently when available and be available from that point on.
+
+.. note::
+
+   It cannot be guaranteed that all models will be available at all times.
+   The NLP Broker does not start any models and if the models crash it is their responsibility to restart the model
+   and reconnect to the NLP Broker on their own.
+
+| NLP tools and models are registered as so called :doc:`Skills <./skills/definition>`, each having a specific task.
+| See :doc:`Quickstart <./getting_started/quickstart>` for a quick introduction to the NLP Broker.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Getting Started
 
    getting_started/quickstart
@@ -20,11 +30,19 @@ NLP tools and models are registered as skills and can then be used by the API.
    getting_started/development
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Skills
-   :hidden:
 
+   skills/definition
    skills/skill_definition_file
+   skills/examples
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Models
+
+   models/example
+
 
 
 DISCLAIMER
