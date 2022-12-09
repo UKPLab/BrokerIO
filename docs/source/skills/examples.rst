@@ -15,27 +15,27 @@ Sentiment Classification
     config:
       data:
         task:
-          type: String
+          type: string
           description: The task to be performed by the transformer pipeline
           default: "text-classification"
           required: true
         model:
-          type: String
+          type: string
           description: The model to be used by the transformer pipeline
           default: "allenai/scibert_scivocab_uncased"
           required: true
         labels:
-          type: Array
+          type: array
           description: The labels to be used by the transformer pipeline
           default: ['positive', 'negative']
-          array: String
+          array: string
           required: true
       required: false
       example: {task: "text-classification", model: "allenai/scibert_scivocab_uncased", labels: ['positive', 'negative']}
     input:
       data:
         text:
-          type: String
+          type: string
           required: true
           description: The text to be classified
         required: true
@@ -43,10 +43,10 @@ Sentiment Classification
     output:
       data:
         score:
-          type: Number
+          type: float
           description: The score of the classification
         label:
-          type: String
+          type: string
           description: The label of the classification
       example: {score: 0.9, label: "positive"}
 
