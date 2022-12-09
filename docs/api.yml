@@ -50,13 +50,33 @@ components:
       payload:
         type: object
         properties:
+          id:
+            type: string
+            description: ID of the skill to be executed
           skill:
             type: string
             description: Name of the skill to be executed
-          input:
+          data:
             type: object
             description: Input for the skill defined in the Skill Definition File (SDF)
             $ref: "#/components/schemas/SDFInput"
+    skillResults:
+      name: skillRequest
+      title: Answer a skill request
+      summary: Answer a skill request with the results
+      payload:
+        type: object
+        properties:
+          id:
+            type: string
+            description: ID of the skill to be executed
+          skill:
+            type: string
+            description: Name of the skill to be executed
+          data:
+            type: object
+            description: Input for the skill defined in the Skill Definition File (SDF)
+            $ref: "#/components/schemas/SDFOutput"
     skillUpdate:
       name: skillUpdate
       title: Update information about a skill
@@ -74,6 +94,30 @@ components:
             type: object
             description: Skill Definition File (SDF)
             $ref: "#/components/schemas/SDF"
+    taskRequest:
+      name: taskRequest
+      title: Task send to a model registered at the broker
+      summary: Request a task to be executed (by the models registered at the broker)
+      payload:
+        type: object
+        properties:
+          id:
+            type: number
+            description: ID of the task to be executed
+          data:
+            $ref: "#/components/schemas/SDFInput"
+    taskResults:
+      name: taskResults
+      title: Results of a task
+      summary: Results of a task (by the models registered at the broker)
+      payload:
+        type: object
+        properties:
+          id:
+            type: number
+            description: ID of the task to be executed
+          data:
+            $ref: "#/components/schemas/SDFOutput"
   schemas:
     SDFInput:
       type: object
@@ -82,6 +126,16 @@ components:
         data:
           type: object
           description: The actual data that should be processed
+        example:
+          description: Please provide an example of this entry as a json
+          format: json
+    SDFOutput:
+      type: object
+      description: Structure of the output object that is returned by the skill
+      properties:
+        data:
+          type: object
+          description: The actual data object that is returned by the skill
         example:
           description: Please provide an example of this entry as a json
           format: json
@@ -115,12 +169,4 @@ components:
         input:
           $ref: "#/components/schemas/SDFInput"
         output:
-          type: object
-          description: Structure of the output object that is returned by the skill
-          properties:
-            data:
-              type: object
-              description: The actual data object that is returned by the skill
-            example:
-              description: Please provide an example of this entry as a json
-              format: json
+          $ref: "#/components/schemas/SDFOutput"

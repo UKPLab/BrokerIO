@@ -36,8 +36,10 @@ def request_skill_by_uid(sid, req):
     skill = registry.get_entry(req["skill_uid"])
     osid = skill.owner
 
+    # TODO add an unique id to the request
+
     # request and wait #todo check that this works properly
-    res = socket.call("request", req, namespace=osid)
+    res = socket.call("taskRequest", req, namespace=osid)
 
     # send response and terminate
-    socket.emit("result", res, room=sid)
+    socket.emit("taskResults", res, room=sid)
