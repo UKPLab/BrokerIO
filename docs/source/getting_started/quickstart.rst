@@ -39,11 +39,10 @@ Here we provide some basic example for the Javascript API:
 
     socket.on('connect', function() {
         console.log('Connected to NLP Broker');
+        socket.emit('skillGetAll')
     });
 
     // Received skill updates from the broker
-    // Note: When connecting to the broker, the broker will send
-    // automatically all available skills to the client
     socket.on('skillUpdate', function(data) {
         console.log("New skill updates: " + data);
         // do something with the skills

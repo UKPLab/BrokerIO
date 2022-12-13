@@ -20,14 +20,14 @@ if __name__ == '__main__':
     @sio.on('connect')
     def connect():
         logging.info('Connection successful established!')
-        sio.emit('get_info')
+        sio.emit('skillGetAll')
 
-    @sio.on('info')
-    def info(data):
+    @sio.on('skillUpdate')
+    def skills(data):
         logging.info('Received info: {}'.format(data))
 
     sio.connect(args.url, auth={"token": args.token})
 
     while True:
         new_input = input("Send string to broker as new task: ")
-        sio.emit('task', {'task_id': 1, 'data': new_input})
+        sio.emit('taskRequest', {'task_id': 1, 'data': new_input})

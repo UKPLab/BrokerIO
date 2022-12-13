@@ -1,15 +1,10 @@
 import json
-import os
-
-import redis
 from typing import List
-
-from broker.db.skill import Announcement, Skill, NetNode
-
 from uuid import uuid4
 
-REDIS_HOST = os.getenv("REDIS_HOST")
-REDIS_PORT = os.getenv("REDIS_PORT")
+import redis
+
+from broker.db.skill import Announcement, Skill, NetNode
 
 
 class Registry:
@@ -20,6 +15,7 @@ class Registry:
     rows: List[Announcement] = None
 
     def __init__(self, redis_host, redis_port):
+        self.redis = None
         self.rows = []
 
         self.host = redis_host
@@ -67,10 +63,7 @@ class Registry:
         return [self.get_entry(a) for a in aa]
 
     def get_entry(self, uid):
-        #todo error handling
+        # todo error handling
         a_data = self.redis.get(uid)
 
         return Announcement.from_dict(json.loads(a_data))
-
-
-registry = Registry(REDIS_HOST, REDIS_PORT)

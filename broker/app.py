@@ -15,8 +15,9 @@ from flask import Flask, session, request
 from flask_socketio import SocketIO, join_room, emit
 from celery_app import *
 
-from db.registry import registry
+from db.registry import Registry
 from sockets.register import RegisterRoute
+registry = Registry(os.getenv("REDIS_HOST"), os.getenv("REDIS_PORT"))
 
 # config loaded in celery_app
 
