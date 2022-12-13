@@ -32,7 +32,7 @@ class RegisterRoute(SocketRoute):
         skill = Skill(data["name"], data)
         owner = NetNode(sid)
 
-        registry.announce_skill(skill, owner)
+        self.registry.announce_skill(skill, owner)
 
         # todo: send skill information to all connected clients
 
@@ -45,7 +45,7 @@ class RegisterRoute(SocketRoute):
         """
         # todo could get quite large, if we transfer the whole config on inform call...
 
-        announcements = registry.get_entries()
+        announcements = self.registry.get_entries()
         self.socketio.emit("skillUpdate", json.dumps([a.to_dict() for a in announcements]), room=session["sid"])
 
     def request(self, data):
