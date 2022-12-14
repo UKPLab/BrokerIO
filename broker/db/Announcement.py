@@ -1,52 +1,7 @@
-import time
-import uuid
+from broker.db.Skill import Skill
+from broker.db.NetNode import NetNode
+
 from datetime import datetime
-
-
-class Skill:
-    """
-    Represents a skill, which will be stored in the registry. Later on this class will be loaded and written
-    to an actual database. They are encapusled within an announcement
-    """
-    uid: str = None
-    name: str = None
-
-    config: dict = None
-
-    def __init__(self, name, config):
-        self.uid = str(uuid.uuid4())
-        self.name = name
-        self.config = config
-
-    def to_dict(self):
-        return {
-            "uid": self.uid,
-            "name": self.name,
-            "config": self.config
-        }
-
-    @staticmethod
-    def from_dict(data):
-        return Skill(data["name"], data)
-
-
-class NetNode:
-    """
-    Represents a network node announcing its skills.
-    """
-    session_id: str = None
-
-    def __init__(self, session_id):
-        self.session_id = session_id
-
-    def to_dict(self):
-        return {
-            "session_id": self.session_id
-        }
-
-    @staticmethod
-    def from_dict(data):
-        return NetNode(data["session_id"])
 
 
 class Announcement:

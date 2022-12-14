@@ -45,7 +45,13 @@ Here we provide some basic example for the Javascript API:
     // Received skill updates from the broker
     socket.on('skillUpdate', function(data) {
         console.log("New skill updates: " + data);
-        // do something with the skills
+        // get config of first skill
+        socket.emit('skillGetConfig', {name: data[0]['name']});
+    });
+
+    // Receive skill config from the broker
+    socket.on('skillConfig', function(data) {
+        console.log("Skill config for {}: {}".format(data['name'], data));
     });
 
     socket.on('disconnect', function() {

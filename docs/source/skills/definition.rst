@@ -17,4 +17,19 @@ In order to use a skill that a neural model has, you typically need to provide i
 Once you have provided the model with the appropriate input data, you can then use the model's skill to process that data and generate some output.
 Therefore a skill provide a :doc:`Skill Definition File (SDF) <./skill_definition_file>`  that describes the input and output data for the skill.
 
+Naming
+------
 
+Skills should have an explicit name.
+
+.. note::
+
+    If two registered services/skills have the exact same name, the task will be distributed randomly between the nodes!
+    This also means that these skills must have the same configuration!
+
+Nodes
+-----
+
+Skill Updates send by the websockets are extended by the nodes key, which indicates the number of available
+network nodes that offer this skill. If this value is set to zero, this skill is currently not registered
+at the broker anymore.

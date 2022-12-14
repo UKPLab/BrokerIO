@@ -25,21 +25,14 @@ celery.conf.update(config.session)
 
 
 @celery.task
-def request_skill_by_uid(sid, req):
+def request_skill_by_owner_id(sid, owner_id, data):
+    # instantiate a socket io client writing messages to the rabbitmq message broker
     socket = SocketIO(message_queue=config.celery["broker"])
-
-    # connect to the registry
-    from db.registry import registry
-    registry.connect()
-
-    # get the skill and associated owner
-    skill = registry.get_entry(req["skill_uid"])
-    osid = skill.owner
 
     # TODO add an unique id to the request
 
     # request and wait #todo check that this works properly
-    res = socket.call("taskRequest", req, namespace=osid)
+    res = socket.call("taskRequest", data, namespace=owner_id)
 
     # send response and terminate
     socket.emit("taskResults", res, room=sid)

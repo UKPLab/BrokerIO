@@ -15,8 +15,8 @@ from flask import Flask, session, request
 from flask_socketio import SocketIO, join_room, emit
 from celery_app import *
 
-from db.registry import Registry
-from sockets.register import RegisterRoute
+from db.Registry import Registry
+from sockets.RegisterRoute import RegisterRoute
 registry = Registry(os.getenv("REDIS_HOST"), os.getenv("REDIS_PORT"))
 
 # config loaded in celery_app
@@ -89,8 +89,23 @@ def init():
         # terminate running jobs
         # clear pending results
 
+        # close connection
         sid = request.sid
         socketio.close_room(sid)
+
+        # Removes owner on skill disconnection and inform other nodes
+        a = registry.remove_owner(sid)
+        if a is not None:
+            skill = registry.get_skill(a.skill['name'])
+            socketio.emit("skillUpdate", skill)
+
+        # Terminate running jobs
+        # 1. Docker container disconnect
+        # TODO send task eventually to the next node if available
+        # 2. Client disconnect
+        # TODO send cancel request via socket io emit to container
+        # TODO send cancel request to celery
+
         print(f"Socket connection teared down for sid: {sid}")
 
 

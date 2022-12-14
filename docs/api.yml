@@ -17,10 +17,12 @@ channels:
           - $ref: "#/components/messages/skillRegister"
           - $ref: "#/components/messages/skillGetAll"
           - $ref: "#/components/messages/skillRequest"
+          - $ref: "#/components/messages/skillGetConfig"
     subscribe:
       message:
         oneOf:
           - $ref: "#/components/messages/skillUpdate"
+          - $ref: "#/components/messages/skillConfig"
 
 components:
   messages:
@@ -41,8 +43,33 @@ components:
         description: Array of all skills currently registered at the broker
         items:
           type: object
-          description: Object from the Skill Definition File (SDF)
-          $ref: "#/components/schemas/SDF"
+          description: Object with name and nodes
+          properties:
+            name:
+              type: string
+              description: name of the skill
+            nodes:
+              type: integer
+              description: number of nodes for that skill
+    skillGetConfig:
+      name: skillGetConfig
+      title: Get config for a skill name
+      summary: Get config for a skill name as currently registered at the broker
+      payload:
+        type: object
+        description: Object from the Skill Definition File (SDF)
+        properties:
+          name:
+            type: string
+            description: name of the skill
+    skillConfig:
+      name: skillConfig
+      title: Get config for a skill name
+      summary: Get config for a skill name as currently registered at the broker
+      payload:
+        type: object
+        description: Object from the Skill Definition File (SDF)
+        $ref: "#/components/schemas/SDF"
     skillRequest:
       name: skillRequest
       title: Request a skill
@@ -53,7 +80,7 @@ components:
           id:
             type: string
             description: ID of the skill to be executed
-          skill:
+          name:
             type: string
             description: Name of the skill to be executed
           data:
