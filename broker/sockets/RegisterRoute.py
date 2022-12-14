@@ -1,26 +1,27 @@
-import json
 import os
 import random
+from uuid import uuid4
 
 from flask import session
 
-from broker.celery_app import request_skill_by_uid, request_skill_by_owner_id
 from broker.db.Registry import Registry
 from broker.db.Announcement import Skill, NetNode
 from . import SocketRoute
 
 
 class RegisterRoute(SocketRoute):
-    def __init__(self, name, socketio, celery):
-        super().__init__(name, socketio, celery)
+    def __init__(self, name, socketio):
+        super().__init__(name, socketio)
         self.registry = Registry(os.getenv("REDIS_HOST"), os.getenv("REDIS_PORT"))
         self.registry.connect()
+        self.client_skill_mapping = {}
 
     def _init(self):
         self.socketio.on_event("skillRegister", self.register)
         self.socketio.on_event("skillGetAll", self.get_all)
         self.socketio.on_event("skillGetConfig", self.get_config)
         self.socketio.on_event("skillRequest", self.request)
+        self.socketio.on_event("taskResults", self.results)
 
     def register(self, data):
         """
@@ -67,4 +68,12 @@ class RegisterRoute(SocketRoute):
         owner = random.choice(owners)
 
         # request skill of the owner
-        request_skill_by_owner_id.delay(sid, owner, data["data"])
+        uid = str(uuid4())
+        self.client_skill_mapping[uid] = sid
+        self.socketio.emit("taskRequest", {'id': uid, 'data': data['data']}, room=owner)
+
+    def results(self, data):
+        """
+        Send results to client
+        """
+        self.socketio.emit("skillResults", data['data'], room=self.client_skill_mapping[data['id']])

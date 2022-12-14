@@ -38,6 +38,10 @@ if __name__ == '__main__':
         logging.info('Received config: {}'.format(data))
 
 
+    @sio.on('skillResults')
+    def results(data):
+        logging.info('Received config: {}'.format(data))
+
     sio.connect(args.url, auth={"token": args.token})
 
     while True:

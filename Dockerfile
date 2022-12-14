@@ -23,9 +23,6 @@ RUN conda init bash
 
 ENV PATH /opt/conda/envs/condaenv/bin:$PATH
 
-# add celery
-RUN pip install celery
-
 # generate documentation
 SHELL ["conda", "run", "-n", "nlp_api",  "/bin/bash", "-c"]
 RUN make doc_sphinx

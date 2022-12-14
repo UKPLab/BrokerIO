@@ -8,12 +8,22 @@ celery + socketio can work together.
 
 Author: Nils Dycke (dycke@ukp...)
 """
+import os
+import sys
+
 from eventlet import monkey_patch  # mandatory! leave at the very top
 monkey_patch()
 
 from flask import Flask, session, request
 from flask_socketio import SocketIO, join_room, emit
-from celery_app import *
+from broker.config.WebConfiguration import WebConfiguration, instance as WebInstance
+
+# check if dev mode
+DEV_MODE = "--dev" in sys.argv
+DEBUG_MODE = "--debug" in sys.argv
+
+# load default web server configuration
+config = WebInstance(dev=DEV_MODE, debug=DEBUG_MODE)
 
 from db.Registry import Registry
 from sockets.RegisterRoute import RegisterRoute
@@ -25,7 +35,6 @@ registry = Registry(os.getenv("REDIS_HOST"), os.getenv("REDIS_PORT"))
 app = Flask("peer_nlp")
 app.config.update(config.flask)
 app.config.update(config.session)
-app.config.update(config.celery)  # necessary as we access the broker information later on
 
 # socketio
 socketio = SocketIO(app, **config.socketio)
@@ -52,7 +61,7 @@ def init():
     token = token if token else "this_is_a_random_token_to_verify"
 
     # add socket routes
-    RegisterRoute("register", socketio, celery)
+    RegisterRoute("register", socketio)
 
     # socketio
     @socketio.on("connect")
@@ -104,7 +113,6 @@ def init():
         # TODO send task eventually to the next node if available
         # 2. Client disconnect
         # TODO send cancel request via socket io emit to container
-        # TODO send cancel request to celery
 
         print(f"Socket connection teared down for sid: {sid}")
 

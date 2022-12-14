@@ -11,31 +11,7 @@ services:
       - celery-worker
       - redis
     command: conda run -n nlp_api --no-capture-output make ENV=${ENV} broker
-  rabbitmq:
-    image: rabbitmq:3.9-management-alpine
-    ports:
-      - 5672:5672
-      - 15673:15673
   redis:
     image: redis
     ports:
       - 6379:6379
-  celery-worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        ENV: ${ENV}
-    environment:
-      - C_FORCE_ROOT=true
-    depends_on:
-      - rabbitmq
-      - redis
-    command: conda run -n nlp_api --no-capture-output make ENV=${ENV} celery
-    #celery -A celery_app.celery worker -l INFO -E
-  flower:
-    image: mher/flower
-    depends_on:
-      - rabbitmq
-      - celery-worker
-    command: celery flower --broker=amqp://${RABBITMQ_HOST}:${RABBITMQ_PORT} --port=8888

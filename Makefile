@@ -22,7 +22,7 @@ help:
 
 .PHONY: dev
 dev: docker
-	make celery & make run
+	make run
 
 .PHONY: doc
 doc: doc_asyncapi doc_sphinx
@@ -52,10 +52,6 @@ test:
 .PHONY: debug
 debug:
 	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev --debug
-
-.PHONY: celery
-celery:
-	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && cd ./broker && celery --app celery_app.celery worker -l INFO -E
 
 .PHONY: broker
 broker:

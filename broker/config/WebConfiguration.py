@@ -35,7 +35,6 @@ DEFAULT = {
     "secret_key": "DEFAULT-SECRET-KEY",
     "session_backend": f"redis://{REDIS_HOST}:{REDIS_PORT}",
     "result_backend": f"redis://{REDIS_HOST}:{REDIS_PORT}",
-    "broker": f"amqp://guest:guest@{RABBITMQ_HOST}:{RABBITMQ_PORT}",
 
     "app": {
         "host": "0.0.0.0",
@@ -52,7 +51,6 @@ DEFAULT_DEV = {
     "secret_key": "DEBUGGING-SECRET-KEY",
     "session_backend": f"redis://{REDIS_HOST}:{REDIS_PORT}",
     "result_backend": f"redis://{REDIS_HOST}:{REDIS_PORT}",
-    "broker": f"amqp://guest:guest@{RABBITMQ_HOST}:{RABBITMQ_PORT}",
 
     "app": {
         "host": "127.0.0.1",
@@ -147,12 +145,7 @@ class WebConfiguration:
 
     def setup(self):
         self.flask = {
-            "SECRET_KEY": self.conf["secret_key"],
-            "CELERY_RESULT_BACKEND": self.conf["result_backend"],
-            "CELERY_BROKER_URL": self.conf["broker"],
-            "CELERY_RESULT_SERIALIZER": 'pickle',
-            "CELERY_TASK_SERIALIZER":'pickle',
-            "CELERY_ACCEPT_CONTENT": ['pickle']
+            "SECRET_KEY": self.conf["secret_key"]
         }
 
         self.session = {
@@ -164,14 +157,8 @@ class WebConfiguration:
 
         self.socketio = {
             "cors_allowed_origins": '*',
-            "message_queue": self.conf["broker"],
             "logger": self.conf["log"],
             "engineio_logger": self.conf["log"]
-        }
-
-        self.celery = {
-            "backend": self.conf["result_backend"],
-            "broker": self.conf["broker"]
         }
 
         self.app = {
