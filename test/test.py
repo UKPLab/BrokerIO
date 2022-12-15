@@ -43,8 +43,9 @@ if __name__ == '__main__':
     def skills_update(data):
         global skills
         logging.info('Received list of skills: {}'.format(data))
-        sio.emit('skillGetConfig', {'name': data[0]['name']})
-        skills = data
+        if len(data) > 0:
+            sio.emit('skillGetConfig', {'name': data[0]['name']})
+            skills = data
 
 
     @sio.on('skillConfig')
@@ -65,7 +66,7 @@ if __name__ == '__main__':
     time.sleep(2)
 
     # Waiting for connection
-    while not sio.connected:
+    while not sio.connected and len(skills) > 0:
         time.sleep(1)
 
     if args.test:

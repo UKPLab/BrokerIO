@@ -63,7 +63,7 @@ def init():
     token = token if token else "this_is_a_random_token_to_verify"
 
     # add socket routes
-    routes = RegisterRoute("register", socketio)
+    routes = RegisterRoute("register", socketio, registry)
 
     # socketio
     @socketio.on("connect")
@@ -109,9 +109,10 @@ def init():
 
         # Removes owner on skill disconnection and inform other nodes
         a = registry.remove_owner(sid)
+        print(a)
         if a is not None:
-            skill = registry.get_skill(a.skill['name'])
-            socketio.emit("skillUpdate", skill, broadcast=True, include_self=False)
+            skill = registry.get_skill(a['skill']['name'], with_config=False)
+            socketio.emit("skillUpdate", [skill], broadcast=True, include_self=False)
 
         # Terminate running jobs
         # 1. Docker container disconnect

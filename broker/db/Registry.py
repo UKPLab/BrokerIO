@@ -54,8 +54,10 @@ class Registry:
     def un_announce_skill(self, announcement_id: str):
         # todo error handling
         a = self.redis.getdel(announcement_id)
+        a = json.loads(a.decode('utf-8'))
+        print(a)
 
-        print(f"Unregistered a skill: {a.skill.config['name']} by {a.owner.session_id}")
+        print(f"Unregistered a skill: {a['skill']['name']} by {a['owner']['session_id']}")
 
         return a
 
@@ -69,27 +71,27 @@ class Registry:
         else:
             return [self.get_entry(a) for a in aa]
 
-    def get_skills(self, with_config = True):
+    def get_skills(self, with_config=True):
         """
         Get list of skills (aggregated)
         """
         aa = self.get_entries(True)
         skills = {}
         for a in aa:
-            if a['name'] not in skills: # only first config is used
+            if a['name'] not in skills:  # only first config is used
                 skills[a['name']] = a if with_config else {'name': a['name']}
                 skills[a['name']]['nodes'] = 1
             else:
                 skills[a['name']]['nodes'] += 1
         return skills
 
-    def get_skill(self, name):
+    def get_skill(self, name, with_config=True):
         """
         Get config of an explicit skill by name
         """
-        skills = self.get_skills()
+        skills = self.get_skills(with_config=with_config)
         if name in skills:
-            return self.get_skills()[name]
+            return self.get_skills(with_config=with_config)[name]
         else:
             return {'name': name, 'nodes': 0}
 

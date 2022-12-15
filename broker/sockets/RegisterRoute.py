@@ -11,13 +11,12 @@ from broker.utils.Quota import Quota
 
 
 class RegisterRoute(SocketRoute):
-    def __init__(self, name, socketio):
+    def __init__(self, name, socketio, registry: Registry):
         super().__init__(name, socketio)
-        self.registry = Registry(os.getenv("REDIS_HOST"), os.getenv("REDIS_PORT"))
-        self.registry.connect()
         self.client_skill_mapping = {}
         self.quota = Quota(max_len=int(os.getenv("QUOTA_CLIENTS", 20)))
         self.quota_results = Quota(max_len=int(os.getenv("QUOTA_RESULTS", 100)))
+        self.registry = registry
 
     def _init(self):
         self.socketio.on_event("skillRegister", self.register)
@@ -42,8 +41,8 @@ class RegisterRoute(SocketRoute):
 
         self.registry.announce_skill(skill, owner)
 
-        update_skill = self.registry.get_skill(skill.config['name'])
-        self.socketio.emit("skillUpdate", update_skill, broadcast=True, include_self=False)
+        update_skill = self.registry.get_skill(skill.config['name'], with_config=False)
+        self.socketio.emit("skillUpdate", [update_skill], broadcast=True, include_self=False)
 
     def get_all(self):
         """
