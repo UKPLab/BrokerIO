@@ -19,12 +19,14 @@ if __name__ == '__main__':
     parser.add_argument("--skill", help="The skill name to test")
     parser.add_argument("--test", help="Execute a stress test", action="store_true")
     parser.add_argument("--n", help="Iterations in the stress test")
+    parser.add_argument("--timeout", help="Max timeout in seconds for the stress test")
     parser.set_defaults(
         url="http://localhost:4852",
         token="this_is_a_random_token_to_verify",
         skill=None,
         test=False,
-        n=10
+        n=10,
+        timeout=20
     )
 
     args = parser.parse_args()
@@ -77,20 +79,28 @@ if __name__ == '__main__':
                           'data': text})
                 starts.append(time.perf_counter())
                 pbar.update(1)
+                time.sleep(0.04)
+
             pbar.close()
 
         time.sleep(1)
         print("\nTotal time to send requests: {:.4f}ms\n".format((time.perf_counter() - starts[0]) * 1000))
 
         pbar = tqdm(total=int(args.n), desc="Results")
+        timeout = time.time()
         while len(end_times) < int(args.n):
             time.sleep(1)
             pbar.update(n=len(end_times))
+            if time.time() > (timeout + args.timeout):
+                break
         pbar.update(n=len(end_times))
         pbar.close()
 
         for i in range(int(args.n)):
-            print("Request {} took {:.4f}ms".format(i, (end_times[i] - starts[i]) * 1000))
+            if i not in end_times:
+                print("Request {} timed out!".format(i))
+            else:
+                print("Request {} took {:.4f}ms".format(i, (end_times[i] - starts[i]) * 1000))
 
     else:
         while True:

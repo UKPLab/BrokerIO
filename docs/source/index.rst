@@ -17,6 +17,7 @@ The models should therefore connect to the NLP Broker independently when availab
    It cannot be guaranteed that all models will be available at all times.
    The NLP Broker does not start any models and if the models crash it is their responsibility to restart the model
    and reconnect to the NLP Broker on their own.
+   We also implemented a quota system to prevent a single client from using all available resources (see .env file for quota definition).
 
 | NLP tools and models are registered as so called :doc:`Skills <./skills/definition>`, each having a specific task.
 | See :doc:`Quickstart <./getting_started/quickstart>` for a quick introduction to the NLP Broker.
