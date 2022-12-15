@@ -12,7 +12,6 @@ default: help
 help:
 	@echo "make clean             	Delete development files"
 	@echo "make dev          		Run the flask app. Requires you to run make nlp_services in another terminal first"
-	@echo "make test				Run unittests"
 	@echo "make build      			Build NLP services"
 	@echo "make env_create			Create a virtual environment"
 	@echo "make env_activate		Activate the virtual environment"
@@ -44,10 +43,6 @@ doc_sphinx:
 .PHONY: run
 run:
 	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev
-
-.PHONY: test
-test:
-	cd test && python -m unittest discover
 
 .PHONY: debug
 debug:
@@ -82,7 +77,7 @@ clean:
 
 .PHONY: docker
 docker:
-	docker-compose -f docker-dev.yml up rabbitmq redis
+	docker-compose -f docker-dev.yml up redis
 
 .PHONY: env_create
 env_create:

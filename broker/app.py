@@ -6,17 +6,18 @@ by the celery client to setup RPCs to the celery server.
 At the moment, the file contains examples to test your setup and get a feeling for how
 celery + socketio can work together.
 
-Author: Nils Dycke (dycke@ukp...)
+Author: Nils Dycke, Dennis Zyska
 """
 import os
 import sys
 
 from eventlet import monkey_patch  # mandatory! leave at the very top
+
 monkey_patch()
 
 from flask import Flask, session, request
-from flask_socketio import SocketIO, join_room, emit
-from broker.config.WebConfiguration import WebConfiguration, instance as WebInstance
+from flask_socketio import SocketIO, join_room
+from broker.config.WebConfiguration import instance as WebInstance
 
 # check if dev mode
 DEV_MODE = "--dev" in sys.argv
@@ -27,6 +28,7 @@ config = WebInstance(dev=DEV_MODE, debug=DEBUG_MODE)
 
 from db.Registry import Registry
 from sockets.RegisterRoute import RegisterRoute
+
 registry = Registry(os.getenv("REDIS_HOST"), os.getenv("REDIS_PORT"))
 
 # config loaded in celery_app
@@ -61,7 +63,7 @@ def init():
     token = token if token else "this_is_a_random_token_to_verify"
 
     # add socket routes
-    RegisterRoute("register", socketio)
+    routes = RegisterRoute("register", socketio, registry)
 
     # socketio
     @socketio.on("connect")
@@ -83,7 +85,7 @@ def init():
         session["sid"] = sid
         join_room(sid)
 
-        print(f"New socket connection established with sid: {sid}")
+        print(f"New socket connection established with sid: {sid} and ip: {request.remote_addr}")
 
         return sid
 
@@ -101,12 +103,16 @@ def init():
         # close connection
         sid = request.sid
         socketio.close_room(sid)
+        # delete quota for sid
+        routes.quota.delete(sid)
+        routes.quota_results.delete(sid)
 
         # Removes owner on skill disconnection and inform other nodes
         a = registry.remove_owner(sid)
+        print(a)
         if a is not None:
-            skill = registry.get_skill(a.skill['name'])
-            socketio.emit("skillUpdate", skill)
+            skill = registry.get_skill(a['skill']['name'], with_config=False)
+            socketio.emit("skillUpdate", [skill], broadcast=True, include_self=False)
 
         # Terminate running jobs
         # 1. Docker container disconnect
