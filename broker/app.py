@@ -85,7 +85,7 @@ def init():
         session["sid"] = sid
         join_room(sid)
 
-        print(f"New socket connection established with sid: {sid}")
+        print(f"New socket connection established with sid: {sid} and ip: {request.remote_addr}")
 
         return sid
 
