@@ -42,7 +42,8 @@ class RegisterRoute(SocketRoute):
 
         self.registry.announce_skill(skill, owner)
 
-        # todo: send skill information to all connected clients
+        update_skill = self.registry.get_skill(skill.config['name'])
+        self.socketio.emit("skillUpdate", update_skill, broadcast=True, include_self=False)
 
     def get_all(self):
         """

@@ -111,7 +111,7 @@ def init():
         a = registry.remove_owner(sid)
         if a is not None:
             skill = registry.get_skill(a.skill['name'])
-            socketio.emit("skillUpdate", skill)
+            socketio.emit("skillUpdate", skill, broadcast=True, include_self=False)
 
         # Terminate running jobs
         # 1. Docker container disconnect

@@ -79,7 +79,7 @@ if __name__ == '__main__':
                           'data': text})
                 starts.append(time.perf_counter())
                 pbar.update(1)
-                time.sleep(0.04)
+                time.sleep(0.10)
 
             pbar.close()
 
