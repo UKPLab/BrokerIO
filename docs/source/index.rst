@@ -44,15 +44,3 @@ The models should therefore connect to the NLP Broker independently when availab
    models/example
 
 
-
-DISCLAIMER
-----------
-This component is under continuous development and refactoring. Specifically, the following features are not implemented
-yet, although they might be referenced in the following documentation:
-
-- adding a gunicorn (or any WSGI server) in-front of the flask app
-- structuring of the server components using:
-- Blueprints for flask routes (checkout documentation on that)
-- Celery task registry (checkout documentation on that)
-- Flower does not connect properly yet (for monitoring Celery)
-

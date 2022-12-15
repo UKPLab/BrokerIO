@@ -100,9 +100,6 @@ components:
           id:
             type: string
             description: ID of the skill to be executed
-          skill:
-            type: string
-            description: Name of the skill to be executed
           data:
             type: object
             description: Input for the skill defined in the Skill Definition File (SDF)
