@@ -36,7 +36,7 @@ To test if the server is available and running, run the following command:
 .. code-block:: shell
 
     cd broker
-    python test.py --url "http://127.0.0.1:4853" --token "<see .env file>"
+    python test.py --url "http://127.0.0.1:4853" --token "<see .env file>" --skill "text_classification"
 
 Debugging
 *********

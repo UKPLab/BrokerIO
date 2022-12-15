@@ -18,11 +18,14 @@ channels:
           - $ref: "#/components/messages/skillGetAll"
           - $ref: "#/components/messages/skillRequest"
           - $ref: "#/components/messages/skillGetConfig"
+          - $ref: "#/components/messages/taskResults"
     subscribe:
       message:
         oneOf:
           - $ref: "#/components/messages/skillUpdate"
           - $ref: "#/components/messages/skillConfig"
+          - $ref: "#/components/messages/skillResults"
+          - $ref: "#/components/messages/taskRequest"
 
 components:
   messages:
@@ -90,7 +93,7 @@ components:
     skillResults:
       name: skillRequest
       title: Answer a skill request
-      summary: Answer a skill request with the results
+      summary: Answer a skill request with the results (send to client)
       payload:
         type: object
         properties:

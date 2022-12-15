@@ -63,4 +63,4 @@ Here we provide some basic example for the Javascript API:
 
 To execute a skill just call:
 
-:javascript:`socket.emit("skillRequest", {skill: "<skill name>", data: "<skill data>"});`
+:javascript:`socket.emit("skillRequest", {id: "<unique id>", name: "<skill name>", data: "<skill data>"});`

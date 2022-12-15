@@ -38,9 +38,9 @@ Since neural models are mostly trained with Python, this sample also use Python 
         # create transformer pipeline
         pipe = pipeline(**skill["pipeline"])
 
-        @sio.on("task")
+        @sio.on("taskRequest")
         def task(data):
-            sio.emit('results', {'task_id': data['task_id'], 'results': pipe(data['data'])})
+            sio.emit('taskResults', {'id': data['id'], 'data': pipe(data['data'])})
 
         # connect to Broker
         while True:

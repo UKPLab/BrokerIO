@@ -7,8 +7,6 @@ services:
       args:
         ENV: ${ENV}
     depends_on:
-      - rabbitmq
-      - celery-worker
       - redis
     command: conda run -n nlp_api --no-capture-output make ENV=${ENV} broker
     ports:
