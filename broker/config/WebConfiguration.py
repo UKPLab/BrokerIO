@@ -20,14 +20,14 @@ RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
 RABBITMQ_PORT = os.getenv("RABBITMQ_PORT")
 REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = os.getenv("REDIS_PORT")
-NLP_PORT = os.getenv("NLP_PORT")
+BROKER_PORT = os.getenv("BROKER_PORT")
 
 
 # default config of all environmental parameters.
 # the parameters in "app" are passed to the flask app specifically
 # the parameters in "grobid" are passed to grobid specifically
 DEFAULT = {
-    "name": "peer_nlp",
+    "name": "broker",
 
     "log": True,
     "debug": False,
@@ -38,12 +38,12 @@ DEFAULT = {
 
     "app": {
         "host": "0.0.0.0",
-        "port": NLP_PORT,
+        "port": BROKER_PORT,
     }
 }
 
 DEFAULT_DEV = {
-    "name": "peer_nlp",
+    "name": "broker",
 
     "log": True,
     "debug": False,  # currently: discouraged; you need a proper debugger setup for that to work
@@ -54,7 +54,7 @@ DEFAULT_DEV = {
 
     "app": {
         "host": "127.0.0.1",
-        "port": NLP_PORT
+        "port": BROKER_PORT
     }
 }
 

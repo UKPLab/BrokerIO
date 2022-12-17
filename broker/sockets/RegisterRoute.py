@@ -1,19 +1,21 @@
 import os
 import random
+import time
 from uuid import uuid4
 
 from flask import session
 
 from broker.db.Announcement import Skill, NetNode
 from broker.db.Registry import Registry
-from . import SocketRoute
+from broker.db.Task import Task
 from broker.utils.Quota import Quota
+from . import SocketRoute
 
 
 class RegisterRoute(SocketRoute):
     def __init__(self, name, socketio, registry: Registry):
         super().__init__(name, socketio)
-        self.client_skill_mapping = {}
+        self.current_tasks = {}
         self.quota = Quota(max_len=int(os.getenv("QUOTA_CLIENTS", 20)))
         self.quota_results = Quota(max_len=int(os.getenv("QUOTA_RESULTS", 100)))
         self.registry = registry
@@ -84,7 +86,7 @@ class RegisterRoute(SocketRoute):
 
         # request skill of the owner
         uid = str(uuid4())
-        self.client_skill_mapping[uid] = {"sessionId": sid, "requestId": data["id"]}
+        self.current_tasks[uid] = Task(task_id=uid, request_id=data['id'], session_id=sid)
         self.socketio.emit("taskRequest", {'id': uid, 'data': data['data']}, room=owner)
 
     def results(self, data):
@@ -95,8 +97,12 @@ class RegisterRoute(SocketRoute):
         if self.quota_results(sid, append=True):
             return
 
-        print(self.client_skill_mapping[data['id']])
+        print("Get skill results after {:.3f} ms".format(
+            (time.perf_counter() - self.current_tasks[data['id']].start_time) * 1000))
+        print("Results: ", data)
+        print("Task: ", self.current_tasks[data['id']].__dict__)
+
         self.socketio.emit("skillResults",
-                           {'id': self.client_skill_mapping[data['id']]['requestId'], 'data': data['data']},
-                           room=self.client_skill_mapping[data['id']]['sessionId'])
-        del(self.client_skill_mapping[data['id']])
+                           {'id': self.current_tasks[data['id']].request_id, 'data': data['data']},
+                           room=self.current_tasks[data['id']].session_id)
+        del (self.current_tasks[data['id']])

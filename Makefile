@@ -90,3 +90,7 @@ env_activate:
 .PHONY: env_update
 env_update:
 	conda env update --file environment.yaml --name nlp_api --prune
+
+.PHONY: stress_test
+stress_test:
+	python main.py --start_broker --test --n 100

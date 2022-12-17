@@ -18,28 +18,8 @@ monkey_patch()
 from flask import Flask, session, request
 from flask_socketio import SocketIO, join_room
 from broker.config.WebConfiguration import instance as WebInstance
-
-# check if dev mode
-DEV_MODE = "--dev" in sys.argv
-DEBUG_MODE = "--debug" in sys.argv
-
-# load default web server configuration
-config = WebInstance(dev=DEV_MODE, debug=DEBUG_MODE)
-
-from db.Registry import Registry
-from sockets.RegisterRoute import RegisterRoute
-
-registry = Registry(os.getenv("REDIS_HOST"), os.getenv("REDIS_PORT"))
-
-# config loaded in celery_app
-
-# flask server
-app = Flask("peer_nlp")
-app.config.update(config.flask)
-app.config.update(config.session)
-
-# socketio
-socketio = SocketIO(app, **config.socketio)
+from broker.db.Registry import Registry
+from broker.sockets.RegisterRoute import RegisterRoute
 
 
 def init():
@@ -47,20 +27,22 @@ def init():
     Initialize the flask app and check for the connection to the GROBID client.
     :return:
     """
+    # check if dev mode
+    DEV_MODE = "--dev" in sys.argv
+    DEBUG_MODE = "--debug" in sys.argv
+    config = WebInstance(dev=DEV_MODE, debug=DEBUG_MODE)
+
     print("Initializing server")
+    # flask server
+    app = Flask("broker")
+    app.config.update(config.flask)
+    app.config.update(config.session)
+    socketio = SocketIO(app, **config.socketio)
 
     # connect to registry
+    registry = Registry(os.getenv("REDIS_HOST"), os.getenv("REDIS_PORT"))
     registry.connect()
     registry.clean()
-
-    # load token
-    token = os.getenv("BROKER_TOKEN")
-    if not token:
-        print("No secret token provided in environment. Loading default token...")
-    else:
-        print("Initialized secret token from environment...")
-
-    token = token if token else "this_is_a_random_token_to_verify"
 
     # add socket routes
     routes = RegisterRoute("register", socketio, registry)
@@ -76,9 +58,10 @@ def init():
         """
         if data is None:
             raise ConnectionRefusedError('Authentication data required on connect!')
+        print(data)
 
-        dtoken = data["token"]
-        if dtoken != token:
+        # check simple authentication
+        if "token" in data and os.getenv("BROKER_TOKEN", "this_is_a_random_token_to_verify") != data["token"]:
             raise ConnectionRefusedError('Authentication failed: Token invalid!')
 
         sid = request.sid
@@ -122,9 +105,9 @@ def init():
 
         print(f"Socket connection teared down for sid: {sid}")
 
-
-if __name__ == '__main__':
-    # this method is called when starting the flask server, initializing it to listen to WS requests
-    init()
     print("App starting", config.app)
     socketio.run(app, **config.app, log_output=True)
+
+
+if __name__ == '__main__':
+    init()
