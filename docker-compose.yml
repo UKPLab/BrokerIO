@@ -11,5 +11,16 @@ services:
     command: conda run -n nlp_api --no-capture-output make ENV=${ENV} broker
     ports:
       - ${NLP_PORT}:${NLP_PORT}
+  guard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ENV: ${ENV}
+    depends_on:
+      - redis
+    command: conda run -n nlp_api --no-capture-output make ENV=${ENV} guard
+    ports:
+      - ${NLP_PORT}:${NLP_PORT}
   redis:
     image: redis

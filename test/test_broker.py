@@ -6,7 +6,9 @@ import unittest
 
 from broker import init_logging
 from broker.app import init
-from utils import simple_response_container, simple_client
+from broker.utils import simple_client
+from broker.utils.Guard import Guard
+from utils import simple_response_container
 
 
 class TestBroker(unittest.TestCase):
@@ -38,7 +40,7 @@ class TestBroker(unittest.TestCase):
         message_queue = mp.Manager().Queue(10)
         client = ctx.Process(target=simple_client, args=(
             "http://{}:{}".format(os.getenv("BROKER_HOST"), os.getenv("BROKER_PORT")), os.getenv("BROKER_TOKEN"),
-            "test_skill", client_queue, message_queue))
+            client_queue, message_queue, "test_skill"))
         client.start()
         cls._client = client
         cls._message_queue = message_queue
@@ -68,6 +70,10 @@ class TestBroker(unittest.TestCase):
             cls._broker.join()
 
     def test_simple_request(self):
+        """
+        Test if simple request is working
+        :return:
+        """
 
         ## Test simple response
         self._message_queue.put({'id': "simple", 'name': "test_skill", 'data': time.perf_counter()})
@@ -81,6 +87,10 @@ class TestBroker(unittest.TestCase):
         return message['id'] == "simple"
 
     def test_stats(self):
+        """
+        Test if stats are returned if config['return_stats'] is set to True
+        :return:
+        """
         ## Test simple response
         self._message_queue.put({'id': "stats", 'name': "test_skill",
                                  'config': {'return_stats': True},
@@ -136,6 +146,23 @@ class TestBroker(unittest.TestCase):
             self._client_queue.get()
 
         self.assertTrue(self.test_simple_request())
+
+    def test_guard(self):
+        """
+        Test if guard is working
+        :return:
+        """
+        self._logger.info("Start client ...")
+        ctx = mp.get_context('spawn')
+
+        # TODO assert check if guard is really running
+        guard = Guard("http://{}:{}".format(os.getenv("BROKER_HOST"), os.getenv("BROKER_PORT")),
+                      os.getenv("BROKER_TOKEN"))
+        client = ctx.Process(target=guard.run,
+                             args=())
+        client.start()
+        client.terminate()
+        client.join()
 
 
 if __name__ == '__main__':

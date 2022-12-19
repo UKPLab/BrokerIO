@@ -95,3 +95,8 @@ env_update:
 test:
 	python -m unittest discover test
 
+.PHONY: guard
+guard:
+	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./main.py
+
+
