@@ -1,7 +1,6 @@
 import os
 import random
 import time
-from uuid import uuid4
 
 import logging
 from flask import session
@@ -82,13 +81,15 @@ class RegisterRoute(SocketRoute):
             return
 
         # get all available nodes for skill; get a random owner from the list
-        owners = [a["owner"]["session_id"] for a in self.registry.get_entries() if a["skill"]["name"] == data["name"]]
-        owner = random.choice(owners)
+        if type(data) is dict and "name" in data and "data" in data:
+            owners = [a["owner"]["session_id"] for a in self.registry.get_entries() if a["skill"]["name"] == data["name"]]
+            owner = random.choice(owners)
 
-        # request skill of the owner
-        uid = str(uuid4())
-        self.current_tasks[uid] = Task(task_id=uid, request_id=data['id'], session_id=sid)
-        self.socketio.emit("taskRequest", {'id': uid, 'data': data['data']}, room=owner)
+            # request skill of the owner
+            task = Task(sid)
+            task.set(data)
+            self.current_tasks[task.id] = task
+            self.socketio.emit("taskRequest", {'id': task.id, 'data': data['data']}, room=owner)
 
     def results(self, data):
         """
@@ -98,12 +99,11 @@ class RegisterRoute(SocketRoute):
         if self.quota_results(sid, append=True):
             return
 
-        logging.debug("Get skill results after {:.3f} ms".format(
-            (time.perf_counter() - self.current_tasks[data['id']].start_time) * 1000))
-        logging.debug("Results: ", data)
-        logging.debug("Task: ", self.current_tasks[data['id']].__dict__)
+        task = self.current_tasks[data['id']]
+        task.set_score(data)
 
         self.socketio.emit("skillResults",
-                           {'id': self.current_tasks[data['id']].request_id, 'data': data['data']},
-                           room=self.current_tasks[data['id']].session_id)
-        del (self.current_tasks[data['id']])
+                           task.output(),
+                           room=task.client_session)
+
+        task.close()

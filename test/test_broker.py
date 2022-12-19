@@ -78,6 +78,64 @@ class TestBroker(unittest.TestCase):
 
         self._logger.info("Simple response time: {:3f}ms".format((time.perf_counter() - message['data']) * 1000))
         self.assertEqual(message['id'], "simple")
+        return message['id'] == "simple"
+
+    def test_stats(self):
+        ## Test simple response
+        self._message_queue.put({'id': "stats", 'name': "test_skill",
+                                 'config': {'return_stats': True},
+                                 'data': time.perf_counter()})
+
+        self._logger.info("Wait for response ...")
+
+        message = self._client_queue.get()
+
+        self._logger.info("Simple response time: {:3f}ms".format((time.perf_counter() - message['data']) * 1000))
+        self.assertEqual(message['id'], "stats")
+        self.assertTrue("stats" in message)
+        self._logger.info("Simple duration time: {:3f}ms".format((time.perf_counter() - message['data']) * 1000))
+
+    def test_config(self):
+        """
+        Test different keyword arguments for the config parameter
+        :return:
+        """
+        self._message_queue.put({'id': "stats", 'name': "test_skill",
+                                 'config': {'return_stats': True},
+                                 'data': time.perf_counter()})
+        self._message_queue.put({'id': "stats", 'name': "test_skill",
+                                 'data': time.perf_counter()})
+        self._message_queue.put({'id': "stats", 'name': "test_skill",
+                                 'config': {},
+                                 'data': time.perf_counter()})
+
+        self._logger.info("Wait for response ...")
+
+        message1 = self._client_queue.get()
+        message2 = self._client_queue.get()
+        message3 = self._client_queue.get()
+
+        self.assertEqual(message1['id'], "stats")
+
+    def test_attack(self):
+        """
+        Attacks Broker with fault requests
+        :return:
+        """
+        self._message_queue.put({})
+        self._message_queue.put("")
+        self._message_queue.put([])
+        self._message_queue.put("Test")
+        self._message_queue.put({'1': "2"})
+        self._message_queue.put([1, 2, 3])
+        self._message_queue.put(1)
+        self._message_queue.put(True)
+
+        # Clear queue
+        while not self._client_queue.empty():
+            self._client_queue.get()
+
+        self.assertTrue(self.test_simple_request())
 
 
 if __name__ == '__main__':
