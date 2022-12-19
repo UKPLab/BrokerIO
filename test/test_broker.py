@@ -213,7 +213,7 @@ class TestBroker(unittest.TestCase):
                 for i in range(num_clients):
                     results += check_queues(client_queues, file)
 
-                    message_queues[i].put({'id': "{}-{}".format(requests_per_client, num_clients), 'name': "test_skill",
+                    message_queues[i].put({'id': "{}-{}".format(i, j), 'name': "test_skill",
                                            'config': {'return_stats': True},
                                            'data': {'perf_counter_start': time.perf_counter()}})
 
