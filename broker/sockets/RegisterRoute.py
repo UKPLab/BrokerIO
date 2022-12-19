@@ -3,6 +3,7 @@ import random
 import time
 from uuid import uuid4
 
+import logging
 from flask import session
 
 from broker.db.Announcement import Skill, NetNode
@@ -97,10 +98,10 @@ class RegisterRoute(SocketRoute):
         if self.quota_results(sid, append=True):
             return
 
-        print("Get skill results after {:.3f} ms".format(
+        logging.debug("Get skill results after {:.3f} ms".format(
             (time.perf_counter() - self.current_tasks[data['id']].start_time) * 1000))
-        print("Results: ", data)
-        print("Task: ", self.current_tasks[data['id']].__dict__)
+        logging.debug("Results: ", data)
+        logging.debug("Task: ", self.current_tasks[data['id']].__dict__)
 
         self.socketio.emit("skillResults",
                            {'id': self.current_tasks[data['id']].request_id, 'data': data['data']},

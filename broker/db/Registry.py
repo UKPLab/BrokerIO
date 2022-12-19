@@ -1,7 +1,7 @@
 import json
 from typing import List
 from uuid import uuid4
-
+import logging
 import redis
 
 from broker.db.Announcement import Announcement, Skill, NetNode
@@ -23,27 +23,27 @@ class Registry:
         self.port = redis_port
 
     def connect(self):
-        print(f"Connecting to redis at {self.host}:{self.port}...")
+        logging.info(f"Connecting to redis at {self.host}:{self.port}...")
 
         self.redis = redis.Redis(host=self.host, port=self.port)
         res = self.redis.ping()
 
         assert res, "Failed to connect to REDIS backend. Cannot start registry"
 
-        print(f"Redis connection established: {res}")
+        logging.info(f"Redis connection established: {res}")
 
     def clean(self):
-        print("Cleaning redis store...")
+        logging.info("Cleaning redis store...")
 
         cnt = 0
         for key in self.redis.scan_iter():
             self.redis.delete(key)
             cnt += 1
 
-        print(f"Discarded {cnt} entries from reddis on initialization")
+        logging.info(f"Discarded {cnt} entries from reddis on initialization")
 
     def announce_skill(self, skill: Skill, owner: NetNode):
-        print(f"Registered a new skill: {skill.config['name']} by {owner.session_id}")
+        logging.debug(f"Registered a new skill: {skill.config['name']} by {owner.session_id}")
 
         a = Announcement(str(uuid4()), skill, owner)
 
@@ -55,16 +55,15 @@ class Registry:
         # todo error handling
         a = self.redis.getdel(announcement_id)
         a = json.loads(a.decode('utf-8'))
-        print(a)
 
-        print(f"Unregistered a skill: {a['skill']['name']} by {a['owner']['session_id']}")
+        logging.debug(f"Unregistered a skill: {a['skill']['name']} by {a['owner']['session_id']}")
 
         return a
 
     def get_entries(self, skill_only=False):
         aa = self.redis.keys()
 
-        print("redis keys", aa)
+        logging.debug("redis keys: {}".format(aa))
 
         if skill_only:
             return [self.get_entry(a)['skill'] for a in aa]

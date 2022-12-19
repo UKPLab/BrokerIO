@@ -11,6 +11,7 @@ Author: Nils Dycke (dycke@ukp...)
 
 import redis
 import os
+import logging
 
 # holds the configuration object
 _singleton = None
@@ -73,7 +74,7 @@ def instance(**kwargs):
         _singleton = WebConfiguration(**kwargs)
 
     if len(kwargs) > 0:
-        print("WARNING: Singleton WebConfiguration already exists; you are trying to reconfigure it, which failed.")
+        logging.debug("WARNING: Singleton WebConfiguration already exists; you are trying to reconfigure it, which failed.")
 
     return _singleton
 
@@ -104,7 +105,7 @@ class WebConfiguration:
         else:
             self.debug = False
 
-        print(self.conf)
+        logging.debug(self.conf)
 
         self.flask = None
         self.session = None
@@ -157,8 +158,6 @@ class WebConfiguration:
 
         self.socketio = {
             "cors_allowed_origins": '*',
-            "logger": self.conf["log"],
-            "engineio_logger": self.conf["log"]
         }
 
         self.app = {

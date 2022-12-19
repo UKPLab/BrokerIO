@@ -93,4 +93,5 @@ env_update:
 
 .PHONY: test
 test:
-	python main.py --start_broker --test --n 100
+	python -m unittest discover test
+

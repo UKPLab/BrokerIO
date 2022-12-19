@@ -20,6 +20,8 @@ from flask_socketio import SocketIO, join_room
 from broker.config.WebConfiguration import instance as WebInstance
 from broker.db.Registry import Registry
 from broker.sockets.RegisterRoute import RegisterRoute
+import logging
+from broker import init_logging
 
 
 def init():
@@ -27,17 +29,20 @@ def init():
     Initialize the flask app and check for the connection to the GROBID client.
     :return:
     """
+    logger = init_logging("broker")
+
     # check if dev mode
     DEV_MODE = "--dev" in sys.argv
     DEBUG_MODE = "--debug" in sys.argv
     config = WebInstance(dev=DEV_MODE, debug=DEBUG_MODE)
 
-    print("Initializing server")
+    logger.info("Initializing server...")
     # flask server
     app = Flask("broker")
+    app.logger = logger
     app.config.update(config.flask)
     app.config.update(config.session)
-    socketio = SocketIO(app, **config.socketio)
+    socketio = SocketIO(app, **config.socketio, logger=logger, engineio_logger=logger)
 
     # connect to registry
     registry = Registry(os.getenv("REDIS_HOST"), os.getenv("REDIS_PORT"))
@@ -58,7 +63,7 @@ def init():
         """
         if data is None:
             raise ConnectionRefusedError('Authentication data required on connect!')
-        print(data)
+        logger.debug(data)
 
         # check simple authentication
         if "token" in data and os.getenv("BROKER_TOKEN", "this_is_a_random_token_to_verify") != data["token"]:
@@ -68,7 +73,7 @@ def init():
         session["sid"] = sid
         join_room(sid)
 
-        print(f"New socket connection established with sid: {sid} and ip: {request.remote_addr}")
+        logger.debug(f"New socket connection established with sid: {sid} and ip: {request.remote_addr}")
 
         return sid
 
@@ -92,7 +97,6 @@ def init():
 
         # Removes owner on skill disconnection and inform other nodes
         a = registry.remove_owner(sid)
-        print(a)
         if a is not None:
             skill = registry.get_skill(a['skill']['name'], with_config=False)
             socketio.emit("skillUpdate", [skill], broadcast=True, include_self=False)
@@ -103,9 +107,9 @@ def init():
         # 2. Client disconnect
         # TODO send cancel request via socket io emit to container
 
-        print(f"Socket connection teared down for sid: {sid}")
+        logger.debug(f"Socket connection teared down for sid: {sid}")
 
-    print("App starting", config.app)
+    logger.info("App starting ...", config.app)
     socketio.run(app, **config.app, log_output=True)
 
 
