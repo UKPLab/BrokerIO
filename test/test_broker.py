@@ -1,6 +1,8 @@
+import json
 import logging
 import multiprocessing as mp
 import os
+import queue
 import time
 import unittest
 
@@ -163,6 +165,74 @@ class TestBroker(unittest.TestCase):
         client.start()
         client.terminate()
         client.join()
+
+    def test_stressTest(self):
+        """
+        Stress test for broker with multiple clients
+        :return:
+        """
+        self._logger.info("Start clients ...")
+        num_clients = 2
+        requests_per_client = 100
+        client_queues = {}
+        message_queues = {}
+        clients = {}
+        timeout = 0.01
+        for i in range(num_clients):
+            self._logger.debug("Start client {}".format(i))
+            ctx = mp.get_context('spawn')
+            client_queues[i] = mp.Manager().Queue(int(requests_per_client / 2))
+            message_queues[i] = mp.Manager().Queue(int(requests_per_client / 2))
+            clients[i] = ctx.Process(target=simple_client, args=(
+                "http://{}:{}".format(os.getenv("BROKER_HOST"), os.getenv("BROKER_PORT")),
+                os.getenv("BROKER_TOKEN"), client_queues[i], message_queues[i], "test_skill"))
+            clients[i].start()
+
+        self._logger.info("Waiting for clients to be ready ...")
+        for i in range(num_clients):
+            message = client_queues[i].get()
+            self._logger.debug("Main process received message: {}".format(message))
+        self._logger.info("Clients ready!")
+
+        def check_queues(queues, file):
+            n = 0
+            for q in queues:
+                try:
+                    m = queues[q].get(block=False)
+                    self._logger.debug("Received message: {}".format(m))
+                    file.write("{}\n".format(json.dumps({"perf_counter_end": time.perf_counter(), "data": m})))
+                    n += 1
+                except queue.Empty:
+                    pass
+            return n
+
+        self._logger.info("Start test ...")
+        results = 0
+        with open("./test/results.jsonl", "w") as file:
+            for l in range(requests_per_client):
+                for i in range(num_clients):
+                    results += check_queues(client_queues, file)
+
+                    message_queues[i].put({'id': "{}-{}".format(requests_per_client, num_clients), 'name': "test_skill",
+                                           'config': {'return_stats': True},
+                                           'data': {'perf_counter_start': time.perf_counter()}})
+
+            self._logger.info("Waiting for responses ...")
+            for l in range(requests_per_client):
+                for i in range(num_clients):
+                    try:
+                        message = client_queues[i].get(timeout=timeout)
+                        file.write("{}\n".format(json.dumps({"perf_counter_end": time.perf_counter(), "data": message})))
+                        self._logger.debug("Main process received message: {} {}/{}".format(message, i * l,
+                                                                                            requests_per_client * num_clients))
+                    except queue.Empty:
+                        self._logger.error(
+                            "Main process received no message: {}/{}".format(i * l, requests_per_client * num_clients))
+        for i in range(num_clients):
+            clients[i].terminate()
+
+        for i in range(num_clients):
+            clients[i].join()
 
 
 if __name__ == '__main__':
