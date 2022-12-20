@@ -36,9 +36,9 @@ build_test:
       - apt update && apt install make -y
     script:
       - make ENV=main build
+      - make test-build
       - tar -czvf ${PWD}/doc_api.tar.gz ./docs/html
       - tar -czvf ${PWD}/doc_main.tar.gz ./docs/build
-      - make test-build
     artifacts:
       name: "documentation"
       paths:
