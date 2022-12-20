@@ -11,46 +11,44 @@ default: help
 .PHONY: help
 help:
 	@echo "make clean             	Delete development files"
-	@echo "make dev          		Run the flask app. Requires you to run make nlp_services in another terminal first"
-	@echo "make build      			Build NLP services"
+	@echo "make guard             	Start guard"
+	@echo "make broker              Start broker"
+	@echo "make dev               	Start broker in development environment"
+	@echo "make docker		  	    Start docker images for local development"
+	@echo "make doc 			 	Generate documentation"
+	@echo "make build      			Build all docker images - complete environment"
 	@echo "make env_create			Create a virtual environment"
 	@echo "make env_activate		Activate the virtual environment"
 	@echo "make env_update			Update the virtual environment"
-	@echo "make docker		  	    Start docker images for local development"
-	@echo "make doc 			 	Generate documentation"
+
+.PHONY: guard
+guard:
+	export PYTHONPATH="${PYTHONPATH}:${PWD}" && python3 ./main.py
+
+.PHONY: docker
+docker:
+	docker-compose -f docker-compose.yml -f docker-dev.yml up redis
 
 .PHONY: dev
-dev: docker
-	make run
+dev:
+	export PYTHONPATH="${PYTHONPATH}:${PWD}" && python3 ./broker/app.py --dev
 
-.PHONY: doc
-doc: doc_asyncapi doc_sphinx
+.PHONY: test
+test:
+	export PYTHONPATH="${PYTHONPATH}:${PWD}" && python3 -m unittest discover test
 
-.PHONY: clean_doc
-clean_doc:
-	cd ./docs && make clean
-	rm -rf docs/docs
+.PHONY: test-build
+test-build:
+	docker run --env-file ".env.main" --network=nlp_api_main_default broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
 
-.PHONY: doc_asyncapi
-doc_asyncapi:
-	docker run --rm -v ${PWD}/docs/api.yml:/app/api.yml -v ${PWD}/docs/html:/app/output asyncapi/generator --force-write -o ./output api.yml @asyncapi/html-template
+.PHONY: test-build-dev
+test-build-dev:
+	docker run --env-file ".env.dev" --network=nlp_api_dev_default broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
 
-.PHONY: doc_sphinx
-doc_sphinx:
-	cd docs && make clean
-	cd docs && make html
-
-.PHONY: run
-run:
-	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev
-
-.PHONY: debug
-debug:
-	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py --dev --debug
 
 .PHONY: broker
 broker:
-	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./broker/app.py
+	export PYTHONPATH="${PYTHONPATH}:${PWD}" && python3 ./broker/app.py
 
 .PHONY: build
 build:
@@ -75,10 +73,6 @@ clean:
 	docker-compose rm -f -s -v
 	docker network rm nlp_api_default || echo "IGNORING ERROR"
 
-.PHONY: docker
-docker:
-	docker-compose -f docker-dev.yml up redis
-
 .PHONY: env_create
 env_create:
 	conda env create -f environment.yaml
@@ -91,12 +85,21 @@ env_activate:
 env_update:
 	conda env update --file environment.yaml --name nlp_api --prune
 
-.PHONY: test
-test:
-	python -m unittest discover test
+.PHONY: doc
+doc: doc_asyncapi doc_sphinx
 
-.PHONY: guard
-guard:
-	export PYTHONPATH="${PYTHONPATH}:$(CURDIR)" && python3 ./main.py
+.PHONY: clean_doc
+clean_doc:
+	cd ./docs && make clean
+	rm -rf docs/docs
+
+.PHONY: doc_asyncapi
+doc_asyncapi:
+	docker run --rm -v ${PWD}/docs/api.yml:/app/api.yml -v ${PWD}/docs/html:/app/output asyncapi/generator --force-write -o ./output api.yml @asyncapi/html-template
+
+.PHONY: doc_sphinx
+doc_sphinx:
+	docker-compose -f docker-compose.yml build docs_sphinx
+	docker run --rm -v ${PWD}/docs:/docs broker_docs_sphinx make html
 
 

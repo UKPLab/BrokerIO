@@ -36,12 +36,14 @@ class Task:
         """
         output = {
             'id': self.request_id,
-            'data': self.results['data']
+            'data': self.results['data'] if isinstance(self.results, dict) and 'data' in self.results.keys() else {}
         }
         if self.config and 'return_stats' in self.config:
             output['stats'] = {
                 'duration': self.duration
             }
+        if self.config and 'min_delay' in self.config:
+            time.sleep(self.config['min_delay'] - (time.perf_counter() - self.time_start))
         return output
 
     def close(self):

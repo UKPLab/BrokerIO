@@ -18,5 +18,4 @@ dependencies:
     - aiohttp>=3.8.3
     - redis>=4.3.4
     - tqdm>=4.62.3
-    - Sphinx>=4.3.1
-    - sphinx-rtd-theme>=1.0.0
+    - python-dotenv>=0.21.0

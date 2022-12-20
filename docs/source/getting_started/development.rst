@@ -28,14 +28,22 @@ To have a fully running development setup run each command in different terminal
     make docker
     make run
 
+.. note::
+
+    You can also build the environment locally, but the connection to redis might be broken.
+    Use `make ENV=dev build` to get a running local environment.
+
 Test
 ****
 
-To test if the server is available and running, run the following command:
+To test the broker, there are several unit tests available.
+To run them, execute the following command:
 
 .. code-block:: shell
 
     make test
+
+The test are located in the ``tests`` folder.
 
 Debugging
 *********

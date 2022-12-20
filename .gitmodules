@@ -1,4 +1,0 @@
-[submodule "grobid_client_python"]
-	path = grobid_client_python
-	url = https://github.com/kermitt2/grobid_client_python
-    ignore = dirty

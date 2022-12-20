@@ -16,8 +16,8 @@ class Guard:
         ctx = mp.get_context('spawn')
         client_queue = mp.Manager().Queue(12)
         message_queue = mp.Manager().Queue(12)
-        client = ctx.Process(target=simple_client, args=(
-            self.url, self.token, client_queue, message_queue))
+        client = ctx.Process(target=simple_client, args=("Guard",
+                                                         self.url, self.token, client_queue, message_queue))
         client.start()
 
         while True:

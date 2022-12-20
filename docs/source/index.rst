@@ -30,11 +30,13 @@ The models should therefore connect to the NLP Broker independently when availab
    getting_started/installation
    getting_started/development
 
+
 .. toctree::
    :maxdepth: 1
    :caption: Skills
 
    skills/definition
+   skills/configuration
    skills/skill_definition_file
    skills/examples
 
