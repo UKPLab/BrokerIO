@@ -27,9 +27,7 @@ services:
 
 build_test:
     stage: build
-    image:
-      name: docker/compose:debian-1.29.2
-      stage: build
+    image: docker/compose:debian-1.29.2
     before_script:
       - *add-debian-mirror
       - docker info
