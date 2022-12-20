@@ -38,7 +38,7 @@ build_test:
       - make ENV=main build
       - tar -czvf ${PWD}/doc_api.tar.gz ./docs/html
       - tar -czvf ${PWD}/doc_main.tar.gz ./docs/build
-      - make build-test
+      - make test-build
     artifacts:
       name: "documentation"
       paths:
