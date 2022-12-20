@@ -1,7 +1,6 @@
 # https://docs.gitlab.com/ee/ci/yaml/
 
 stages:          # List of stages for jobs, and their order of execution
-  - test
   - build
   - deploy
 
@@ -26,8 +25,8 @@ services:
   - echo "deb-src ${DEBIAN_MIRROR} stretch main" >> /etc/apt/sources.list
   - cat /etc/apt/sources.list
 
-build&test:
-    stage: test
+build_test:
+    stage: build
     image:
       name: docker/compose:debian-1.29.2
       stage: build
@@ -58,7 +57,7 @@ build&test:
 deploy-dev:
   stage: deploy
   image: alpine:3.16
-  needs: ["build&test"]
+  needs: ["build_test"]
   script:
     - chmod og= $PEER_RSAKEY
     - *setup-ssh
@@ -73,7 +72,7 @@ deploy-dev:
 deploy-main:
   stage: deploy
   image: alpine:3.16
-  needs: ["build&test"]
+  needs: ["build_test"]
   script:
     - chmod og= $PEER_RSAKEY
     - *setup-ssh
