@@ -39,11 +39,11 @@ test:
 
 .PHONY: test-build
 test-build:
-	docker run --env-file ".env.main" --network=nlp_api_main_default broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
+	docker run --env-file ".env.main" -v ${PWD}/test:/test --network=nlp_api_main_default  broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
 
 .PHONY: test-build-dev
 test-build-dev:
-	docker run --env-file ".env.dev" --network=nlp_api_dev_default broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
+	docker run --env-file ".env.dev" -v ${PWD}/test:/test --network=nlp_api_dev_default broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
 
 
 .PHONY: broker

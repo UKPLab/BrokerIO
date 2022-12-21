@@ -21,7 +21,7 @@ class TestClient:
         self.client = ctx.Process(target=simple_client, args=(self.name,
                                                               self.url, self.token, self.client_queue,
                                                               self.message_queue,
-                                                              os.getenv("TEST_CLIENT_LOGGING_LEVEL", "INFO")))
+                                                              os.getenv("TEST_CLIENT_LOGGING_LEVEL", "ERROR")))
         self.client.start()
 
         self._wait_for_start()
