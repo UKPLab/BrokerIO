@@ -167,7 +167,7 @@ class TestBroker(unittest.TestCase):
         client.terminate()
         client.join()
 
-    def test_stressTest(self):
+    def stressTest(self):
         """
         Stress test for broker with multiple clients
         :return:

@@ -37,6 +37,11 @@ dev:
 test:
 	export PYTHONPATH="${PYTHONPATH}:${PWD}" && python3 -m unittest discover test
 
+.PHONY: stress
+stress:
+	export PYTHONPATH="${PYTHONPATH}:${PWD}" && python3 -u -m unittest test.test_broker.TestBroker.stressTest
+
+
 .PHONY: test-build
 test-build:
 	docker run --env-file ".env.main" -v ${PWD}/test:/test --network=nlp_api_main_default  broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
@@ -44,6 +49,14 @@ test-build:
 .PHONY: test-build-dev
 test-build-dev:
 	docker run --env-file ".env.dev" -v ${PWD}/test:/test --network=nlp_api_dev_default broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
+
+.PHONY: test-stress
+test-build:
+	docker run --env-file ".env.main" -v ${PWD}/test:/test --network=nlp_api_main_default  broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest test.test_broker.TestBroker.stressTest
+
+.PHONY: test-stress-dev
+test-build-dev:
+	docker run --env-file ".env.dev" -v ${PWD}/test:/test --network=nlp_api_dev_default broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest test.test_broker.TestBroker.stressTest
 
 
 .PHONY: broker

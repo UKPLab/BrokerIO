@@ -3,7 +3,7 @@
 stages: # List of stages for jobs, and their order of execution
   - build
   - deploy
-  - test
+  - stressTest
 
 variables:
   DOCKER_HOST: tcp://docker:2375
@@ -26,7 +26,7 @@ services:
   - echo "deb-src ${DEBIAN_MIRROR} stretch main" >> /etc/apt/sources.list
   - cat /etc/apt/sources.list
 
-build:
+build_test:
   stage: build
   image: docker/compose:debian-1.29.2
   before_script:
@@ -37,6 +37,7 @@ build:
     - apt update && apt install make -y
   script:
     - make ENV=main build
+    - make ENV=main test-build
     - docker wait nlp_api_main_docs_asyncapi_1
     - docker wait nlp_api_main_docs_sphinx_1
     - tar -czvf ${PWD}/doc_api.tar.gz ./docs/html
@@ -95,7 +96,7 @@ test_dev:
   script:
     - chmod og= $PEER_RSAKEY
     - *setup-ssh
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=dev test-build-dev"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=dev test-stress-dev"
     - scp -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP:~/nlp_api/test/stress_results.jsonl stress_results.jsonl
   only:
     - dev
@@ -111,7 +112,7 @@ test_main:
   script:
     - chmod og= $PEER_RSAKEY
     - *setup-ssh
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=main test-build"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=main test-stress"
     - scp -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP:~/nlp_api/test/stress_results.jsonl stress_results.jsonl
   only:
     - main
