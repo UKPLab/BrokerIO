@@ -24,14 +24,14 @@ class TestBroker(unittest.TestCase):
     def setUpClass(cls):
         if os.getenv("TEST_URL", None) is None:
             load_dotenv(dotenv_path=".env")
-        logger = init_logging(name="Unittest", level=logging.DEBUG)
+        logger = init_logging(name="Unittest", level=logging.getLevelName(os.getenv("TEST_LOGGING_LEVEL", "INFO")))
         cls._logger = logger
 
         logger.info("Starting broker ...")
-        logger.debug("Broker URL: {}".format(os.getenv("TEST_URL")))
-        logger.debug("Broker Token: {}".format(os.getenv("TEST_TOKEN")))
-        logger.debug("Broker Skill: {}".format("test_skill"))
-        logger.debug("Start Broker? {}".format(os.getenv("TEST_START_BROKER")))
+        logger.info("Broker URL: {}".format(os.getenv("TEST_URL")))
+        logger.info("Broker Token: {}".format(os.getenv("TEST_TOKEN")))
+        logger.info("Broker Skill: {}".format("test_skill"))
+        logger.info("Start Broker? {}".format(os.getenv("TEST_START_BROKER")))
         if int(os.getenv("TEST_START_BROKER")) == 0:
             logger.info("Skip creating broker.")
         else:
@@ -84,7 +84,7 @@ class TestBroker(unittest.TestCase):
 
         message = self.client.get()
 
-        self._logger.debug("Main process received message: {}".format(message))
+        self._logger.info("Main process received message: {}".format(message))
 
         self._logger.info("Simple response time: {:3f}ms".format((time.perf_counter() - message['data']) * 1000))
         self.assertEqual(message['id'], "simple")
@@ -284,7 +284,6 @@ class TestBroker(unittest.TestCase):
         self.assertLess(len(messages), total_requests)
         self.assertEqual(int(os.getenv("QUOTA_CLIENTS")), len(messages))
         self._logger.info("Messages received: {}".format(messages))
-
 
     def test_delay(self):
         """

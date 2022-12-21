@@ -7,8 +7,9 @@ import socketio
 from broker import init_logging
 
 
-def simple_client(name, url, token, client_queue: mp.Queue, message_queue: mp.Queue, skill_name="test_skill"):
-    logger = init_logging(name, logging.DEBUG)
+def simple_client(name, url, token, client_queue: mp.Queue, message_queue: mp.Queue, skill_name="test_skill",
+                  logging_level="INFO"):
+    logger = init_logging(name, level=logging.getLevelName(logging_level))
     sio = socketio.Client(logger=logger)
     initialized = False
 
@@ -27,7 +28,7 @@ def simple_client(name, url, token, client_queue: mp.Queue, message_queue: mp.Qu
     # connect to Broker
     while True:
         if sio.connected:
-            logger.info("Waiting for next message...")
+            logger.debug("Waiting for next message...")
             message = message_queue.get()
             sio.emit('skillRequest', message)
             logger.debug("Send message: {}".format(message))
@@ -37,5 +38,3 @@ def simple_client(name, url, token, client_queue: mp.Queue, message_queue: mp.Qu
             except socketio.exceptions.ConnectionError:
                 logger.error("Connection to broker failed. Trying again in 5 seconds ...")
                 time.sleep(5)
-
-

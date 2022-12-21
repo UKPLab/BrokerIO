@@ -16,7 +16,7 @@ class RegisterRoute(SocketRoute):
     def __init__(self, name, socketio, registry: Registry):
         super().__init__(name, socketio)
         self.current_tasks = {}
-        self.quota = Quota(max_len=int(os.getenv("QUOTA_CLIENTS", 20))+2)
+        self.quota = Quota(max_len=int(os.getenv("QUOTA_CLIENTS", 20))+1)
         self.quota_results = Quota(max_len=int(os.getenv("QUOTA_RESULTS", 100))+1)
         self.registry = registry
 
