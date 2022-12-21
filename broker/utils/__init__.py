@@ -20,13 +20,8 @@ def simple_client(name, url, token, client_queue: mp.Queue, message_queue: mp.Qu
                 if skill['name'] == skill_name:
                     sio.emit('skillGetConfig', {'name': skill['name']})
 
-    def skill_config(data, init):
-        logger.debug("skillConfig: {}".format(data))
-        if data['name'] == skill_name:
-            client_queue.put(data)
-
-    sio.on('connect', lambda: sio.emit('skillGetAll'))
-    sio.on('skillConfig', lambda data: skill_config(data, initialized))
+    sio.on('connect', lambda: [sio.emit('skillGetAll'), client_queue.put("connected")])
+    sio.on('skillConfig', lambda data: logger.debug("skillConfig: {}".format(data)))
     sio.on('skillResults', lambda data: [logger.debug("Skill results: {}".format(data)), client_queue.put(data)])
 
     # connect to Broker

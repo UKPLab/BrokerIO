@@ -16,7 +16,7 @@ class RegisterRoute(SocketRoute):
     def __init__(self, name, socketio, registry: Registry):
         super().__init__(name, socketio)
         self.current_tasks = {}
-        self.quota = Quota(max_len=int(os.getenv("QUOTA_CLIENTS", 20))+1)
+        self.quota = Quota(max_len=int(os.getenv("QUOTA_CLIENTS", 20))+2)
         self.quota_results = Quota(max_len=int(os.getenv("QUOTA_RESULTS", 100))+1)
         self.registry = registry
 
@@ -101,7 +101,7 @@ class RegisterRoute(SocketRoute):
 
         if type(data) is dict and "id" in data and "data" in data:
             task = self.current_tasks[data['id']]
-            task.set_score(data)
+            task.set_score(sid, data)
 
             self.socketio.emit("skillResults",
                                task.output(),

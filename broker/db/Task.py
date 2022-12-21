@@ -4,6 +4,7 @@ from uuid import uuid4
 
 class Task:
     def __init__(self, client_session):
+        self.results_session = None
         self.client_session = client_session
         self.id = str(uuid4())
 
@@ -20,12 +21,13 @@ class Task:
         self.request_id = data['id']
         self.time_last_update = time.perf_counter()
 
-    def set_score(self, data):
+    def set_score(self, sid, data):
         """
         Set the results data of the task from container
         :param data: the output field in SDF format
         :return:
         """
+        self.results_session = sid
         self.results = data
         self.duration = time.perf_counter() - self.time_start
 
@@ -40,7 +42,8 @@ class Task:
         }
         if self.config and 'return_stats' in self.config:
             output['stats'] = {
-                'duration': self.duration
+                'duration': self.duration,
+                'host': self.results_session,
             }
         if self.config and 'min_delay' in self.config:
             time.sleep(self.config['min_delay'] - (time.perf_counter() - self.time_start))

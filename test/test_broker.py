@@ -1,3 +1,4 @@
+import json
 import logging
 import multiprocessing as mp
 import os
@@ -8,11 +9,9 @@ from dotenv import load_dotenv
 
 from broker import init_logging
 from broker.app import init
-from broker.utils import simple_client
 from broker.utils.Guard import Guard
 from test.TestClient import TestClient
-from test.utils import check_queue
-from test.utils import simple_response_container
+from test.TestContainer import TestContainer
 
 
 class TestBroker(unittest.TestCase):
@@ -28,14 +27,6 @@ class TestBroker(unittest.TestCase):
         logger = init_logging(name="Unittest", level=logging.DEBUG)
         cls._logger = logger
 
-        logger.info("Starting response container ...")
-        ctx = mp.get_context('spawn')
-        container = ctx.Process(target=simple_response_container, args=(
-            os.getenv("TEST_URL"), os.getenv("TEST_TOKEN"),
-            "test_skill"))
-        container.start()
-        cls._container = container
-
         logger.info("Starting broker ...")
         logger.debug("Broker URL: {}".format(os.getenv("TEST_URL")))
         logger.debug("Broker Token: {}".format(os.getenv("TEST_TOKEN")))
@@ -49,6 +40,11 @@ class TestBroker(unittest.TestCase):
             broker.start()
             cls._broker = broker
 
+        logger.info("Starting response container ...")
+        container = TestContainer(logger, os.getenv("TEST_URL"), os.getenv("TEST_TOKEN"), "test_skill")
+        container.start()
+        cls._container = container
+
         logger.info("Starting client for testing that the environment is working ...")
         client = TestClient(logger, os.getenv("TEST_URL"), os.getenv("TEST_TOKEN"), "test_skill")
         client.start()
@@ -58,8 +54,7 @@ class TestBroker(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls._logger.info("Stopping response container ...")
-        cls._container.terminate()
-        cls._container.join()
+        cls._container.stop()
 
         cls._logger.info("Stopping broker ...")
         if int(os.getenv("TEST_START_BROKER")) == 0:
@@ -71,7 +66,7 @@ class TestBroker(unittest.TestCase):
     def setUp(self) -> None:
         self._logger.info("Start new client ...")
         self.client = TestClient(self._logger, os.getenv("TEST_URL"), os.getenv("TEST_TOKEN"), "test_skill",
-                                 2 * int(os.getenv("QUOTA_CLIENTS")))
+                                 queue_size=2 * int(os.getenv("QUOTA_CLIENTS")))
         self.client.start()
 
     def tearDown(self) -> None:
@@ -177,64 +172,87 @@ class TestBroker(unittest.TestCase):
         Stress test for broker with multiple clients
         :return:
         """
-        self._logger.info("Start clients ...")
-        num_clients = 2
-        requests_per_client = 100
-        client_queues = {}
-        message_queues = {}
-        clients = {}
-        timeout = 0.01
-        delay = 0.06  # Due to quota limit
+        test_start = time.perf_counter()
+        max_clients = int(os.getenv("TEST_STRESS_MAX_CLIENTS"))
+        max_container = int(os.getenv("TEST_STRESS_MAX_CONTAINER"))
+        max_messages = int(os.getenv("TEST_STRESS_MAX_MESSAGES"))
 
-        for i in range(num_clients):
-            self._logger.debug("Start client {}".format(i))
-            ctx = mp.get_context('spawn')
-            client_queues[i] = mp.Manager().Queue(int(requests_per_client / 2))
-            message_queues[i] = mp.Manager().Queue(int(requests_per_client / 2))
-            clients[i] = ctx.Process(target=simple_client, args=("Client_{}".format(i),
-                                                                 os.getenv("TEST_URL"),
-                                                                 os.getenv("TEST_TOKEN"), client_queues[i],
-                                                                 message_queues[i], "test_skill"))
-            clients[i].start()
+        # save all results in a file
+        with open("./test/stress_results.jsonl", "w") as file:
 
-        self._logger.info("Waiting for clients to be ready ...")
-        for i in range(num_clients):
-            message = client_queues[i].get()
-            self._logger.debug("Main process received message: {}".format(message))
-        self._logger.info("Clients ready!")
+            containers = []
+            clients = []
 
-        self._logger.info("Start test ...")
-        results = 0
-        with open("./test/results.jsonl", "w") as file:
-            for l in range(requests_per_client):
-                for i in range(num_clients):
-                    if check_queue(client_queues[i], file):
-                        results += 1
+            def client_check(c):
+                m = c.check_queue()
+                if m:
+                    file.write("{}\n".format(json.dumps({
+                        "time": time.perf_counter() - test_start,
+                        "duration_container": m['stats']['duration'],
+                        "duration_request": time.perf_counter() - m['data']['start'],
+                        'start': time.perf_counter(),
+                        'client': m['data']['client'],
+                        'container': m['stats']['host'],
+                        'delay': m['data']['delay'],
+                        'message_id': m['data']['message'],
+                        'data_length': len(json.dumps(m['data'])),
+                        'current_clients': len(clients),
+                        'current_containers': len(containers),
+                        'max_clients': max_clients,
+                        'max_containers': max_container,
+                        'max_messages': max_messages,
+                    })))
 
-                    message_queues[i].put({'id': "{}-{}".format(i, l), 'name': "test_skill",
-                                           'config': {'return_stats': True},
-                                           'data': {'perf_counter_start': time.perf_counter()}})
-                time.sleep(delay)
+            self._logger.info("Start stress test ...")
+            for container_i in range(1, max_container + 1):
+                for client_i in range(1, max_clients + 1):
+
+                    # start container
+                    while len(containers) < container_i:
+                        self._logger.info("Start container {} ...".format(len(containers) + 1))
+                        container = TestContainer(self._logger, os.getenv("TEST_URL"), os.getenv("TEST_TOKEN"),
+                                                  "skill_test",
+                                                  name="Container_{}".format(len(containers) + 1))
+                        container.start()
+                        containers.append(container)
+
+                    # start client
+                    while len(clients) < client_i:
+                        self._logger.info("Start client {} ...".format(len(clients) + 1))
+                        client = TestClient(self._logger, os.getenv("TEST_URL"), os.getenv("TEST_TOKEN"),
+                                            name="Client_{}".format(len(clients) + 1))
+                        client.start()
+                        clients.append(client)
+
+                    # send request
+                    self._logger.info("Send request ...")
+                    for i, client in enumerate(clients):
+                        for j, container in enumerate(containers):
+                            for delay in [0, 25, 50]:  # ms
+                                for message_i in range(1, max_messages + 1, 10):
+                                    client_check(client)
+                                    client.put({'id': "stress_{}_{}_{}_{}".format(i, j, delay, message_i),
+                                                'name': "skill_test",
+                                                'data': {
+                                                    'start': time.perf_counter(),
+                                                    'client': i,
+                                                    'delay': delay,
+                                                    'message': message_i,
+                                                },
+                                                'config': {'return_stats': True}})
+                                    time.sleep(delay / 1000)
 
             self._logger.info("Check if there are open responses?")
-            end = time.perf_counter() + timeout
-            while results < requests_per_client * num_clients and time.perf_counter() < end:
-                for i in range(num_clients):
-                    if check_queue(client_queues[i], file):
-                        results += 1
+            end = time.perf_counter() + 5
+            while time.perf_counter() < end:
+                for client in clients:
+                    client_check(client)
 
-            if results < requests_per_client * num_clients:
-                self._logger.error("Not all responses received!")
-            else:
-                self._logger.info("All responses received!")
-
-            self.assertEqual(results, requests_per_client * num_clients)
-
-        for i in range(num_clients):
-            clients[i].terminate()
-
-        for i in range(num_clients):
-            clients[i].join()
+        self._logger.info("Stop all clients and containers ...")
+        for client in clients:
+            client.stop()
+        for container in containers:
+            container.stop()
 
     def test_quota(self):
         """
@@ -242,32 +260,31 @@ class TestBroker(unittest.TestCase):
         :return:
         """
 
-        self._logger.info("Start new client ...")
-        ctx = mp.get_context('spawn')
-        c_queue = mp.Manager().Queue(2 * int(os.getenv("QUOTA_CLIENTS")))
-        m_queue = mp.Manager().Queue(2 * int(os.getenv("QUOTA_CLIENTS")))
-        client = ctx.Process(target=simple_client, args=("TestClient",
-                                                         os.getenv("TEST_URL"),
-                                                         os.getenv("TEST_TOKEN"), c_queue, m_queue, "test_skill"))
-        client.start()
+        end = time.perf_counter() + 0.5
+        total_requests = 0
+        while time.perf_counter() < end:
+            total_requests += 1
+            self.client.put({'id': "quota", 'name': "test_skill",
+                             'data': {'start': time.perf_counter(), 'request': total_requests}})
 
-        results = 0
-        start = time.perf_counter()
-        while time.perf_counter() - start < 1:
-            m_queue.put({'id': "quota", 'name': "test_skill",
-                         'config': {'return_stats': True},
-                         'data': time.perf_counter()})
-
-        timeout = time.perf_counter() + 3
+        timeout = time.perf_counter() + 2
+        first_message = None
+        last_message = None
+        messages = []
         while time.perf_counter() < timeout:
-            if check_queue(c_queue):
-                results += 1
+            m = self.client.check_queue()
+            if m and m['id'] == "quota":
+                if len(messages) == 0:
+                    first_message = m['data']['start']
+                last_message = m['data']['start']
+                messages.append(m['data']['request'])
 
-        self._logger.debug("Stop client ...")
-        client.terminate()
-        client.join()
+        self._logger.info("Total requests sent: {}".format(total_requests))
+        self._logger.info("Time between first and last received message: {}".format(last_message - first_message))
+        self.assertLess(len(messages), total_requests)
+        self.assertEqual(int(os.getenv("QUOTA_CLIENTS")), len(messages))
+        self._logger.info("Messages received: {}".format(messages))
 
-        self.assertEqual(int(os.getenv("QUOTA_CLIENTS")), results)
 
     def test_delay(self):
         """
