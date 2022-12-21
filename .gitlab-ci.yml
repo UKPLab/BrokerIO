@@ -98,6 +98,7 @@ stressTest_dev:
     - *setup-ssh
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=dev test-stress-dev"
     - scp -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP:~/nlp_api/test/stress_results.jsonl stress_results.jsonl
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && rm test/stress_results.jsonl"
   only:
     - dev
   artifacts:
@@ -114,6 +115,8 @@ stressTest_main:
     - *setup-ssh
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=main test-stress"
     - scp -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP:~/nlp_api/test/stress_results.jsonl stress_results.jsonl
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && rm test/stress_results.jsonl"
+
   only:
     - main
   artifacts:
