@@ -178,7 +178,7 @@ class TestBroker(unittest.TestCase):
         max_messages = int(os.getenv("TEST_STRESS_MAX_MESSAGES"))
 
         # save all results in a file
-        with open("./test/stress_results.jsonl", "w") as file:
+        with open("./stress_results.jsonl", "w") as file:
 
             containers = []
             clients = []

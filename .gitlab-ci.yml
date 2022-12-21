@@ -41,7 +41,6 @@ build_test:
       - docker wait nlp_api_main_docs_sphinx_1
       - tar -czvf ${PWD}/doc_api.tar.gz ./docs/html
       - tar -czvf ${PWD}/doc_main.tar.gz ./docs/build
-      - cp ./test/stress_results.jsonl ${PWD}/stress_results.jsonl
     artifacts:
       name: "documentation"
       paths:
