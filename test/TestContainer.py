@@ -1,4 +1,5 @@
 import multiprocessing as mp
+import os
 
 from test import simple_response_container
 
@@ -18,7 +19,7 @@ class TestContainer:
         ctx = mp.get_context('spawn')
         self.container = ctx.Process(target=simple_response_container, args=(
             self.name, self.url, self.token,
-            self.skill_name, self.queue))
+            self.skill_name, self.queue, os.getenv("TEST_CLIENT_LOGGING_LEVEL", "INFO")))
 
         self.container.start()
 

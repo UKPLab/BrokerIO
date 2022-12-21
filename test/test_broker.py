@@ -225,7 +225,7 @@ class TestBroker(unittest.TestCase):
                         clients.append(client)
 
                     # send request
-                    self._logger.info("Send request ...")
+                    self._logger.info("Send request with clients {} and containers {} ...".format(client_i, container_i))
                     for i, client in enumerate(clients):
                         for j, container in enumerate(containers):
                             for delay in [0, 25, 50]:  # ms

@@ -1,4 +1,5 @@
 import multiprocessing as mp
+import os
 import queue
 
 from broker.utils import simple_client
@@ -19,7 +20,8 @@ class TestClient:
         ctx = mp.get_context('spawn')
         self.client = ctx.Process(target=simple_client, args=(self.name,
                                                               self.url, self.token, self.client_queue,
-                                                              self.message_queue, str(self.logger.level)))
+                                                              self.message_queue,
+                                                              os.getenv("TEST_CLIENT_LOGGING_LEVEL", "INFO")))
         self.client.start()
 
         self._wait_for_start()
