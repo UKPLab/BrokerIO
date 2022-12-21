@@ -37,6 +37,8 @@ build_test:
     script:
       - make ENV=main build
       - make test-build
+      - docker wait nlp_api_main_docs_asyncapi_1
+      - docker wait nlp_api_main_docs_sphinx_1
       - tar -czvf ${PWD}/doc_api.tar.gz ./docs/html
       - tar -czvf ${PWD}/doc_main.tar.gz ./docs/build
     artifacts:
@@ -79,7 +81,9 @@ deploy-main:
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git submodule update --init"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make build-clean"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=main build"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && docker wait nlp_api_main_docs_asyncapi_1"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && cp -r ./docs/html $DOCS_PATH_ASYNC_API"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && docker wait nlp_api_main_docs_sphinx_1"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && cp -r ./docs/build $DOCS_PATH"
   only:
   - main
