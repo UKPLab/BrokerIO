@@ -6,6 +6,11 @@ from broker.utils import simple_client
 
 
 class Guard:
+    """
+    Guard is a simple client that connects to the broker and listen to broadcast messages.
+
+    @author: Dennis Zyska
+    """
     def __init__(self, url, token):
         self.url = url
         self.token = token

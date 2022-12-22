@@ -3,6 +3,11 @@ from uuid import uuid4
 
 
 class Task:
+    """
+    Representation of a task in the broker
+
+    @author: Dennis Zyska
+    """
     def __init__(self, client_session):
         self.results_session = None
         self.client_session = client_session

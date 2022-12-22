@@ -13,6 +13,11 @@ from . import SocketRoute
 
 
 class RegisterRoute(SocketRoute):
+    """
+    Basic socket.io event handlers for skill and task management
+
+    @author: Dennis Zyska, Nils Dycke
+    """
     def __init__(self, name, socketio, registry: Registry):
         super().__init__(name, socketio)
         self.current_tasks = {}

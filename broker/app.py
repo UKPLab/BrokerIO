@@ -8,7 +8,6 @@ celery + socketio can work together.
 
 Author: Nils Dycke, Dennis Zyska
 """
-import os
 import sys
 
 from eventlet import monkey_patch  # mandatory! leave at the very top
@@ -20,8 +19,12 @@ from flask_socketio import SocketIO, join_room
 from broker.config.WebConfiguration import instance as WebInstance
 from broker.db.Registry import Registry
 from broker.sockets.RegisterRoute import RegisterRoute
-import logging
+import os
 from broker import init_logging
+
+__version__ = os.getenv("BROKER_VERSION")
+__author__ = "Dennis Zyska, Nils Dycke"
+__credits__ = ["Dennis Zyska", "Nils Dycke"]
 
 
 def init():
