@@ -8,7 +8,7 @@ ADD . /broker
 WORKDIR broker
 
 # Install debian mirror
-RUN echo "deb http://debian.tu-bs.de/debian/ bullseye-updates main" >> /etc/apt/sources.list
+RUN echo "deb http://debian.tu-bs.de/debian/ bullseye-updates main" > /etc/apt/sources.list
 RUN echo "deb-src http://debian.tu-bs.de/debian/ bullseye-updates main" >> /etc/apt/sources.list
 RUN echo "deb http://debian.tu-bs.de/debian/ bullseye main" >> /etc/apt/sources.list
 RUN echo "deb-src http://debian.tu-bs.de/debian/ bullseye main" >> /etc/apt/sources.list
