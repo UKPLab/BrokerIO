@@ -17,6 +17,15 @@ This guide will help you get started with the NLP Broker.
     | The full documentation of the API can be found under:
     | |BROKER_APIURL|
 
+Sequence Diagram
+----------------
+
+To give you a better understanding of the communication between the Broker, Containers and Clients, we provide a sequence diagram of the communication:
+
+.. image:: ./sequence.drawio.svg
+   :width: 80%
+   :align: center
+
 Usage
 -----
 
@@ -64,3 +73,4 @@ Here we provide some basic example for the Javascript API:
 To execute a skill just call:
 
 :javascript:`socket.emit("skillRequest", {id: "<unique id>", name: "<skill name>", data: "<skill data>"});`
+

@@ -97,14 +97,14 @@ stressTest_dev:
     - chmod og= $PEER_RSAKEY
     - *setup-ssh
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=dev test-stress-dev"
-    - scp -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP:~/nlp_api/test/stress_results.jsonl stress_results.jsonl
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && rm test/stress_results.jsonl"
+    - scp -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP:~/nlp_api/test/stress_results.csv stress_results.csv
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && rm test/stress_results.csv"
   only:
     - dev
   artifacts:
     name: "TestResults"
     paths:
-      - "stress_results.jsonl"
+      - "stress_results.csv"
 
 stressTest_main:
   stage: stressTest
@@ -114,12 +114,12 @@ stressTest_main:
     - chmod og= $PEER_RSAKEY
     - *setup-ssh
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=main test-stress"
-    - scp -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP:~/nlp_api/test/stress_results.jsonl stress_results.jsonl
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && rm test/stress_results.jsonl"
+    - scp -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP:~/nlp_api/test/stress_results.csv stress_results.csv
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && rm test/stress_results.csv"
 
   only:
     - main
   artifacts:
     name: "TestResults"
     paths:
-      - "stress_results.jsonl"
+      - "stress_results.csv"

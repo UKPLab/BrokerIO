@@ -183,25 +183,44 @@ class TestBroker(unittest.TestCase):
             containers = []
             clients = []
 
+            # add csv header
+            header = [
+                "time",
+                "duration_container",
+                "duration_request",
+                "client",
+                "container",
+                "delay",
+                "message_id",
+                "data_length",
+                "current_clients",
+                "current_containers",
+                "max_clients",
+                "max_containers",
+                "max_messages",
+            ]
+            file.write("{}\n".format(",".join(header)))
+
             def client_check(c):
                 m = c.check_queue()
                 if m:
-                    file.write("{}\n".format(json.dumps({
-                        "time": time.perf_counter() - test_start,
-                        "duration_container": m['stats']['duration'],
-                        "duration_request": time.perf_counter() - m['data']['start'],
-                        'start': time.perf_counter(),
-                        'client': m['data']['client'],
-                        'container': m['stats']['host'],
-                        'delay': m['data']['delay'],
-                        'message_id': m['data']['message'],
-                        'data_length': len(json.dumps(m['data'])),
-                        'current_clients': len(clients),
-                        'current_containers': len(containers),
-                        'max_clients': max_clients,
-                        'max_containers': max_container,
-                        'max_messages': max_messages,
-                    })))
+                    data = [
+                        time.perf_counter() - test_start,           # time
+                        m['stats']['duration'],                     # duration_container
+                        time.perf_counter() - m['data']['start'],   # duration_request
+                        m['data']['client'],                        # client
+                        m['stats']['host'],                         # container
+                        m['data']['delay'],                         # delay
+                        m['data']['message'],                       # message_id
+                        len(json.dumps(m['data'])),                 # data_length
+                        len(clients),                               # current_clients
+                        len(containers),                            # current_containers
+                        max_clients,                                # max_clients
+                        max_container,                              # max_containers
+                        max_messages,                               # max_messages
+                    ]
+
+                    file.write("{}\n".format(",".join(str(e) for e in data)))
 
             self._logger.info("Start stress test ...")
             for container_i in range(1, max_container + 1):
