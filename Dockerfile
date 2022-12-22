@@ -7,6 +7,12 @@ WORKDIR /
 ADD . /broker
 WORKDIR broker
 
+# Install debian mirror
+RUN echo "deb http://debian.tu-bs.de/debian/ stretch-updates main" >> /etc/apt/sources.list
+RUN echo "deb-src http://debian.tu-bs.de/debian/ stretch-updates main" >> /etc/apt/sources.list
+RUN echo "deb http://debian.tu-bs.de/debian/ stretch main" >> /etc/apt/sources.list
+RUN echo "deb-src http://debian.tu-bs.de/debian/ stretch main" >> /etc/apt/sources.list
+
 # Install make
 RUN apt update && apt install make -y
 
