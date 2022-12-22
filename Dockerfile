@@ -12,6 +12,7 @@ RUN echo "deb http://debian.tu-bs.de/debian/ stretch-updates main" >> /etc/apt/s
 RUN echo "deb-src http://debian.tu-bs.de/debian/ stretch-updates main" >> /etc/apt/sources.list
 RUN echo "deb http://debian.tu-bs.de/debian/ stretch main" >> /etc/apt/sources.list
 RUN echo "deb-src http://debian.tu-bs.de/debian/ stretch main" >> /etc/apt/sources.list
+RUN cat /etc/apt/sources.list
 
 # Install make
 RUN apt update && apt install make -y
