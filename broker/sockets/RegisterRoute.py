@@ -108,7 +108,7 @@ class RegisterRoute(SocketRoute):
             task = self.current_tasks[data['id']]
             task.set_score(sid, data)
 
-            self.socketio.emit("skillResults",
+            self.socketio.emit("taskResults",
                                task.output(),
                                room=task.client_session)
 
