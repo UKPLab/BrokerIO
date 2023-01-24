@@ -26,7 +26,7 @@ class Task:
             self.config = data['config']
 
         self.request_id = data['id']
-        self.client_id = data['clientId']
+        self.client_id = data['clientId'] if 'clientId' in data else None
         self.time_last_update = time.perf_counter()
 
     def set_score(self, sid, data):
