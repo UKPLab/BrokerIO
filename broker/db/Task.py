@@ -15,6 +15,7 @@ class Task:
 
         self.config = None
         self.request_id = None
+        self.client_id = None
         self.results = None
         self.time_start = time.perf_counter()
         self.time_last_update = self.time_start
@@ -23,7 +24,9 @@ class Task:
     def set(self, data):
         if "config" in data:
             self.config = data['config']
+
         self.request_id = data['id']
+        self.client_id = data['clientId']
         self.time_last_update = time.perf_counter()
 
     def set_score(self, sid, data):
@@ -43,6 +46,7 @@ class Task:
         """
         output = {
             'id': self.request_id,
+            'clientId': self.client_id,
             'data': self.results['data'] if isinstance(self.results, dict) and 'data' in self.results.keys() else {}
         }
         if self.config and 'return_stats' in self.config:

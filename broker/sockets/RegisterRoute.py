@@ -90,10 +90,12 @@ class RegisterRoute(SocketRoute):
             owners = [a["owner"]["session_id"] for a in self.registry.get_entries() if a["skill"]["name"] == data["name"]]
             owner = random.choice(owners)
 
-            # request skill of the owner
+            # cache requests
             task = Task(sid)
             task.set(data)
             self.current_tasks[task.id] = task
+
+            # request skill of the owner
             self.socketio.emit("taskRequest", {'id': task.id, 'data': data['data']}, room=owner)
 
     def results(self, data):
