@@ -23,7 +23,8 @@ if __name__ == '__main__':
     client.start()
 
     client.put({"id": "1", "name": args.skill,
-                "data": {"text": "Rewrite this section to explain how this file fits into the project."}})
+                "data": {"params": {"min_length": 3, "max_length": 8},
+                         "text": "Rewrite this section to explain how this file fits into the project."}})
 
     while True:
         print(client.get())
