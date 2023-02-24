@@ -1,12 +1,7 @@
 .. _installation:
 Installation
 ============
-
-Our NLP Broker project is available on the UKP GitLab Repository:
-
-https://git.ukp.informatik.tu-darmstadt.de/zyska/nlp_api
-
-If you need access, please contact us under peer@ukp.tu-darmstadt.de.
+This section describes how to install the Broker.
 
 Prerequisites
 *************
@@ -16,12 +11,6 @@ Please install them according to the official documentation:
 
 * `Docker <https://docs.docker.com/engine/installation/>`_
 * `Docker Compose <https://docs.docker.com/compose/install/>`_
-
-.. note::
-    Make sure that your local installation of Celery is either compatible (see environment.yaml)
-    or does not over-shadow the conda-installed version.
-
-    Check location with `which celery` and version with `celery --version`.
 
 
 Build

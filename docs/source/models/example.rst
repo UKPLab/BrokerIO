@@ -6,11 +6,7 @@ We recommend to use a docker environment to run the model inside a container.
 
 .. note::
 
-    | The full working example can be found on the internal UKP Gitlab Repository:
-    |
-    | https://git.ukp.informatik.tu-darmstadt.de/zyska/nlp_api_skill_hf_pipeline
-    |
-    | If you need access, send a mail to peer@ukp.tu-darmstadt.de.
+    | The full working example can be found on `GitHub <https://github.com/UKPLab/CARE_models>`_.
 
 Since neural models are mostly trained with Python, this sample also use Python as the programming language.
 

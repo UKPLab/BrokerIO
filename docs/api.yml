@@ -1,12 +1,12 @@
 asyncapi: 2.5.0
 info:
-    title: NLP API Broker
+    title: Broker API
     version: 0.2.0
     description: |
-        This is the API Broker for the NLP API. It is possible to publish skills to the broker and send task to the skills.
+        This is the documentation of the asynchronous communication for the Broker API. It is possible to publish skills to the broker and send task to the skills.
 servers:
     broker:
-        url: http://peer.ukp.informatik.tu-darmstadt.de:4853
+        url: http://localhost:4853
         protocol: wss
 
 channels:

@@ -23,7 +23,7 @@ help:
 
 .PHONY: guard
 guard:
-	export PYTHONPATH="${PYTHONPATH}:${PWD}" && python3 ./main.py
+	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 ./main.py
 
 .PHONY: docker
 docker:
@@ -31,36 +31,36 @@ docker:
 
 .PHONY: dev
 dev:
-	export PYTHONPATH="${PYTHONPATH}:${PWD}" && python3 ./broker/app.py --dev
+	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 ./broker/app.py --dev
 
 .PHONY: test
 test:
-	export PYTHONPATH="${PYTHONPATH}:${PWD}" && python3 -m unittest discover test
+	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 -m unittest discover test
 
 .PHONY: stress
 stress:
-	export PYTHONPATH="${PYTHONPATH}:${PWD}" && python3 -u -m unittest test.test_broker.TestBroker.stressTest
+	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 -u -m unittest test.test_broker.TestBroker.stressTest
 
 
 .PHONY: test-build
 test-build:
-	docker run --env-file ".env.main" -v ${PWD}/test:/test --network=nlp_api_main_default  broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
+	docker run --env-file ".env.main" -v ${CURDIR}/test:/test --network=nlp_api_main_default  broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
 
 .PHONY: test-build-dev
 test-build-dev:
-	docker run --env-file ".env.dev" -v ${PWD}/test:/test --network=nlp_api_dev_default broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
+	docker run --env-file ".env.dev" -v ${CURDIR}/test:/test --network=nlp_api_dev_default broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
 
 .PHONY: test-stress
 test-stress:
-	docker run --env-file ".env.main" -v ${PWD}/test:/test --network=nlp_api_main_default  broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest test.test_broker.TestBroker.stressTest
+	docker run --env-file ".env.main" -v ${CURDIR}/test:/test --network=nlp_api_main_default  broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest test.test_broker.TestBroker.stressTest
 
 .PHONY: test-stress-dev
 test-stress-dev:
-	docker run --env-file ".env.dev" -v ${PWD}/test:/test --network=nlp_api_dev_default broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest test.test_broker.TestBroker.stressTest
+	docker run --env-file ".env.dev" -v ${CURDIR}/test:/test --network=nlp_api_dev_default broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest test.test_broker.TestBroker.stressTest
 
 .PHONY: broker
 broker:
-	export PYTHONPATH="${PYTHONPATH}:${PWD}" && python3 ./broker/app.py
+	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 ./broker/app.py
 
 .PHONY: build
 build:
@@ -107,11 +107,11 @@ clean_doc:
 
 .PHONY: doc_asyncapi
 doc_asyncapi:
-	docker run --rm -v ${PWD}/docs/api.yml:/app/api.yml -v ${PWD}/docs/html:/app/output asyncapi/generator --force-write -o ./output api.yml @asyncapi/html-template
+	docker run --rm -v ${CURDIR}/docs/api.yml:/app/api.yml -v ${CURDIR}/docs/html:/app/output asyncapi/generator --force-write -o ./output api.yml @asyncapi/html-template
 
 .PHONY: doc_sphinx
 doc_sphinx:
 	docker-compose -f docker-compose.yml build docs_sphinx
-	docker run --rm -v ${PWD}/docs:/docs broker_docs_sphinx make html
+	docker run --rm -v ${CURDIR}/docs:/docs broker_docs_sphinx make html
 
 
