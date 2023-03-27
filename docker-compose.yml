@@ -23,6 +23,7 @@ services:
       dockerfile: Dockerfile
       args:
         ENV: ${ENV}
+    restart: unless-stopped
     command: bash
     <<: &default
       image: broker_image
@@ -35,6 +36,7 @@ services:
     command: conda run -n nlp_api --no-capture-output make ENV=${ENV} broker
     ports:
       - ${BROKER_PORT}:${BROKER_PORT}
+    restart: unless-stopped
   guard:
     <<: *default
     links:
@@ -44,5 +46,7 @@ services:
       - broker
       - redis
     command: conda run -n nlp_api --no-capture-output make ENV=${ENV} guard
+    restart: unless-stopped
   redis:
     image: redis
+    restart: unless-stopped
