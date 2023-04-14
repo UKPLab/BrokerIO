@@ -47,5 +47,16 @@ class Quota:
                 return True
 
     def delete(self, sid):
+        """
+        Delete the quota for a specific sid
+        :param sid: session id
+        :return:
+        """
         if sid in self.queues:
             del self.queues[sid]
+
+    def reset(self):
+        """
+        Reset the quota
+        """
+        self.queues = {}

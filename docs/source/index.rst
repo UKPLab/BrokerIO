@@ -29,6 +29,7 @@ The models should therefore connect to the NLP Broker independently when availab
    getting_started/quickstart
    getting_started/installation
    getting_started/development
+   getting_started/db
 
 
 .. toctree::

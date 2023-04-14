@@ -3,4 +3,6 @@ services:
   redis:
     ports:
       - ${REDIS_PORT}:6379
-    restart: unless-stopped
+  arangodb:
+    ports:
+      - ${ARANGODB_PORT}:8529

@@ -48,3 +48,10 @@ services:
   redis:
     image: redis
     restart: unless-stopped
+  arangodb:
+    image: arangodb/arangodb:3.10.5
+    restart: unless-stopped
+    environment:
+      - ARANGO_ROOT_PASSWORD=${ARANGODB_ROOT_PASSWORD}
+      - ARANGO_NO_AUTH=1
+      - ARANGODB_SOCKETIO_PORT=${ARANGODB_SOCKETIO_PORT}
