@@ -83,10 +83,6 @@ def init():
             raise ConnectionRefusedError('Authentication data required on connect!')
         logger.debug(data)
 
-        # check simple authentication
-        if "token" in data and os.getenv("BROKER_TOKEN", "this_is_a_random_token_to_verify") != data["token"]:
-            raise ConnectionRefusedError('Authentication failed: Token invalid!')
-
         clients.connect(sid=request.sid, ip=request.remote_addr, data=data)
         session["sid"] = request.sid
 
