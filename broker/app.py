@@ -79,8 +79,6 @@ def init():
 
         :return: the sid of the connection
         """
-        if data is None:
-            raise ConnectionRefusedError('Authentication data required on connect!')
         logger.debug(data)
 
         clients.connect(sid=request.sid, ip=request.remote_addr, data=data)

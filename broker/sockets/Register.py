@@ -1,5 +1,5 @@
 from flask import session
-
+import json
 
 class Register:
     """
@@ -29,6 +29,9 @@ class Register:
 
         :param data: Data Object
         """
+        if isinstance(data, str):  # needed for c++ socket.io client
+            data = json.loads(data)
+
         if self.clients.check_quota(session["sid"], append=True):
             return
 
