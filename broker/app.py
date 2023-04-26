@@ -62,6 +62,7 @@ def init():
 
     # clients
     logger.info("Initializing db tables...")
+    db.clear_async_jobs()
     clients = Clients(db, socketio)
     tasks = Tasks(db, socketio)
     skills = Skills(db, socketio)

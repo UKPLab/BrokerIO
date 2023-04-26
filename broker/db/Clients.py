@@ -3,6 +3,8 @@ from datetime import datetime
 
 from flask_socketio import join_room
 
+from broker import init_logging
+from broker.db import results
 from broker.utils.Quota import Quota
 
 
@@ -17,12 +19,13 @@ class Clients:
         self.socketio = socketio
         self.quota = Quota(max_len=int(os.getenv("QUOTA_CLIENTS", 20)) + 1)
         self.quota_results = Quota(max_len=int(os.getenv("QUOTA_RESULTS", 100)) + 1)
+        self.logger = init_logging("clients")
 
-        if db.has_collection("clients").result():
+        if results(db.has_collection("clients")):
             self.db = db.collection("clients")
         else:
-            self.db = db.create_collection("clients").result()
-        self.index = self.db.add_hash_index(fields=['sid'], name='sid_index', unique=False).result()
+            self.db = results(db.create_collection("clients"))
+        self.index = results(self.db.add_hash_index(fields=['sid'], name='sid_index', unique=False))
 
         self.clean()
 
@@ -74,6 +77,7 @@ class Clients:
         """
         Clean up old clients and reset quota
         """
-        self.db.update_match({"connected": True}, {"connected": False, "cleaned": True})
+        cleaned = results(self.db.update_match({"connected": True}, {"connected": False, "cleaned": True}))
+        self.logger.info("Cleaned up {} clients".format(cleaned))
         self.quota.reset()
         self.quota_results.reset()

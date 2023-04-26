@@ -2,6 +2,9 @@ import random
 from datetime import datetime
 from uuid import uuid4
 
+from broker import init_logging
+from broker.db import results
+
 
 class Skills:
     """
@@ -12,14 +15,15 @@ class Skills:
 
     def __init__(self, db, socketio):
         self.socketio = socketio
+        self.logger = init_logging("skills")
 
-        if db.has_collection("skills").result():
+        if results(db.has_collection("skills")):
             self.db = db.collection("skills")
         else:
-            self.db = db.create_collection("skills").result()
+            self.db = results(db.create_collection("skills"))
 
-        self.index = self.db.add_hash_index(fields=['sid'], name='sid_index', unique=False).result()
-        self.index = self.db.add_hash_index(fields=['connected'], name='connected_index', unique=False).result()
+        self.index = results(self.db.add_hash_index(fields=['sid'], name='sid_index', unique=False))
+        self.index = results(self.db.add_hash_index(fields=['connected'], name='connected_index', unique=False))
 
         self.clean()
 
@@ -30,7 +34,7 @@ class Skills:
         :param sid: session id of skill node
         :param data: skill data
         """
-        self.db.insert(
+        results(self.db.insert(
             {
                 "uid": str(uuid4()),
                 "sid": sid,
@@ -42,7 +46,7 @@ class Skills:
                 "first_contact": datetime.now().isoformat(),
                 "reconnects": 1,
             }
-        ).result()
+        ))
         self.send_update(data["name"])
 
     def unregister(self, sid):
@@ -51,12 +55,12 @@ class Skills:
 
         :param sid: session id of skill node
         """
-        skills = self.db.find({"sid": sid, "connected": True}).result()
+        skills = results(self.db.find({"sid": sid, "connected": True}))
         if len(skills) > 0:
             skill = skills.next()
             skill["connected"] = False
             skill["last_contact"] = datetime.now().isoformat()
-            self.db.update(skill).result()
+            results(self.db.update(skill))
             self.send_update(skill["config"]["name"])
 
     def send_update(self, name=None, with_config=False, **kwargs):
@@ -82,7 +86,7 @@ class Skills:
         :param name: Skill name
         :return: random node id (session id)
         """
-        skills = self.db.find({"config.name": name, "connected": True}).result()
+        skills = results(self.db.find({"config.name": name, "connected": True}))
         if len(skills) == 0:
             return None
 
@@ -98,7 +102,7 @@ class Skills:
         :param name: Skill name
         :param with_config: with config
         """
-        skills = self.db.find({"config.name": name, "connected": True}).result()
+        skills = results(self.db.find({"config.name": name, "connected": True}))
         if len(skills) == 0:
             return {
                 "nodes": 0,
@@ -120,7 +124,7 @@ class Skills:
 
         :param with_config: with config
         """
-        skills = self.db.find({"connected": True}).result()
+        skills = results(self.db.find({"connected": True}))
         skill_list = {}
         for skill in skills:
             name = skill["config"]["name"]
@@ -139,4 +143,5 @@ class Skills:
         """
         Clean up database
         """
-        self.db.update_match({"connected": True}, {"connected": False, "cleaned": True})
+        cleaned = results(self.db.update_match({"connected": True}, {"connected": False, "cleaned": True}))
+        self.logger.info("Cleaned up {} skills".format(cleaned))

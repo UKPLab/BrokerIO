@@ -2,6 +2,9 @@ import asyncio
 import time
 from datetime import datetime
 
+from broker import init_logging
+from broker.db import results
+
 
 class Tasks:
     """
@@ -12,10 +15,11 @@ class Tasks:
 
     def __init__(self, db, socketio):
         self.socketio = socketio
-        if db.has_collection("tasks").result():
+        self.logger = init_logging("tasks")
+        if results(db.has_collection("tasks")):
             self.db = db.collection("tasks")
         else:
-            self.db = db.create_collection("tasks").result()
+            self.db = results(db.create_collection("tasks"))
 
         self.clean()
 
@@ -28,20 +32,20 @@ class Tasks:
         :param payload: task payload
         :return:
         """
-        return self.db.insert({
+        return results(self.db.insert({
             "rid": sid,  # request id
             "nid": node,  # node id
             "request": payload,
             "start_timer": time.perf_counter(),
             "created": datetime.now().isoformat(),
             "updated": datetime.now().isoformat(),
-        }).result()
+        }))
 
     def get(self, key):
         """
         Get task by key (sync)
         """
-        return self.db.get(key).result()
+        return results(self.db.get(key))
 
     def finish(self, key, node, payload):
         """
@@ -105,4 +109,5 @@ class Tasks:
         """
         Clean up tasks
         """
-        self.db.update_match({"connected": True}, {"connected": False, "cleaned": True})
+        cleaned = results(self.db.update_match({"connected": True}, {"connected": False, "cleaned": True}))
+        self.logger.info("Cleaned up {} tasks".format(cleaned))

@@ -1,5 +1,9 @@
-from flask import session
 import json
+
+from flask import session
+
+from broker import init_logging
+
 
 class Register:
     """
@@ -13,6 +17,7 @@ class Register:
         self.tasks = tasks
         self.skills = skills
         self.clients = clients
+        self.logger = init_logging("register")
 
         self._init()
 
@@ -29,13 +34,18 @@ class Register:
 
         :param data: Data Object
         """
-        if isinstance(data, str):  # needed for c++ socket.io client
-            data = json.loads(data)
+        try:
+            if isinstance(data, str):  # needed for c++ socket.io client
+                data = json.loads(data)
 
-        if self.clients.check_quota(session["sid"], append=True):
-            return
+            if self.clients.check_quota(session["sid"], append=True):
+                return
 
-        self.skills.register(session["sid"], data)
+            self.skills.register(session["sid"], data)
+        except:
+            self.logger.error("Error in request {}: {}".format("skillRegister", data))
+            self.socketio.emit("requestError", {"message": "Error in request!"}, to=session["sid"])
+
 
     def get_all(self):
         """
@@ -44,44 +54,63 @@ class Register:
         This should be called after a client connects to the broker. Further updates are provided by the
         "skillRegister" event.
         """
-        if self.clients.check_quota(session["sid"], append=True):
-            return
+        try:
+            if self.clients.check_quota(session["sid"], append=True):
+                return
 
-        self.skills.send_update(to=session["sid"])
+            self.skills.send_update(to=session["sid"])
+        except:
+            self.logger.error("Error in request {}".format("skillGetAll"))
+            self.socketio.emit("requestError", {"message": "Error in request!"}, to=session["sid"])
+
 
     def get_config(self, data):
         """
         Get configuration from a skill by name
         """
-        if self.clients.check_quota(session["sid"], append=True):
-            return
+        try:
+            if self.clients.check_quota(session["sid"], append=True):
+                return
 
-        self.skills.send_update(data['name'], with_config=True, to=session["sid"])
+            self.skills.send_update(data['name'], with_config=True, to=session["sid"])
+        except:
+            self.logger.error("Error in request {}: {}".format("skillGetConfig", data))
+            self.socketio.emit("requestError", {"message": "Error in request!"}, to=session["sid"])
+
 
     def request(self, data):
         """
         Request a specific skill by name
         """
-        if self.clients.check_quota(session["sid"], append=True):
-            return
+        try:
+            if self.clients.check_quota(session["sid"], append=True):
+                return
 
-        # get all available nodes for skill; get a random owner from the list
-        node = self.skills.get_node(data["name"])
-        if node is None:
-            self.socketio.emit("requestError", {"error": "No node for this skill available!"}, to=session["sid"])
-        else:
-            # cache requests
-            task = self.tasks.create(session["sid"], node, data)
-            # request skill of the owner
-            self.socketio.emit("taskRequest", {'id': task['_key'], 'data': data['data']}, room=node)
+            # get all available nodes for skill; get a random owner from the list
+            node = self.skills.get_node(data["name"])
+            if node is None:
+                self.socketio.emit("requestError", {"message": "No node for this skill available!"}, to=session["sid"])
+            else:
+                # cache requests
+                task = self.tasks.create(session["sid"], node, data)
+                # request skill of the owner
+                self.socketio.emit("taskRequest", {'id': task['_key'], 'data': data['data']}, room=node)
+        except:
+            self.logger.error("Error in request {}: {}".format("skillRequest", data))
+            self.socketio.emit("requestError", {"message": "Error in request!"}, to=session["sid"])
 
     def results(self, data):
         """
         Send results to client
         """
-        node = session["sid"]
-        if self.clients.check_quota(node, append=True, results=True):
-            return
+        try:
+            node = session["sid"]
+            if self.clients.check_quota(node, append=True, results=True):
+                return
 
-        if type(data) is dict and "id" in data and "data" in data:
-            self.tasks.finish(data["id"], node, data)
+            if type(data) is dict and "id" in data and "data" in data:
+                self.tasks.finish(data["id"], node, data)
+        except:
+            self.logger.error("Error in request {}: {}".format("taskResults", data))
+            self.socketio.emit("requestError", {"message": "Error in request!"}, to=session["sid"])
+
