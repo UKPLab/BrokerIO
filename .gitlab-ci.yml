@@ -27,6 +27,7 @@ services:
   - echo "deb http://archive.debian.org/debian-archive jessie/updates main" >> /etc/apt/sources.list
   - echo "deb-src http://archive.debian.org/debian-archive jessie/updates main" >> /etc/apt/sources.list
   - cat /etc/apt/sources.list
+  - cat /etc/os-release
 
 build_test:
   stage: build
