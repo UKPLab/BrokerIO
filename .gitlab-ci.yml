@@ -19,7 +19,7 @@ variables:
 services:
   - docker:dind
 
-.debian-archiv-template: &add-debian-archiv
+.debian-archiv-template: &add-debian-archive
   - sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list
   - sed -i 's|security.debian.org|archive.debian.org/|g' /etc/apt/sources.list
   - sed -i '/stretch-updates/d' /etc/apt/sources.list
@@ -38,7 +38,7 @@ build_test:
   stage: build
   image: docker/compose:debian-1.29.2
   before_script:
-    - *add-debian-archiv
+    - *add-debian-archive
    # - *add-debian-mirror
     - docker info
     - docker version
