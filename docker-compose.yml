@@ -23,7 +23,6 @@ services:
       dockerfile: Dockerfile
       args:
         ENV: ${ENV}
-    restart: unless-stopped
     command: bash
     <<: &default
       image: broker_image
@@ -46,7 +45,13 @@ services:
       - broker
       - redis
     command: conda run -n nlp_api --no-capture-output make ENV=${ENV} guard
-    restart: unless-stopped
   redis:
     image: redis
     restart: unless-stopped
+  arangodb:
+    image: arangodb/arangodb:3.10.5
+    restart: unless-stopped
+    environment:
+      - ARANGO_ROOT_PASSWORD=${ARANGODB_ROOT_PASSWORD}
+      - ARANGO_NO_AUTH=1
+      - ARANGODB_SOCKETIO_PORT=${ARANGODB_SOCKETIO_PORT}
