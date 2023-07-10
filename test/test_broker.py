@@ -77,8 +77,8 @@ class TestBroker(unittest.TestCase):
             cls._broker.terminate()
             cls._broker.join()
 
-        cls._logger.info("Delete db ...")
-        cls._sysdb.delete_database("broker_test")
+        #cls._logger.info("Delete db ...")
+        #cls._sysdb.delete_database("broker_test")
 
     def setUp(self) -> None:
         self._logger.info("Start new client ...")
