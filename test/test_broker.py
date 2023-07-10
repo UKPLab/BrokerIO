@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 
 from broker import init_logging
 from broker.app import init
+from broker.db import connect_db
 from broker.utils.Guard import Guard
 from test.TestClient import TestClient
 from test.TestContainer import TestContainer
@@ -24,8 +25,18 @@ class TestBroker(unittest.TestCase):
     def setUpClass(cls):
         if os.getenv("TEST_URL", None) is None:
             load_dotenv(dotenv_path=".env")
+
         logger = init_logging(name="Unittest", level=logging.getLevelName(os.getenv("TEST_LOGGING_LEVEL", "INFO")))
         cls._logger = logger
+
+        logger.info("Connect to db...")
+        # set low scrub values
+        os.environ["SCRUB_INTERVAL"] = "7"
+        os.environ["SCRUB_MAX_AGE"] = "1"
+        os.environ["ARANGODB_DB_NAME"] = "broker_test"
+        cls._db, cls._syncdb, cls._sysdb = connect_db()
+        if cls._syncdb.has_collection("tasks"):
+            cls._syncdb.collection("tasks").truncate()
 
         logger.info("Starting broker ...")
         logger.info("Broker URL: {}".format(os.getenv("TEST_URL")))
@@ -51,6 +62,9 @@ class TestBroker(unittest.TestCase):
         logger.info("Environment ready!")
         client.stop()
 
+
+
+
     @classmethod
     def tearDownClass(cls):
         cls._logger.info("Stopping response container ...")
@@ -63,6 +77,9 @@ class TestBroker(unittest.TestCase):
             cls._broker.terminate()
             cls._broker.join()
 
+        cls._logger.info("Delete db ...")
+        cls._sysdb.delete_database("broker_test")
+
     def setUp(self) -> None:
         self._logger.info("Start new client ...")
         self.client = TestClient(self._logger, os.getenv("TEST_URL"), os.getenv("TEST_TOKEN"), "test_skill",
@@ -72,6 +89,8 @@ class TestBroker(unittest.TestCase):
     def tearDown(self) -> None:
         self._logger.info("Stop client ...")
         self.client.stop()
+
+
 
     def test_simple_request(self):
         """
@@ -205,19 +224,19 @@ class TestBroker(unittest.TestCase):
                 m = c.check_queue()
                 if m:
                     data = [
-                        time.perf_counter() - test_start,           # time
-                        m['stats']['duration'],                     # duration_container
-                        time.perf_counter() - m['data']['start'],   # duration_request
-                        m['data']['client'],                        # client
-                        m['stats']['host'],                         # container
-                        m['data']['delay'],                         # delay
-                        m['data']['message'],                       # message_id
-                        len(json.dumps(m['data'])),                 # data_length
-                        len(clients),                               # current_clients
-                        len(containers),                            # current_containers
-                        max_clients,                                # max_clients
-                        max_container,                              # max_containers
-                        max_messages,                               # max_messages
+                        time.perf_counter() - test_start,  # time
+                        m['stats']['duration'],  # duration_container
+                        time.perf_counter() - m['data']['start'],  # duration_request
+                        m['data']['client'],  # client
+                        m['stats']['host'],  # container
+                        m['data']['delay'],  # delay
+                        m['data']['message'],  # message_id
+                        len(json.dumps(m['data'])),  # data_length
+                        len(clients),  # current_clients
+                        len(containers),  # current_containers
+                        max_clients,  # max_clients
+                        max_container,  # max_containers
+                        max_messages,  # max_messages
                     ]
 
                     file.write("{}\n".format(",".join(str(e) for e in data)))
@@ -244,7 +263,8 @@ class TestBroker(unittest.TestCase):
                         clients.append(client)
 
                     # send request
-                    self._logger.info("Send request with clients {} and containers {} ...".format(client_i, container_i))
+                    self._logger.info(
+                        "Send request with clients {} and containers {} ...".format(client_i, container_i))
                     for i, client in enumerate(clients):
                         for j, container in enumerate(containers):
                             for delay in [0, 25, 50]:  # ms
@@ -325,6 +345,34 @@ class TestBroker(unittest.TestCase):
         self._logger.debug("Main process received message: {}".format(message))
         self.assertEqual(message['id'], "delay")
         self.assertGreater(time.perf_counter() - message['data'], 1)
+
+    def test_scrub(self):
+        """
+        Check if scrubbing is working
+        :return:
+        """
+        self.client.put({'id': "donated", 'name': "test_skill", 'config': {'donate': True}, 'data': time.perf_counter()})
+        message1 = self.client.get()
+        self.assertEqual(message1['id'], "donated")
+        self.client.put({'id': "not_donated", 'name': "test_skill", 'config': {'donate': False}, 'data': time.perf_counter()})
+        message2 = self.client.get()
+        self.assertEqual(message2['id'], "not_donated")
+        self.client.put(
+            {'id': "not_donated_without_key", 'name': "test_skill", 'data': time.perf_counter()})
+        message3 = self.client.get()
+        self.assertEqual(message3['id'], "not_donated_without_key")
+
+        aql_query = """
+            FOR doc IN tasks
+            FILTER doc.request.id IN ["donated", "not_donated", "not_donated_without_key"]
+            RETURN doc
+        """
+        cursor = self._syncdb.aql.execute(aql_query, count=True)
+        self.assertEqual(cursor.count(), 3)
+
+        time.sleep(10) # make sure scrub was running
+        cursor = self._syncdb.aql.execute(aql_query, count=True)
+        return self.assertEqual(cursor.count(), 1)
 
 
 if __name__ == '__main__':

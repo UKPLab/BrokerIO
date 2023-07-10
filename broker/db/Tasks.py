@@ -122,15 +122,18 @@ class Tasks:
         cleaned = results(self.db.update_match({"connected": True}, {"connected": False, "cleaned": True}))
         self.logger.info("Cleaned up {} tasks".format(cleaned))
 
-    def scrub(self):
+    def scrub(self, run_forever=True):
         """
         Regular task for cleaning db - delete old entries
+        :param run_forever: run forever as called in thread
         :return:
         """
-        while True:
+        while run_forever:
             aql_query = """
                 FOR doc IN tasks
                 FILTER doc.updated < @timestamp
+                && (NOT HAS(doc.request.config, 'donate')
+                || doc.request.config.donate == false)
                 RETURN doc
             """
             if self.scrub_max_age > 0:
@@ -140,4 +143,5 @@ class Tasks:
                 for entry in cursor:
                     print("Delete by scrub: Task {}".format(entry['_key']))
                     self.db.delete(entry['_key'])
-            time.sleep(self.scrub_interval)
+            if run_forever:
+                time.sleep(self.scrub_interval)

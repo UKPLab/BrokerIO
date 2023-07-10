@@ -21,9 +21,9 @@ from broker.db.Clients import Clients
 from broker.db.Tasks import Tasks
 from broker.db.Skills import Skills
 from broker.sockets.Register import Register
-from arango import ArangoClient
 import os
 from broker import init_logging
+from broker.db import connect_db
 
 __version__ = os.getenv("BROKER_VERSION")
 __author__ = "Dennis Zyska, Nils Dycke"
@@ -44,13 +44,7 @@ def init():
 
     # arango db
     logger.info("Connecting to db...")
-    db_client = ArangoClient(
-        hosts="http://{}:{}".format(os.getenv("ARANGODB_HOST", "localhost"), os.getenv("ARANGODB_PORT", "8529")))
-    sys_db = db_client.db('_system', username='root', password=os.getenv("ARANGODB_ROOT_PASSWORD", "root"))
-    if not sys_db.has_database('broker'):
-        sys_db.create_database('broker')
-    sync_db = db_client.db('broker', username='root', password=os.getenv("ARANGODB_ROOT_PASSWORD", "root"))
-    db = sync_db.begin_async_execution(return_result=True)
+    db, _, _ = connect_db()
 
     logger.info("Initializing server...")
     # flask server
