@@ -1,6 +1,8 @@
 import asyncio
+import os
+import threading
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from broker import init_logging
 from broker.db import results
@@ -16,12 +18,20 @@ class Tasks:
     def __init__(self, db, socketio):
         self.socketio = socketio
         self.logger = init_logging("tasks")
+        self._db = db
         if results(db.has_collection("tasks")):
             self.db = db.collection("tasks")
         else:
             self.db = results(db.create_collection("tasks"))
 
+        self.scrub_max_age = int(os.getenv("SCRUB_MAX_AGE", 3600))
+        self.scrub_interval = int(os.getenv("SCRUB_INTERVAL", 3600))
         self.clean()
+
+        # start scrub task
+        scrub_thread = threading.Thread(target=self.scrub)
+        scrub_thread.daemon = True
+        scrub_thread.start()
 
     def create(self, sid, node, payload):
         """
@@ -111,3 +121,23 @@ class Tasks:
         """
         cleaned = results(self.db.update_match({"connected": True}, {"connected": False, "cleaned": True}))
         self.logger.info("Cleaned up {} tasks".format(cleaned))
+
+    def scrub(self):
+        """
+        Regular task for cleaning db - delete old entries
+        :return:
+        """
+        while True:
+            aql_query = """
+                FOR doc IN tasks
+                FILTER doc.updated < @timestamp
+                RETURN doc
+            """
+            if self.scrub_max_age > 0:
+                timestamp_threshold = datetime.now() - timedelta(seconds=self.scrub_max_age)
+                query_params = {'timestamp': timestamp_threshold.isoformat()}
+                cursor = results(self._db.aql.execute(aql_query, bind_vars=query_params))
+                for entry in cursor:
+                    print("Delete by scrub: Task {}".format(entry['_key']))
+                    self.db.delete(entry['_key'])
+            time.sleep(self.scrub_interval)

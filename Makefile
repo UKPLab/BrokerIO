@@ -15,6 +15,7 @@ help:
 	@echo "make broker              Start broker"
 	@echo "make dev               	Start broker in development environment"
 	@echo "make docker		  	    Start docker images for local development"
+	@echo "make test				Run tests"
 	@echo "make doc 			 	Generate documentation"
 	@echo "make build      			Build all docker images - complete environment"
 	@echo "make env_create			Create a virtual environment"
