@@ -7,6 +7,7 @@ import socketio
 from broker import init_logging
 from broker.db import connect_db
 from broker.db.Tasks import Tasks
+from broker.db.Users import Users
 
 
 def simple_client(name, url, token, client_queue: mp.Queue, message_queue: mp.Queue, skill_name="test_skill",
@@ -46,9 +47,22 @@ def scrub_job(max_age=None):
     Simple job to start a scrub process (e.g., by an cronjob)
     :return:
     """
-    logger = init_logging("Scrub Client", level=logging.getLevelName("INFO"))
+    logger = init_logging("Scrub Job", level=logging.getLevelName("INFO"))
     logger.info("Connecting to db...")
     db, _, _ = connect_db()
 
     tasks = Tasks(db, socketio)
     tasks.scrub(run_forever=False, max_age=max_age)
+
+
+def init_job():
+    """
+    Reinit the database with new keys
+    :return:
+    """
+    logger = init_logging("Init Job", level=logging.getLevelName("INFO"))
+    logger.info("Connecting to db...")
+    db, _, _ = connect_db()
+
+    tasks = Users(db, socketio)
+    tasks.init(True)

@@ -19,7 +19,7 @@ channels:
           - $ref: "#/components/messages/skillRequest"
           - $ref: "#/components/messages/skillGetConfig"
           - $ref: "#/components/messages/taskResults"
-          - $ref: "#/components/messages/requestError"
+          - $ref: "#/components/messages/error"
     subscribe:
       message:
         oneOf:
@@ -91,19 +91,16 @@ components:
             type: object
             description: Input for the skill defined in the Skill Definition File (SDF)
             $ref: "#/components/schemas/SDFInput"
-    requestError:
-      name: requestError
+    error:
+      name: Error
       title: Error in a request
       summary: Error in a request
       payload:
         type: object
         properties:
-          id:
-            type: string
-            description: ID of the skill to be executed
-          message:
-            type: string
-            description: Error message
+          code:
+            type: int
+            description: Error code (see documentation)
     skillResults:
       name: skillResults
       title: Answer a skill request

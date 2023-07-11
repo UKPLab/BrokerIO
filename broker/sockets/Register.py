@@ -1,8 +1,10 @@
 import json
 
-from flask import session
+from flask import session, request
 
 from broker import init_logging
+import os
+from Crypto.Hash import SHA256
 
 
 class Register:
@@ -27,6 +29,18 @@ class Register:
         self.socketio.on_event("skillGetConfig", self.get_config)
         self.socketio.on_event("skillRequest", self.request)
         self.socketio.on_event("taskResults", self.results)
+        self.socketio.on_event("userAuth", self.auth)
+
+    def auth(self, data):
+        """
+        Authenticate a user
+        :param data: user data
+        :return:
+        """
+        secret_message = "{}{}".format(request.sid, os.getenv("SECRET", "broker"))
+        hash = SHA256.new()
+        hash.update(secret_message)
+        hash.digest()
 
     def register(self, data):
         """
@@ -44,7 +58,7 @@ class Register:
             self.skills.register(session["sid"], data)
         except:
             self.logger.error("Error in request {}: {}".format("skillRegister", data))
-            self.socketio.emit("requestError", {"message": "Error in request!"}, to=session["sid"])
+            self.socketio.emit("error", {"code": 500}, to=session["sid"])
 
     def get_all(self):
         """
@@ -60,7 +74,7 @@ class Register:
             self.skills.send_update(to=session["sid"])
         except:
             self.logger.error("Error in request {}".format("skillGetAll"))
-            self.socketio.emit("requestError", {"message": "Error in request!"}, to=session["sid"])
+            self.socketio.emit("error", {"code": 500}, to=session["sid"])
 
     def get_config(self, data):
         """
@@ -73,7 +87,7 @@ class Register:
             self.skills.send_update(data['name'], with_config=True, to=session["sid"])
         except:
             self.logger.error("Error in request {}: {}".format("skillGetConfig", data))
-            self.socketio.emit("requestError", {"message": "Error in request!"}, to=session["sid"])
+            self.socketio.emit("error", {"code": 500}, to=session["sid"])
 
     def request(self, data):
         """
@@ -94,7 +108,7 @@ class Register:
                 self.socketio.emit("taskRequest", {'id': task['_key'], 'data': data['data']}, room=node)
         except:
             self.logger.error("Error in request {}: {}".format("skillRequest", data))
-            self.socketio.emit("requestError", {"message": "Error in request!"}, to=session["sid"])
+            self.socketio.emit("error", {"code": 500}, to=session["sid"])
 
     def results(self, data):
         """
@@ -109,4 +123,4 @@ class Register:
                 self.tasks.finish(data["id"], node, data)
         except:
             self.logger.error("Error in request {}: {}".format("taskResults", data))
-            self.socketio.emit("requestError", {"message": "Error in request!"}, to=session["sid"])
+            self.socketio.emit("error", {"code": 500}, to=session["sid"])

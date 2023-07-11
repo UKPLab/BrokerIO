@@ -22,6 +22,11 @@ help:
 	@echo "make env_activate		Activate the virtual environment"
 	@echo "make env_update			Update the virtual environment"
 
+.PHONY: init
+init:
+	openssl genrsa -out private_key.pem 1024
+	python3 client.py --init True
+
 .PHONY: guard
 guard:
 	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 ./main.py

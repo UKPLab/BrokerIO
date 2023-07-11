@@ -20,7 +20,9 @@ from broker.config.WebConfiguration import instance as WebInstance
 from broker.db.Clients import Clients
 from broker.db.Tasks import Tasks
 from broker.db.Skills import Skills
+from broker.db.Users import Users
 from broker.sockets.Register import Register
+from broker.sockets.Auth import Auth
 import os
 from broker import init_logging
 from broker.db import connect_db
@@ -60,10 +62,12 @@ def init():
     clients = Clients(db, socketio)
     tasks = Tasks(db, socketio)
     skills = Skills(db, socketio)
+    users = Users(db, socketio)
 
     # add socket routes
     logger.info("Initializing socket routes...")
     routes = Register(socketio=socketio, tasks=tasks, skills=skills, clients=clients)
+    auth_routes = Auth(socketio=socketio, users=users, clients=clients)
 
     # socketio
     @socketio.on("connect")

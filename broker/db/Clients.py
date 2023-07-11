@@ -50,6 +50,36 @@ class Clients:
             }
         )
 
+    def get(self, sid):
+        """
+        Get client by sid
+        :param sid: session id
+        :return:
+        """
+        client = results(self.db.find({"sid": sid, "connected": True}))
+        if client.count() > 0:
+            return client.next()
+
+
+    def register(self, sid, secret):
+        """
+        Try to register a client with a public key
+        :param sid: session id
+        :param user: user document
+        :return:
+        """
+        self.db.update_match({"sid": sid, "connected": True},
+                             {'last_contact': datetime.now().isoformat(), 'secret': secret})
+
+    def save(self, client):
+        """
+        Save a client object
+        :param client: client object
+        :return:
+        """
+        self.db.update(client)
+
+
     def disconnect(self, sid):
         self.db.update_match({"sid": sid, "connected": True},
                              {'last_contact': datetime.now().isoformat(), 'connected': False})

@@ -1,0 +1,67 @@
+import os
+
+from Crypto.Hash import SHA256
+from flask import request, session
+
+from broker import init_logging
+from broker.utils.Keys import verify
+
+
+class Auth:
+    """
+    Basic socket.io event handlers for authentication
+
+    @author: Dennis Zyska
+    """
+
+    def __init__(self, socketio, users, clients):
+        self.socketio = socketio
+        self.users = users
+        self.clients = clients
+        self.logger = init_logging("auth")
+
+        self._init()
+
+    def _init(self):
+        self.socketio.on_event("authRequest", self.request)
+        self.socketio.on_event("authRegister", self.register)
+
+    def register(self, data):
+        """
+        Register as a client, receive public key and associate with user
+        :param data: object with public key and signature {pub:...,sig:...}
+        :return:
+        """
+        try:
+            # get secret
+            client = self.clients.get(session["sid"])
+            if "secret" in client:
+                if verify(client['secret'], data.sig, data.pub):
+                    user = self.users.auth(data.pub)
+                    client['user'] = user['_key']
+                    self.clients.save(client)
+                else:
+                    self.logger.error("Error in verify {}: {}".format(session["sid"], data))
+                    self.socketio.emit("error", {"code": 401}, to=session["sid"])
+            else:
+                self.request()
+        except:
+            self.logger.error("Error in request {}: {}".format("authRegister", data))
+            self.socketio.emit("error", {"code": 500}, to=session["sid"])
+
+    def request(self):
+        """
+        Authenticate a user, assign client to user
+        :param data: object with public and signature
+        :return:
+        """
+        try:
+            # create secret message to sign by client
+            secret_message = "{}{}".format(request.sid, os.getenv("SECRET", "astringency"))
+            hash = SHA256.new()
+            hash.update(secret_message)
+            self.clients.register(request.sid, hash.digest())
+            self.socketio.emit("authTask", hash.digest())
+        except:
+            self.logger.error("Error in request {}".format("authRequest"))
+            self.socketio.emit("error", {"code": 500}, to=session["sid"])

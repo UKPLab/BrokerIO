@@ -32,6 +32,7 @@ The broker is developed as part of the `CARE project <https://github.com/UKPLab/
    getting_started/quickstart
    getting_started/installation
    getting_started/development
+   getting_started/frameworks
    getting_started/db
 
 

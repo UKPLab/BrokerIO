@@ -4,7 +4,7 @@ import multiprocessing as mp
 import os
 
 from broker.utils import init_logging
-from broker.utils import scrub_job
+from broker.utils import scrub_job, init_job
 from test.TestClient import TestClient
 
 
@@ -15,6 +15,7 @@ def args():
                         default=os.getenv("BROKER_TOKEN", "this_is_a_random_token_to_verify"))
     parser.add_argument("--skill", help="Skill name to test", default="test_skill")
     parser.add_argument("--scrub", help="Start a scrub job", type=bool)
+    parser.add_argument("--init", help="Reinit the default users (reading keys)", type=bool)
     return parser
 
 
@@ -25,6 +26,11 @@ if __name__ == '__main__':
     if args.scrub:
         ctx = mp.get_context('spawn')
         scrub = ctx.Process(target=scrub_job)
+        scrub.start()
+        scrub.join()
+    elif args.init:
+        ctx = mp.get_context('spawn')
+        scrub = ctx.Process(target=init_job)
         scrub.start()
         scrub.join()
     else:

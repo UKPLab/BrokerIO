@@ -383,6 +383,16 @@ class TestBroker(unittest.TestCase):
         cursor = self._syncdb.aql.execute(aql_query, count=True)
         return self.assertEqual(cursor.count(), 1)
 
+    def test_auth(self):
+        """
+        Check authentication work
+        :return:
+        """
+
+        # TODO check authentication process with system key
+        return True
+
+
 
 if __name__ == '__main__':
     unittest.main()

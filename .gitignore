@@ -9,3 +9,5 @@ docs/html
 
 # test
 test/results.jsonl
+
+private_key.pem
