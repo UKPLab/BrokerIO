@@ -36,10 +36,6 @@ class TestBroker(unittest.TestCase):
         logger.info("Connect to db...")
         cls._db, cls._syncdb, cls._sysdb = connect_db()
 
-        # run scrub
-        logger.info("Start scrubbing...")
-        scrub_job(max_age=0)
-
         logger.info("Starting broker ...")
         logger.info("Broker URL: {}".format(os.getenv("TEST_URL")))
         logger.info("Broker Token: {}".format(os.getenv("TEST_TOKEN")))

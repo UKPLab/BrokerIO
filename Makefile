@@ -44,12 +44,12 @@ stress:
 
 .PHONY: test-build
 test-build:
-	docker exec --env-file ".env.main" nlp_api_main_broker_1 conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
+	docker exec nlp_api_main_broker_1 conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
 
 
 .PHONY: test-build-dev
 test-build-dev:
-	docker exec --env-file ".env.dev" nlp_api_dev_broker_1 conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
+	docker exec nlp_api_dev_broker_1 conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
 
 .PHONY: test-stress
 test-stress:
