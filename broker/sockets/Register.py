@@ -46,7 +46,6 @@ class Register:
             self.logger.error("Error in request {}: {}".format("skillRegister", data))
             self.socketio.emit("requestError", {"message": "Error in request!"}, to=session["sid"])
 
-
     def get_all(self):
         """
         Informs the client about all skills currently registered on the broker.
@@ -63,7 +62,6 @@ class Register:
             self.logger.error("Error in request {}".format("skillGetAll"))
             self.socketio.emit("requestError", {"message": "Error in request!"}, to=session["sid"])
 
-
     def get_config(self, data):
         """
         Get configuration from a skill by name
@@ -76,7 +74,6 @@ class Register:
         except:
             self.logger.error("Error in request {}: {}".format("skillGetConfig", data))
             self.socketio.emit("requestError", {"message": "Error in request!"}, to=session["sid"])
-
 
     def request(self, data):
         """
@@ -113,4 +110,3 @@ class Register:
         except:
             self.logger.error("Error in request {}: {}".format("taskResults", data))
             self.socketio.emit("requestError", {"message": "Error in request!"}, to=session["sid"])
-

@@ -5,6 +5,8 @@ import time
 import socketio
 
 from broker import init_logging
+from broker.db import connect_db
+from broker.db.Tasks import Tasks
 
 
 def simple_client(name, url, token, client_queue: mp.Queue, message_queue: mp.Queue, skill_name="test_skill",
@@ -37,3 +39,16 @@ def simple_client(name, url, token, client_queue: mp.Queue, message_queue: mp.Qu
             except socketio.exceptions.ConnectionError:
                 logger.error("Connection to broker failed. Trying again in 5 seconds ...")
                 time.sleep(5)
+
+
+def scrub_job(max_age=None):
+    """
+    Simple job to start a scrub process (e.g., by an cronjob)
+    :return:
+    """
+    logger = init_logging("Scrub Client", level=logging.getLevelName("INFO"))
+    logger.info("Connecting to db...")
+    db, _, _ = connect_db()
+
+    tasks = Tasks(db, socketio)
+    tasks.scrub(run_forever=False, max_age=max_age)

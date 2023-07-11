@@ -44,19 +44,20 @@ stress:
 
 .PHONY: test-build
 test-build:
-	docker run --env-file ".env.main" -v ${CURDIR}/test:/test --network=nlp_api_main_default  broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
+	docker exec --env-file ".env.main" nlp_api_main_broker_1 conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
+
 
 .PHONY: test-build-dev
 test-build-dev:
-	docker run --env-file ".env.dev" -v ${CURDIR}/test:/test --network=nlp_api_dev_default broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
+	docker exec --env-file ".env.dev" nlp_api_dev_broker_1 conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
 
 .PHONY: test-stress
 test-stress:
-	docker run --env-file ".env.main" -v ${CURDIR}/test:/test --network=nlp_api_main_default  broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest test.test_broker.TestBroker.stressTest
+	docker run --env-file ".env.main" -v ${CURDIR}/test:/test --network=nlp_api_main_default  broker_image conda run --no-capture-output -n nlp_api export ENV=main && python3 -u -m unittest test.test_broker.TestBroker.stressTest
 
 .PHONY: test-stress-dev
 test-stress-dev:
-	docker run --env-file ".env.dev" -v ${CURDIR}/test:/test --network=nlp_api_dev_default broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest test.test_broker.TestBroker.stressTest
+	docker run --env-file ".env.dev" -v ${CURDIR}/test:/test --network=nlp_api_dev_default broker_image conda run --no-capture-output -n nlp_api export ENV=dev && python3 -u -m unittest test.test_broker.TestBroker.stressTest
 
 .PHONY: broker
 broker:

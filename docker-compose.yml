@@ -30,8 +30,10 @@ services:
     <<: *default
     links:
       - redis
+      - arangodb
     depends_on:
       - redis
+      - arangodb
     command: conda run -n nlp_api --no-capture-output make ENV=${ENV} broker
     ports:
       - ${BROKER_PORT}:${BROKER_PORT}
@@ -50,8 +52,11 @@ services:
     restart: unless-stopped
   arangodb:
     image: arangodb/arangodb:3.10.5
+    expose:
+      - "8529"
     restart: unless-stopped
     environment:
       - ARANGO_ROOT_PASSWORD=${ARANGODB_ROOT_PASSWORD}
       - ARANGO_NO_AUTH=1
-      - ARANGODB_SOCKETIO_PORT=${ARANGODB_SOCKETIO_PORT}
+    ports:
+      - ${ARANGODB_PORT}:8529

@@ -122,13 +122,15 @@ class Tasks:
         cleaned = results(self.db.update_match({"connected": True}, {"connected": False, "cleaned": True}))
         self.logger.info("Cleaned up {} tasks".format(cleaned))
 
-    def scrub(self, run_forever=True):
+    def scrub(self, run_forever=True, max_age=None):
         """
         Regular task for cleaning db - delete old entries
         :param run_forever: run forever as called in thread
+        :param max_age: overwrite max age threshold and force scrub
         :return:
         """
-        while run_forever:
+        once = True
+        while run_forever or once:
             aql_query = """
                 FOR doc IN tasks
                 FILTER doc.updated < @timestamp
@@ -136,8 +138,9 @@ class Tasks:
                 || doc.request.config.donate == false)
                 RETURN doc
             """
-            if self.scrub_max_age > 0:
-                timestamp_threshold = datetime.now() - timedelta(seconds=self.scrub_max_age)
+            if self.scrub_max_age > 0 or max_age is not None:
+                timestamp_threshold = datetime.now() - timedelta(
+                    seconds=self.scrub_max_age if (max_age is None) else max_age)
                 query_params = {'timestamp': timestamp_threshold.isoformat()}
                 cursor = results(self._db.aql.execute(aql_query, bind_vars=query_params))
                 for entry in cursor:
@@ -145,3 +148,4 @@ class Tasks:
                     self.db.delete(entry['_key'])
             if run_forever:
                 time.sleep(self.scrub_interval)
+            once = False

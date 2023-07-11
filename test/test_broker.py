@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from broker import init_logging
 from broker.app import init
 from broker.db import connect_db
+from broker.utils import scrub_job
 from broker.utils.Guard import Guard
 from test.TestClient import TestClient
 from test.TestContainer import TestContainer
@@ -24,19 +25,20 @@ class TestBroker(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if os.getenv("TEST_URL", None) is None:
-            load_dotenv(dotenv_path=".env")
+            if os.getenv("ENV", None) is not None:
+                load_dotenv(dotenv_path=".env.{}".format(os.getenv("ENV", None)))
+            else:
+                load_dotenv(dotenv_path=".env")
 
         logger = init_logging(name="Unittest", level=logging.getLevelName(os.getenv("TEST_LOGGING_LEVEL", "INFO")))
         cls._logger = logger
 
         logger.info("Connect to db...")
-        # set low scrub values
-        os.environ["SCRUB_INTERVAL"] = "7"
-        os.environ["SCRUB_MAX_AGE"] = "1"
-        os.environ["ARANGODB_DB_NAME"] = "broker_test"
         cls._db, cls._syncdb, cls._sysdb = connect_db()
-        if cls._syncdb.has_collection("tasks"):
-            cls._syncdb.collection("tasks").truncate()
+
+        # run scrub
+        logger.info("Start scrubbing...")
+        scrub_job(max_age=0)
 
         logger.info("Starting broker ...")
         logger.info("Broker URL: {}".format(os.getenv("TEST_URL")))
@@ -62,9 +64,6 @@ class TestBroker(unittest.TestCase):
         logger.info("Environment ready!")
         client.stop()
 
-
-
-
     @classmethod
     def tearDownClass(cls):
         cls._logger.info("Stopping response container ...")
@@ -77,8 +76,8 @@ class TestBroker(unittest.TestCase):
             cls._broker.terminate()
             cls._broker.join()
 
-        #cls._logger.info("Delete db ...")
-        #cls._sysdb.delete_database("broker_test")
+        # cls._logger.info("Delete db ...")
+        # cls._sysdb.delete_database("broker_test")
 
     def setUp(self) -> None:
         self._logger.info("Start new client ...")
@@ -89,8 +88,6 @@ class TestBroker(unittest.TestCase):
     def tearDown(self) -> None:
         self._logger.info("Stop client ...")
         self.client.stop()
-
-
 
     def test_simple_request(self):
         """
@@ -351,10 +348,23 @@ class TestBroker(unittest.TestCase):
         Check if scrubbing is working
         :return:
         """
-        self.client.put({'id': "donated", 'name': "test_skill", 'config': {'donate': True}, 'data': time.perf_counter()})
+        # run scrub
+        self._logger.info("Clean db")
+        aql_query = """
+            FOR doc IN tasks
+            FILTER doc.request.id IN ["donated", "not_donated", "not_donated_without_key"]
+            RETURN doc
+        """
+        cursor = self._syncdb.aql.execute(aql_query, count=True)
+        for d in cursor:
+            self._syncdb.delete_document(d)
+
+        self.client.put(
+            {'id': "donated", 'name': "test_skill", 'config': {'donate': True}, 'data': time.perf_counter()})
         message1 = self.client.get()
         self.assertEqual(message1['id'], "donated")
-        self.client.put({'id': "not_donated", 'name': "test_skill", 'config': {'donate': False}, 'data': time.perf_counter()})
+        self.client.put(
+            {'id': "not_donated", 'name': "test_skill", 'config': {'donate': False}, 'data': time.perf_counter()})
         message2 = self.client.get()
         self.assertEqual(message2['id'], "not_donated")
         self.client.put(
@@ -370,7 +380,10 @@ class TestBroker(unittest.TestCase):
         cursor = self._syncdb.aql.execute(aql_query, count=True)
         self.assertEqual(cursor.count(), 3)
 
-        time.sleep(10) # make sure scrub was running
+        # run scrub
+        self._logger.info("Starting scrubbing")
+        scrub_job(max_age=0)
+
         cursor = self._syncdb.aql.execute(aql_query, count=True)
         return self.assertEqual(cursor.count(), 1)
 
