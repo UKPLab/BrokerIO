@@ -21,7 +21,7 @@ from broker.db.Clients import Clients
 from broker.db.Tasks import Tasks
 from broker.db.Skills import Skills
 from broker.db.Users import Users
-from broker.sockets.Register import Register
+from broker.sockets.Requests import Requests
 from broker.sockets.Auth import Auth
 import os
 from broker import init_logging
@@ -66,7 +66,7 @@ def init():
 
     # add socket routes
     logger.info("Initializing socket routes...")
-    routes = Register(socketio=socketio, tasks=tasks, skills=skills, clients=clients)
+    requests_routes = Requests(socketio=socketio, tasks=tasks, skills=skills, clients=clients)
     auth_routes = Auth(socketio=socketio, users=users, clients=clients)
 
     # socketio

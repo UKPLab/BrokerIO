@@ -34,6 +34,8 @@ class Auth:
         :return:
         """
         try:
+            if self.clients.check_quota(session["sid"], append=True):
+                return
             client = self.clients.get(session["sid"])
             if "secret" in client:
                 if verify(client['secret'], data['sig'], data['pub']):
@@ -57,6 +59,8 @@ class Auth:
         :return:
         """
         try:
+            if self.clients.check_quota(session["sid"], append=True):
+                return
             # create secret message to sign by client
             secret_message = "{}{}".format(request.sid, os.getenv("SECRET", "astringency"))
             hash = SHA256.new()
@@ -73,6 +77,8 @@ class Auth:
         :return:
         """
         try:
+            if self.clients.check_quota(session["sid"], append=True):
+                return
             user = self.users.getByKey(self.clients.get(session["sid"])['user'])
             if user:
                 self.socketio.emit("authInfo", {"role": user['role']})

@@ -1,13 +1,11 @@
 import json
 
-from flask import session, request
+from flask import session
 
 from broker import init_logging
-import os
-from Crypto.Hash import SHA256
 
 
-class Register:
+class Requests:
     """
     Basic socket.io event handlers for skill and task management
 
@@ -29,18 +27,6 @@ class Register:
         self.socketio.on_event("skillGetConfig", self.get_config)
         self.socketio.on_event("skillRequest", self.request)
         self.socketio.on_event("taskResults", self.results)
-        self.socketio.on_event("userAuth", self.auth)
-
-    def auth(self, data):
-        """
-        Authenticate a user
-        :param data: user data
-        :return:
-        """
-        secret_message = "{}{}".format(request.sid, os.getenv("SECRET", "broker"))
-        hash = SHA256.new()
-        hash.update(secret_message)
-        hash.digest()
 
     def register(self, data):
         """

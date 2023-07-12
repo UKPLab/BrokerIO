@@ -59,12 +59,11 @@ class Clients:
         if client.count() > 0:
             return client.next()
 
-
     def register(self, sid, secret):
         """
         Try to register a client with a public key
+        :param secret: secret string
         :param sid: session id
-        :param user: user document
         :return:
         """
         self.db.update_match({"sid": sid, "connected": True},
@@ -77,7 +76,6 @@ class Clients:
         :return:
         """
         self.db.update(client)
-
 
     def disconnect(self, sid):
         self.db.update_match({"sid": sid, "connected": True},
