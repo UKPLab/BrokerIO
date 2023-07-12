@@ -1,5 +1,10 @@
-Request Configuration
-=====================
+Requests
+========
+
+Options
+-------
+
+
 
 In addition to the configuration options described in the :doc:`Skills <./skills/definition>` section,
 the following options are available during runtime for each skill request.
@@ -25,4 +30,4 @@ Example:
 
 .. option:: donate
 
-    This option marks the dataset as donated to allow permanent usage
+    This option marks the dataset as donated to allow permanent usage. By default, this option is set to ``false``.

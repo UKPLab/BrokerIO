@@ -12,6 +12,9 @@ default: help
 help:
 	@echo "make clean             	Delete development files"
 	@echo "make guard             	Start guard"
+	@echo "make scrub             	Scrub database"
+	@echo "make init              	Initialize keys"
+	@echo "make stress            	Run stress test"
 	@echo "make broker              Start broker"
 	@echo "make dev               	Start broker in development environment"
 	@echo "make docker		  	    Start docker images for local development"
@@ -26,6 +29,10 @@ help:
 init:
 	openssl genrsa -out private_key.pem 1024
 	python3 client.py --init True
+
+.PHONY: scrub
+scrub:
+	python3 client.py --scrub True
 
 .PHONY: guard
 guard:

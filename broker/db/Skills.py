@@ -44,7 +44,6 @@ class Skills:
                 "updated": datetime.now().isoformat(),
                 "last_contact": datetime.now().isoformat(),
                 "first_contact": datetime.now().isoformat(),
-                "reconnects": 1,
             }
         ))
         self.send_update(data["name"])

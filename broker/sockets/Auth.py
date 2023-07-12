@@ -24,22 +24,23 @@ class Auth:
 
     def _init(self):
         self.socketio.on_event("authRequest", self.request)
-        self.socketio.on_event("authRegister", self.register)
+        self.socketio.on_event("authResponse", self.response)
+        self.socketio.on_event("authStatus", self.status)
 
-    def register(self, data):
+    def response(self, data):
         """
         Register as a client, receive public key and associate with user
         :param data: object with public key and signature {pub:...,sig:...}
         :return:
         """
         try:
-            # get secret
             client = self.clients.get(session["sid"])
             if "secret" in client:
-                if verify(client['secret'], data.sig, data.pub):
-                    user = self.users.auth(data.pub)
+                if verify(client['secret'], data['sig'], data['pub']):
+                    user = self.users.auth(data['pub'])
                     client['user'] = user['_key']
                     self.clients.save(client)
+                    self.status()
                 else:
                     self.logger.error("Error in verify {}: {}".format(session["sid"], data))
                     self.socketio.emit("error", {"code": 401}, to=session["sid"])
@@ -59,9 +60,24 @@ class Auth:
             # create secret message to sign by client
             secret_message = "{}{}".format(request.sid, os.getenv("SECRET", "astringency"))
             hash = SHA256.new()
-            hash.update(secret_message)
-            self.clients.register(request.sid, hash.digest())
-            self.socketio.emit("authTask", hash.digest())
+            hash.update(secret_message.encode("utf8"))
+            self.clients.register(request.sid, hash.hexdigest())
+            self.socketio.emit("authChallenge", {"secret": hash.hexdigest()})
         except:
             self.logger.error("Error in request {}".format("authRequest"))
+            self.socketio.emit("error", {"code": 500}, to=session["sid"])
+
+    def status(self):
+        """
+        Send current authentication status
+        :return:
+        """
+        try:
+            user = self.users.getByKey(self.clients.get(session["sid"])['user'])
+            if user:
+                self.socketio.emit("authInfo", {"role": user['role']})
+            else:
+                self.socketio.emit("authInfo", {"role": "guest"})
+        except:
+            self.logger.error("Error in request {}".format("authStatus"))
             self.socketio.emit("error", {"code": 500}, to=session["sid"])

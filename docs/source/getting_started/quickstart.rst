@@ -7,15 +7,12 @@ This guide will help you get started with the NLP Broker.
 | For a local installation, please follow the instructions in :doc:`Installation <./installation>`.
 | If you want to use the NLP Broker as a service, you can connect the API through:
 
-- |BROKER_WEBURL|
 
 .. note::
 
     Please be aware that the NLP Broker is a websocket API based on `Socket.IO <https://socket.io/>`_ and therefore requires a websocket client to connect to it.
     The API is not accessible through a RESTful interface!
 
-    | The full documentation of the API can be found under:
-    | |BROKER_APIURL|
 
 Sequence Diagram
 ----------------
@@ -72,5 +69,11 @@ Here we provide some basic example for the Javascript API:
 
 To execute a skill just call:
 
-:javascript:`socket.emit("skillRequest", {id: "<unique id>", name: "<skill name>", data: "<skill data>"});`
+.. code-block:: javascript
 
+    socket.emit("skillRequest", {id: "<unique id>", name: "<skill name>", data: "<skill data>", config: {donate: true}});
+
+
+.. note::
+
+    For authentication see :doc:`Authentication <./authentication>`.

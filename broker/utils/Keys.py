@@ -32,11 +32,10 @@ def verify(message, sig, key):
     :param key: public key
     :return:
     """
-    digest = SHA256.new()
-    digest.update(message.encode('utf-8'))
-
-    verifier = PKCS1_v1_5.new(key)
-    return verifier.verify(digest, sig)
+    hash = SHA256.new(message.encode('utf-8'))
+    pubkey = RSA.importKey(bytes.fromhex(key))
+    verifier = PKCS1_v1_5.new(pubkey)
+    return verifier.verify(hash, bytes.fromhex(sig))
 
 
 class Keys:
@@ -60,10 +59,7 @@ class Keys:
         digest.update(message.encode('utf-8'))
         signer = PKCS1_v1_5.new(self.private_key)
         sig = signer.sign(digest)
-
-        print("Signature:")
-        print(sig.hex())
-        return sig
+        return sig.hex()
 
     def get_public(self):
         """

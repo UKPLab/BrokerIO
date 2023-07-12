@@ -45,6 +45,10 @@ To run them, execute the following command:
 
 The test are located in the ``tests`` folder.
 
+.. tip::
+
+    You also can run the tests individually by using, e.g. ``python3 -u -m unittest test.test_broker.TestBroker.test_auth``.
+
 Debugging
 *********
 
@@ -55,4 +59,12 @@ To debug the redis server, you can use the redis-cli:
     sudo apt-get install redis-tools
     redis-cli --stat
     redis-cli --scan | head -10
+
+Frameworks
+**********
+
+The following frameworks are used inside the broker:
+
+- https://docs.python-arango.com/
+- https://www.pycryptodome.org/
 

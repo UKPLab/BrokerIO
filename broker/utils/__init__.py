@@ -10,7 +10,7 @@ from broker.db.Tasks import Tasks
 from broker.db.Users import Users
 
 
-def simple_client(name, url, token, client_queue: mp.Queue, message_queue: mp.Queue, skill_name="test_skill",
+def simple_client(name, url, client_queue: mp.Queue, message_queue: mp.Queue, skill_name="test_skill",
                   logging_level="INFO"):
     logger = init_logging(name, level=logging.getLevelName(logging_level))
     sio = socketio.Client(logger=logger, engineio_logger=logger)
@@ -36,7 +36,7 @@ def simple_client(name, url, token, client_queue: mp.Queue, message_queue: mp.Qu
             logger.debug("Send message: {}".format(message))
         else:
             try:
-                sio.connect(url, auth={"token": token})
+                sio.connect(url)
             except socketio.exceptions.ConnectionError:
                 logger.error("Connection to broker failed. Trying again in 5 seconds ...")
                 time.sleep(5)
@@ -57,7 +57,7 @@ def scrub_job(max_age=None):
 
 def init_job():
     """
-    Reinit the database with new keys
+    Reinit the database with new keys for system user
     :return:
     """
     logger = init_logging("Init Job", level=logging.getLevelName("INFO"))
@@ -66,3 +66,4 @@ def init_job():
 
     tasks = Users(db, socketio)
     tasks.init(True)
+

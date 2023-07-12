@@ -51,6 +51,7 @@ class Users:
                     {
                         "system": True,
                         "role": "admin",
+                        "authenticated": 0,
                         "key": keys.get_public(),
                         "created": datetime.now().isoformat(),
                         "updated": datetime.now().isoformat()
@@ -64,14 +65,13 @@ class Users:
         :return:
         """
         # make sure the public key doesn't exists
-        client = results(self.db.find({"public": public}))
+        client = results(self.db.find({"key": public}))
         if client.count() > 0:
             c = client.next()
-            c['authenticated'] += 1
+            c['authenticated'] = c['authenticated'] + 1
             c["updated"]: datetime.now().isoformat()
             return results(self.db.update(c))
         else:
-            # generate key pair
             return results(self.db.insert(
                 {
                     "role": "default",
@@ -81,3 +81,11 @@ class Users:
                     "updated": datetime.now().isoformat()
                 }
             ))
+
+    def getByKey(self, key):
+        """
+        Get user by key
+        :param key: key
+        :return:
+        """
+        return results(self.db.get(key))

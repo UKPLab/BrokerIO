@@ -12,6 +12,7 @@ from broker.app import init
 from broker.db import connect_db
 from broker.utils import scrub_job
 from broker.utils.Guard import Guard
+from test.TestAuth import TestAuth
 from test.TestClient import TestClient
 from test.TestContainer import TestContainer
 
@@ -55,7 +56,7 @@ class TestBroker(unittest.TestCase):
         cls._container = container
 
         logger.info("Starting client for testing that the environment is working ...")
-        client = TestClient(logger, os.getenv("TEST_URL"), os.getenv("TEST_TOKEN"), "test_skill")
+        client = TestClient(logger, os.getenv("TEST_URL"), "test_skill")
         client.start()
         logger.info("Environment ready!")
         client.stop()
@@ -77,7 +78,7 @@ class TestBroker(unittest.TestCase):
 
     def setUp(self) -> None:
         self._logger.info("Start new client ...")
-        self.client = TestClient(self._logger, os.getenv("TEST_URL"), os.getenv("TEST_TOKEN"), "test_skill",
+        self.client = TestClient(self._logger, os.getenv("TEST_URL"), "test_skill",
                                  queue_size=2 * int(os.getenv("QUOTA_CLIENTS")))
         self.client.start()
 
@@ -172,7 +173,7 @@ class TestBroker(unittest.TestCase):
         ctx = mp.get_context('spawn')
 
         # TODO assert check if guard is really running
-        guard = Guard(os.getenv("TEST_URL"), os.getenv("TEST_TOKEN"))
+        guard = Guard(os.getenv("TEST_URL"))
         client = ctx.Process(target=guard.run,
                              args=())
         client.start()
@@ -250,7 +251,7 @@ class TestBroker(unittest.TestCase):
                     # start client
                     while len(clients) < client_i:
                         self._logger.info("Start client {} ...".format(len(clients) + 1))
-                        client = TestClient(self._logger, os.getenv("TEST_URL"), os.getenv("TEST_TOKEN"),
+                        client = TestClient(self._logger, os.getenv("TEST_URL"),
                                             name="Client_{}".format(len(clients) + 1))
                         client.start()
                         clients.append(client)
@@ -388,10 +389,10 @@ class TestBroker(unittest.TestCase):
         Check authentication work
         :return:
         """
-
-        # TODO check authentication process with system key
-        return True
-
+        client = TestAuth(logger=self._logger, url=os.getenv("TEST_URL"))
+        role = client.test()
+        client.terminate()
+        return self.assertEqual(role, "admin")
 
 
 if __name__ == '__main__':

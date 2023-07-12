@@ -46,7 +46,6 @@ class Clients:
                 "connected": True,
                 "first_contact": datetime.now().isoformat(),
                 "last_contact": datetime.now().isoformat(),
-                "reconnects": 1,
             }
         )
 

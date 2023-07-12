@@ -6,12 +6,11 @@ from broker.utils import simple_client
 
 
 class TestClient:
-    def __init__(self, logger, url, token, name="TestClient", queue_size=100):
+    def __init__(self, logger, url, name="TestClient", queue_size=100):
         self.logger = logger
         self.message_queue = mp.Manager().Queue(queue_size)
         self.client_queue = mp.Manager().Queue(queue_size)
         self.url = url
-        self.token = token
         self.client = None
         self.name = name
 
@@ -19,7 +18,7 @@ class TestClient:
         self.logger.info("Start new client ...")
         ctx = mp.get_context('spawn')
         self.client = ctx.Process(target=simple_client, args=(self.name,
-                                                              self.url, self.token, self.client_queue,
+                                                              self.url, self.client_queue,
                                                               self.message_queue,
                                                               os.getenv("TEST_CLIENT_LOGGING_LEVEL", "ERROR")))
         self.client.start()
