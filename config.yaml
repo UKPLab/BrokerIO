@@ -1,0 +1,15 @@
+quota:
+  guest:
+    requests: 20
+    results: 100
+  user:
+    requests: 100
+    results: 1000
+  admin:
+    requests: 0
+    results: 0
+scrub:
+  enabled: true
+  interval: 60
+  maxAge: 0
+

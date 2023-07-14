@@ -36,6 +36,7 @@ The broker is developed as part of the `CARE project <https://github.com/UKPLab/
    :maxdepth: 1
    :caption: Broker
 
+   broker/config
    broker/authentication
    broker/client
    broker/requests

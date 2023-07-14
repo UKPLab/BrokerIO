@@ -15,8 +15,9 @@ class Tasks:
     @author: Dennis Zyska
     """
 
-    def __init__(self, db, socketio):
+    def __init__(self, db, config, socketio):
         self.socketio = socketio
+        self.config = config
         self.logger = init_logging("tasks")
         self._db = db
         if results(db.has_collection("tasks")):
@@ -24,8 +25,6 @@ class Tasks:
         else:
             self.db = results(db.create_collection("tasks"))
 
-        self.scrub_max_age = int(os.getenv("SCRUB_MAX_AGE", 3600))
-        self.scrub_interval = int(os.getenv("SCRUB_INTERVAL", 3600))
         self.clean()
 
         # start scrub task
@@ -138,14 +137,14 @@ class Tasks:
                 || doc.request.config.donate == false)
                 RETURN doc
             """
-            if self.scrub_max_age > 0 or max_age is not None:
+            if self.config['scrub']['enabled'] and self.config['scrub']['maxAge'] > 0:
                 timestamp_threshold = datetime.now() - timedelta(
-                    seconds=self.scrub_max_age if (max_age is None) else max_age)
+                    seconds=self.config['scrub']['maxAge'] if (max_age is None) else max_age)
                 query_params = {'timestamp': timestamp_threshold.isoformat()}
                 cursor = results(self._db.aql.execute(aql_query, bind_vars=query_params))
                 for entry in cursor:
                     print("Delete by scrub: Task {}".format(entry['_key']))
                     self.db.delete(entry['_key'])
             if run_forever:
-                time.sleep(self.scrub_interval)
+                time.sleep(self.config['scrub']['interval'])
             once = False

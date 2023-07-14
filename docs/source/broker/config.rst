@@ -1,0 +1,40 @@
+Configuration
+=============
+
+To adapt the broker's behavior to your needs, you can also adapt the ``config.yaml`` file in the broker's root directory.
+
+The following options are available:
+
+.. option:: quota
+
+    There are several options to configure the quota system. The options are applied to each role (see :doc:`Authentication <./authentication>` individually.
+
+    For each role, you can specify the following options:
+
+    .. option:: requests
+
+        The maximum number of requests per second. If ``0``, no limit is applied.
+
+    .. option:: results
+
+        The maximum number of results can be sent by a skill per second. If ``0``, no limit is applied.
+
+.. option:: scrub
+
+    The database can be scrubbed automatically. This means that all data older than a certain time is deleted (not donated data!).
+    This is useful to keep the database small and fast.
+    The following options are available:
+
+    .. option:: enabled
+
+        If ``true``, the scrubbing is enabled.
+
+    .. option:: interval
+
+        The interval in seconds in which the scrubbing is performed.
+
+    .. option:: maxAge
+
+        The maximum age of data in the database in seconds. All data older than this value is deleted (expect donated data).
+        If set to ``0``, no data is deleted.
+

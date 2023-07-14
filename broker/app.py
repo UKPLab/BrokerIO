@@ -24,7 +24,7 @@ from broker.db.Users import Users
 from broker.sockets.Requests import Requests
 from broker.sockets.Auth import Auth
 import os
-from broker import init_logging
+from broker import init_logging, load_config
 from broker.db import connect_db
 
 __version__ = os.getenv("BROKER_VERSION")
@@ -44,6 +44,9 @@ def init():
     DEBUG_MODE = "--debug" in sys.argv
     config = WebInstance(dev=DEV_MODE, debug=DEBUG_MODE)
 
+    # load yaml config
+    main_config = load_config()
+
     # arango db
     logger.info("Connecting to db...")
     db, _, _ = connect_db()
@@ -59,8 +62,8 @@ def init():
     # clients
     logger.info("Initializing db tables...")
     db.clear_async_jobs()
-    clients = Clients(db, socketio)
-    tasks = Tasks(db, socketio)
+    clients = Clients(db=db, config=main_config, socketio=socketio)
+    tasks = Tasks(db=db, config=main_config, socketio=socketio)
     skills = Skills(db, socketio)
     users = Users(db, socketio)
 

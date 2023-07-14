@@ -129,8 +129,9 @@ Roles
 The following roles are available:
 
 - guest: The user has only limit access to resources.
+- user: The user is registered with a public key.
 - admin: The user has full access to all resources.
 
-.. note::
+.. tip::
 
-    Currently there is no difference between the roles implemented.
+    See :doc:`./config` for more information about how to configure settings for roles.

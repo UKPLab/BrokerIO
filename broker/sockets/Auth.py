@@ -41,6 +41,7 @@ class Auth:
                 if verify(client['secret'], data['sig'], data['pub']):
                     user = self.users.auth(data['pub'])
                     client['user'] = user['_key']
+                    client['role'] = user['role']
                     self.clients.save(client)
                     self.status()
                 else:

@@ -3,7 +3,7 @@ from datetime import datetime
 from broker import init_logging
 from broker.db import results
 from broker.utils.Keys import Keys
-import uuid
+
 
 class Users:
     """
@@ -74,7 +74,7 @@ class Users:
         else:
             return results(self.db.insert(
                 {
-                    "role": "default",
+                    "role": "user",
                     "key": public,
                     "authenticated": 1,
                     "created": datetime.now().isoformat(),

@@ -7,7 +7,7 @@ import unittest
 
 from dotenv import load_dotenv
 
-from broker import init_logging
+from broker import init_logging, load_config
 from broker.app import init
 from broker.db import connect_db
 from broker.utils import scrub_job
@@ -33,6 +33,9 @@ class TestBroker(unittest.TestCase):
 
         logger = init_logging(name="Unittest", level=logging.getLevelName(os.getenv("TEST_LOGGING_LEVEL", "INFO")))
         cls._logger = logger
+
+        logger.info("Load config ...")
+        cls._config = load_config()
 
         logger.info("Connect to db...")
         cls._db, cls._syncdb, cls._sysdb = connect_db()
@@ -79,7 +82,7 @@ class TestBroker(unittest.TestCase):
     def setUp(self) -> None:
         self._logger.info("Start new client ...")
         self.client = TestClient(self._logger, os.getenv("TEST_URL"), "test_skill",
-                                 queue_size=2 * int(os.getenv("QUOTA_CLIENTS")))
+                                 queue_size=2 * int(self._config['quota']['guest']['requests']))
         self.client.start()
 
     def tearDown(self) -> None:

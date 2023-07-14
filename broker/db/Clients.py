@@ -1,4 +1,3 @@
-import os
 from datetime import datetime
 
 from flask_socketio import join_room
@@ -15,10 +14,11 @@ class Clients:
     @author: Dennis Zyska
     """
 
-    def __init__(self, db, socketio):
+    def __init__(self, db, config, socketio):
         self.socketio = socketio
-        self.quota = Quota(max_len=int(os.getenv("QUOTA_CLIENTS", 20)) + 1)
-        self.quota_results = Quota(max_len=int(os.getenv("QUOTA_RESULTS", 100)) + 1)
+        self.config = config
+        self.quotas = {}
+
         self.logger = init_logging("clients")
 
         if results(db.has_collection("clients")):
@@ -38,7 +38,7 @@ class Clients:
         :return:
         """
         join_room(sid)
-        return self.db.insert(
+        user = results(self.db.insert(
             {
                 "sid": sid,
                 "ip": ip,
@@ -47,7 +47,41 @@ class Clients:
                 "first_contact": datetime.now().isoformat(),
                 "last_contact": datetime.now().isoformat(),
             }
-        )
+        ))
+
+        # add quota for sid
+        self._apply_quota(sid, "guest")
+
+        return user
+
+    def disconnect(self, sid):
+        self.db.update_match({"sid": sid, "connected": True},
+                             {'last_contact': datetime.now().isoformat(), 'connected': False})
+
+        # remove sid from quota
+        del self.quotas[sid]
+
+        # close room
+        self.socketio.close_room(sid)
+
+        # cancel jobs
+        # TODO cancel open jobs
+
+    def _apply_quota(self, sid, role):
+        """
+        Set quota for client
+        :param sid: session id
+        :param role: name of the role
+        :return:
+        """
+        if sid in self.quotas:
+            del self.quotas[sid]
+
+        self.quotas[sid] = {
+            "role": role,
+            "requests": Quota(max_len=int(self.config['quota'][role]['requests']) + 1),
+            "results": Quota(max_len=int(self.config['quota'][role]['results']) + 1),
+        }
 
     def get(self, sid):
         """
@@ -75,30 +109,25 @@ class Clients:
         :param client: client object
         :return:
         """
+        # update quota if role changed
+        if "role" in client:
+            if self.quotas[client["sid"]]["role"] != client["role"]:
+                self._apply_quota(client["sid"], client["role"])
+
         self.db.update(client)
 
-    def disconnect(self, sid):
-        self.db.update_match({"sid": sid, "connected": True},
-                             {'last_contact': datetime.now().isoformat(), 'connected': False})
-
-        # delete quota for sid
-        self.quota.delete(sid)
-        self.quota_results.delete(sid)
-
-        self.socketio.close_room(sid)
-
-    def check_quota(self, sid, append=False, results=False):
+    def check_quota(self, sid, append=False, is_result=False):
         """
         Check if a client is allowed to send data
-        :param results: use results quota
+        :param is_result: use results quota
         :param sid: session id
         :param append: append to quota
         :return: True if quota is exceeded
         """
         self.db.update_match({"sid": sid, "connected": True}, {'last_contact': datetime.now().isoformat()})
-        if results:
-            return self.quota_results(sid, append)
-        return self.quota(sid, append)
+        if is_result:
+            return self.quotas[sid]['results'](append)
+        return self.quotas[sid]['requests'](append)
 
     def clean(self):
         """
@@ -106,5 +135,3 @@ class Clients:
         """
         cleaned = results(self.db.update_match({"connected": True}, {"connected": False, "cleaned": True}))
         self.logger.info("Cleaned up {} clients".format(cleaned))
-        self.quota.reset()
-        self.quota_results.reset()

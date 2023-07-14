@@ -102,7 +102,7 @@ class Requests:
         """
         try:
             node = session["sid"]
-            if self.clients.check_quota(node, append=True, results=True):
+            if self.clients.check_quota(node, append=True, is_result=True):
                 return
 
             if type(data) is dict and "id" in data and "data" in data:

@@ -4,7 +4,7 @@ import time
 
 import socketio
 
-from broker import init_logging
+from broker import init_logging, load_config
 from broker.db import connect_db
 from broker.db.Tasks import Tasks
 from broker.db.Users import Users
@@ -50,8 +50,9 @@ def scrub_job(max_age=None):
     logger = init_logging("Scrub Job", level=logging.getLevelName("INFO"))
     logger.info("Connecting to db...")
     db, _, _ = connect_db()
+    config = load_config()
 
-    tasks = Tasks(db, socketio)
+    tasks = Tasks(db, config, socketio)
     tasks.scrub(run_forever=False, max_age=max_age)
 
 
@@ -64,6 +65,7 @@ def init_job():
     logger.info("Connecting to db...")
     db, _, _ = connect_db()
 
-    tasks = Users(db, socketio)
+    config = load_config()
+    tasks = Users(db, config, socketio)
     tasks.init(True)
 
