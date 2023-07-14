@@ -40,6 +40,7 @@ class Auth:
             if "secret" in client:
                 if verify(client['secret'], data['sig'], data['pub']):
                     user = self.users.auth(data['pub'])
+                    user = self.users.get(user['_key'])
                     client['user'] = user['_key']
                     client['role'] = user['role']
                     self.clients.save(client)
@@ -80,7 +81,7 @@ class Auth:
         try:
             if self.clients.check_quota(session["sid"], append=True):
                 return
-            user = self.users.getByKey(self.clients.get(session["sid"])['user'])
+            user = self.users.get(self.clients.get(session["sid"])['user'])
             if user:
                 self.socketio.emit("authInfo", {"role": user['role']})
             else:

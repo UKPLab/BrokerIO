@@ -121,7 +121,7 @@ class Tasks:
         cleaned = results(self.db.update_match({"connected": True}, {"connected": False, "cleaned": True}))
         self.logger.info("Cleaned up {} tasks".format(cleaned))
 
-    def scrub(self, run_forever=True, max_age=None):
+    def scrub(self, run_forever=True):
         """
         Regular task for cleaning db - delete old entries
         :param run_forever: run forever as called in thread
@@ -138,8 +138,7 @@ class Tasks:
                 RETURN doc
             """
             if self.config['scrub']['enabled'] and self.config['scrub']['maxAge'] > 0:
-                timestamp_threshold = datetime.now() - timedelta(
-                    seconds=self.config['scrub']['maxAge'] if (max_age is None) else max_age)
+                timestamp_threshold = datetime.now() - timedelta(seconds=self.config['scrub']['maxAge'])
                 query_params = {'timestamp': timestamp_threshold.isoformat()}
                 cursor = results(self._db.aql.execute(aql_query, bind_vars=query_params))
                 for entry in cursor:

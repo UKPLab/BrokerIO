@@ -296,7 +296,7 @@ class TestBroker(unittest.TestCase):
         :return:
         """
         total_requests = 0
-        for i in range(int(os.getenv("QUOTA_CLIENTS")) * 2):
+        for i in range(int(self._config['quota']['guest']['requests']) * 2):
             total_requests += 1
             self.client.put({'id': "quota", 'name': "test_skill",
                              'data': {'start': time.perf_counter(), 'request': total_requests}})
@@ -317,7 +317,7 @@ class TestBroker(unittest.TestCase):
         self._logger.info("Time between first and last received message: {}".format(last_message - first_message))
         self._logger.info("Messages received: {}".format(messages))
         self.assertLess(len(messages), total_requests)
-        self.assertEqual(int(os.getenv("QUOTA_CLIENTS")), len(messages))
+        self.assertEqual(int(self._config['quota']['guest']['requests']), len(messages))
 
     def test_delay(self):
         """
@@ -381,8 +381,15 @@ class TestBroker(unittest.TestCase):
         self.assertEqual(cursor.count(), 3)
 
         # run scrub
+        time.sleep(2)
         self._logger.info("Starting scrubbing")
-        scrub_job(max_age=0)
+        scrub_config = {
+            "scrub": {
+                "enabled": True,
+                "maxAge": 1
+            }
+        }
+        scrub_job(overwrite_config=scrub_config)
 
         cursor = self._syncdb.aql.execute(aql_query, count=True)
         return self.assertEqual(cursor.count(), 1)

@@ -49,6 +49,14 @@ The test are located in the ``tests`` folder.
 
     You also can run the tests individually by using, e.g. ``python3 -u -m unittest test.test_broker.TestBroker.test_auth``.
 
+Error Codes
+===========
+
+Sometimes the broker will return an error code, here is a list of all possible error codes:
+
+- 401 - Signature cannot be verified by message
+- 500 - Undefined error in request
+
 Debugging
 *********
 

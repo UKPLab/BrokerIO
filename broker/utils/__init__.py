@@ -42,7 +42,7 @@ def simple_client(name, url, client_queue: mp.Queue, message_queue: mp.Queue, sk
                 time.sleep(5)
 
 
-def scrub_job(max_age=None):
+def scrub_job(overwrite_config=None):
     """
     Simple job to start a scrub process (e.g., by an cronjob)
     :return:
@@ -52,8 +52,11 @@ def scrub_job(max_age=None):
     db, _, _ = connect_db()
     config = load_config()
 
+    if overwrite_config:
+        config.update(overwrite_config)
+
     tasks = Tasks(db, config, socketio)
-    tasks.scrub(run_forever=False, max_age=max_age)
+    tasks.scrub(run_forever=False)
 
 
 def init_job():

@@ -82,7 +82,7 @@ class Users:
                 }
             ))
 
-    def getByKey(self, key):
+    def get(self, key):
         """
         Get user by key
         :param key: key
