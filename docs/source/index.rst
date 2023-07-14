@@ -50,7 +50,7 @@ The broker is developed as part of the `CARE project <https://github.com/UKPLab/
    :caption: Skills
 
    skills/definition
-   skills/requests
+   skills/features
    skills/skill_definition_file
    skills/examples
 
