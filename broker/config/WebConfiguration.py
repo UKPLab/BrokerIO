@@ -6,7 +6,7 @@ are propagated to all other instances.
 
 A default configuration is loaded, if not specified otherwise.
 
-Author: Nils Dycke (dycke@ukp...)
+Author: Nils Dycke
 """
 
 import redis

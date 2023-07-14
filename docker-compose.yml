@@ -58,5 +58,3 @@ services:
     environment:
       - ARANGO_ROOT_PASSWORD=${ARANGODB_ROOT_PASSWORD}
       - ARANGO_NO_AUTH=1
-    ports:
-      - ${ARANGODB_PORT}:8529

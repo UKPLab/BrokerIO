@@ -38,3 +38,29 @@ The following options are available:
         The maximum age of data in the database in seconds. All data older than this value is deleted (expect donated data).
         If set to ``0``, no data is deleted.
 
+.. option:: taskKiller
+
+    The task killer is a mechanism to kill tasks that are running too long. This is useful to prevent a skill from blocking the whole system.
+
+.. warning::
+
+    Especially the job quota is highly affected by this! If a task is running forever, the job quota is not freed.
+
+    The following options are available:
+
+    .. option:: enabled
+
+        If ``true``, the task killer is enabled.
+
+    .. option:: interval
+
+        The interval in seconds in which the task killer is performed.
+
+    .. option:: maxDuration
+
+        The maximum age of a task in seconds.
+        If a task is running longer than this value, a kill signal will be sent to the node (if node support it).
+        and the client will be notified that the task failed.
+
+
+

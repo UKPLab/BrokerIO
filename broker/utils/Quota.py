@@ -11,7 +11,9 @@ class Quota:
 
     def __init__(self, max_len=100):
         self.max_len = max_len
-        self.queue = deque(maxlen=self.max_len)
+        self.queue = None
+
+        self.reset()
 
     def __call__(self, append=True):
         """

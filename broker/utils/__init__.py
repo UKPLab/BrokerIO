@@ -5,12 +5,12 @@ import time
 import socketio
 
 from broker import init_logging, load_config
-from broker.db import connect_db
-from broker.db.Tasks import Tasks
-from broker.db.Users import Users
+from broker.db.Database import Database
+from broker.db.collection.Tasks import Tasks
+from broker.db.collection.Users import Users
 
 
-def simple_client(name, url, client_queue: mp.Queue, message_queue: mp.Queue, skill_name="test_skill",
+def simple_client(name, url, client_queue: mp.Queue, message_queue: mp.Queue, skill_queue: mp.Queue = None, skill_name="test_skill",
                   logging_level="INFO"):
     logger = init_logging(name, level=logging.getLevelName(logging_level))
     sio = socketio.Client(logger=logger, engineio_logger=logger)
@@ -18,6 +18,8 @@ def simple_client(name, url, client_queue: mp.Queue, message_queue: mp.Queue, sk
     @sio.on('skillUpdate')
     def skill_update(data):
         logger.debug("skillUpdate: {}".format(data))
+        if skill_queue:
+            skill_queue.put(data)
         if len(data) > 0:
             for skill in data:
                 if skill['name'] == skill_name:
@@ -49,14 +51,12 @@ def scrub_job(overwrite_config=None):
     """
     logger = init_logging("Scrub Job", level=logging.getLevelName("INFO"))
     logger.info("Connecting to db...")
-    db, _, _ = connect_db()
     config = load_config()
-
     if overwrite_config:
         config.update(overwrite_config)
 
-    tasks = Tasks(db, config, socketio)
-    tasks.scrub(run_forever=False)
+    db = Database(config=config)
+    db.tasks.scrub(run_forever=False)
 
 
 def init_job():

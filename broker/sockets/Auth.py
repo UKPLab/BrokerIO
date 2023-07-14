@@ -2,25 +2,21 @@ import os
 
 from Crypto.Hash import SHA256
 from flask import request, session
+from flask_socketio import join_room, leave_room
 
-from broker import init_logging
+from broker.sockets import Socket
 from broker.utils.Keys import verify
 
 
-class Auth:
+class Auth(Socket):
     """
     Basic socket.io event handlers for authentication
 
     @author: Dennis Zyska
     """
 
-    def __init__(self, socketio, users, clients):
-        self.socketio = socketio
-        self.users = users
-        self.clients = clients
-        self.logger = init_logging("auth")
-
-        self._init()
+    def __init__(self, db, socketio):
+        super().__init__("skill", db, socketio)
 
     def _init(self):
         self.socketio.on_event("authRequest", self.request)
@@ -34,16 +30,21 @@ class Auth:
         :return:
         """
         try:
-            if self.clients.check_quota(session["sid"], append=True):
+            if self.db.clients.quota(session["sid"], append=True):
                 return
-            client = self.clients.get(session["sid"])
+            client = self.db.clients.get(session["sid"])
             if "secret" in client:
                 if verify(client['secret'], data['sig'], data['pub']):
-                    user = self.users.auth(data['pub'])
-                    user = self.users.get(user['_key'])
+                    user = self.db.users.auth(data['pub'])
+                    user = self.db.users.get(user['_key'])
                     client['user'] = user['_key']
+
+                    # updating client role
                     client['role'] = user['role']
-                    self.clients.save(client)
+                    leave_room("role:guests")
+                    join_room("role:{}".format(user['role']))
+
+                    self.db.clients.save(client)
                     self.status()
                 else:
                     self.logger.error("Error in verify {}: {}".format(session["sid"], data))
@@ -61,13 +62,13 @@ class Auth:
         :return:
         """
         try:
-            if self.clients.check_quota(session["sid"], append=True):
+            if self.db.clients.quota(session["sid"], append=True):
                 return
             # create secret message to sign by client
             secret_message = "{}{}".format(request.sid, os.getenv("SECRET", "astringency"))
             hash = SHA256.new()
             hash.update(secret_message.encode("utf8"))
-            self.clients.register(request.sid, hash.hexdigest())
+            self.db.clients.register(request.sid, hash.hexdigest())
             self.socketio.emit("authChallenge", {"secret": hash.hexdigest()})
         except:
             self.logger.error("Error in request {}".format("authRequest"))
@@ -79,9 +80,9 @@ class Auth:
         :return:
         """
         try:
-            if self.clients.check_quota(session["sid"], append=True):
+            if self.db.clients.quota(session["sid"], append=True):
                 return
-            user = self.users.get(self.clients.get(session["sid"])['user'])
+            user = self.db.users.get(self.db.clients.get(session["sid"])['user'])
             if user:
                 self.socketio.emit("authInfo", {"role": user['role']})
             else:

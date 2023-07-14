@@ -126,7 +126,7 @@ In node.js:
 Roles
 -----
 
-The following roles are available:
+The following roles are currently supported:
 
 - guest: The user has only limit access to resources.
 - user: The user is registered with a public key.

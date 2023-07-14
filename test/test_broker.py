@@ -404,6 +404,43 @@ class TestBroker(unittest.TestCase):
         client.terminate()
         return self.assertEqual(role, "admin")
 
+    def test_roles(self):
+        """
+        Check if skills can be selected for specific roles
+        :return:
+        """
+        self._logger.info("Start container with user role")
+        container = TestContainer(self._logger, os.getenv("TEST_URL"), os.getenv("TEST_TOKEN"),
+                                  "skill_role_test", roles=["user"],
+                                  name="Container_Roles")
+        container.start()
+
+        # get skills
+        self._logger.info("Get skills")
+        self._logger.info("Start client...")
+        client = TestClient(self._logger, os.getenv("TEST_URL"),
+                            name="Client_Test_Role")
+        client.start()
+        skill = client.get_skill_queue()
+        self.assertEqual(skill, "skill_role_test")
+
+        # stop container and client
+        client.stop()
+        container.stop()
+
+        # TODO
+
+    def test_status_update(self):
+        pass
+        # TODO
+
+    def test_abort(self):
+        pass
+        # TODO
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,36 +1,33 @@
 from datetime import datetime
 
-from broker import init_logging
 from broker.db import results
+from broker.db.collection import Collection
 from broker.utils.Keys import Keys
 
 
-class Users:
+class Users(Collection):
     """
-    Representation of a client in the broker (through db)
+    Users Collection
 
     @author: Dennis Zyska
     """
 
-    def __init__(self, db, socketio):
-        self.socketio = socketio
-        self.logger = init_logging("users")
+    def __init__(self, db, adb, config, socketio):
+        super().__init__("users", db, adb, config, socketio)
+        self.quotas = {}
 
-        if results(db.has_collection("users")):
-            self.db = db.collection("users")
-        else:
-            self.db = results(db.create_collection("users"))
-        self.index = results(self.db.add_hash_index(fields=['username'], name='username_index', unique=False))
+        self.index = results(self.collection.add_hash_index(fields=['sid'], name='sid_index', unique=False))
+        self.index = results(self.collection.add_hash_index(fields=['connected'], name='connected_index', unique=False))
 
-        self.init()
-
-    def init(self, reinit=False):
+    def _init(self, reinit=False):
         """
         Check if necessary keys exists, if not create
         :param reinit: overwrite basic clients
         :return:
         """
-        basic_client = results(self.db.find({"system": True}))
+        super()._init()
+
+        basic_client = results(self.collection.find({"system": True}))
         if reinit or basic_client.count() == 0:
 
             # load keys
@@ -38,16 +35,16 @@ class Users:
             if basic_client.count() > 0:
                 for c in basic_client:
                     if basic_client.has_more():
-                        self.db.delete(c)
+                        self.collection.delete(c)
 
                 c['key'] = keys.get_public()
                 c['updated'] = datetime.now().isoformat()
 
-                results(self.db.update(c))
+                results(self.collection.update(c))
 
             else:
                 # generate key pair
-                results(self.db.insert(
+                results(self.collection.insert(
                     {
                         "system": True,
                         "role": "admin",
@@ -65,14 +62,14 @@ class Users:
         :return:
         """
         # make sure the public key doesn't exists
-        client = results(self.db.find({"key": public}))
+        client = results(self.collection.find({"key": public}))
         if client.count() > 0:
             c = client.next()
             c['authenticated'] = c['authenticated'] + 1
             c["updated"]: datetime.now().isoformat()
-            return results(self.db.update(c))
+            return results(self.collection.update(c))
         else:
-            return results(self.db.insert(
+            return results(self.collection.insert(
                 {
                     "role": "user",
                     "key": public,
@@ -88,4 +85,4 @@ class Users:
         :param key: key
         :return:
         """
-        return results(self.db.get(key))
+        return results(self.collection.get(key))

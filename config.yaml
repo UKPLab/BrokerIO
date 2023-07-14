@@ -1,15 +1,22 @@
 quota:
   guest:
+    jobs: 1
     requests: 20
     results: 100
   user:
+    jobs: 10
     requests: 100
     results: 1000
   admin:
+    jobs: 0
     requests: 0
     results: 0
 scrub:
   enabled: true
   interval: 60
   maxAge: 0
+taskKiller:
+  enabled: true
+  interval: 1
+  maxDuration: 600
 

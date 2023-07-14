@@ -10,6 +10,7 @@ class TestClient:
         self.logger = logger
         self.message_queue = mp.Manager().Queue(queue_size)
         self.client_queue = mp.Manager().Queue(queue_size)
+        self.skill_queue = mp.Manager().Queue(queue_size)
         self.url = url
         self.client = None
         self.name = name
@@ -20,6 +21,7 @@ class TestClient:
         self.client = ctx.Process(target=simple_client, args=(self.name,
                                                               self.url, self.client_queue,
                                                               self.message_queue,
+                                                              self.skill_queue,
                                                               os.getenv("TEST_CLIENT_LOGGING_LEVEL", "ERROR")))
         self.client.start()
 
@@ -38,6 +40,13 @@ class TestClient:
             return m
         except queue.Empty:
             return False
+
+    def get_skill_queue(self):
+        """
+        Get the skill queue
+        :return: skill queue
+        """
+        return self.skill_queue.get()
 
     def get(self, *args, **kwargs):
         return self.client_queue.get(*args, **kwargs)

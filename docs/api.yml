@@ -19,6 +19,7 @@ channels:
           - $ref: "#/components/messages/skillRequest"
           - $ref: "#/components/messages/skillGetConfig"
           - $ref: "#/components/messages/taskResults"
+          - $ref: "#/components/messages/taskAbort"
           - $ref: "#/components/messages/error"
     subscribe:
       message:
@@ -27,6 +28,7 @@ channels:
           - $ref: "#/components/messages/skillConfig"
           - $ref: "#/components/messages/skillResults"
           - $ref: "#/components/messages/taskRequest"
+          - $ref: "#/components/messages/taskKill"
 
 components:
   messages:

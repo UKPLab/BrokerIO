@@ -54,6 +54,12 @@ Error Codes
 
 Sometimes the broker will return an error code, here is a list of all possible error codes:
 
+- 100 - Request Quota exceeded
+- 101 - Job Quota exceeded
+- 102 - Job cancelled - maximum execution time exceeded
+- 103 - Lost connection to node - and no other node available
+- 104 - Lost connection to node - job is started on another node
+- 200 - Skill not available
 - 401 - Signature cannot be verified by message
 - 500 - Undefined error in request
 

@@ -2,30 +2,23 @@ import random
 from datetime import datetime
 from uuid import uuid4
 
-from broker import init_logging
 from broker.db import results
+from broker.db.collection import Collection
 
 
-class Skills:
+class Skills(Collection):
     """
-    Represents skills from the database
+    Skill Collection
 
     @author: Dennis Zyska
     """
 
-    def __init__(self, db, socketio):
-        self.socketio = socketio
-        self.logger = init_logging("skills")
+    def __init__(self, db, adb, config, socketio):
+        super().__init__("skills", db, adb, config, socketio)
+        self.quotas = {}
 
-        if results(db.has_collection("skills")):
-            self.db = db.collection("skills")
-        else:
-            self.db = results(db.create_collection("skills"))
-
-        self.index = results(self.db.add_hash_index(fields=['sid'], name='sid_index', unique=False))
-        self.index = results(self.db.add_hash_index(fields=['connected'], name='connected_index', unique=False))
-
-        self.clean()
+        self.index = results(self.collection.add_hash_index(fields=['sid'], name='sid_index', unique=False))
+        self.index = results(self.collection.add_hash_index(fields=['connected'], name='connected_index', unique=False))
 
     def register(self, sid, data):
         """
@@ -34,7 +27,7 @@ class Skills:
         :param sid: session id of skill node
         :param data: skill data
         """
-        results(self.db.insert(
+        results(self.collection.insert(
             {
                 "uid": str(uuid4()),
                 "sid": sid,
@@ -54,12 +47,12 @@ class Skills:
 
         :param sid: session id of skill node
         """
-        skills = results(self.db.find({"sid": sid, "connected": True}))
+        skills = results(self.collection.find({"sid": sid, "connected": True}))
         if len(skills) > 0:
             skill = skills.next()
             skill["connected"] = False
             skill["last_contact"] = datetime.now().isoformat()
-            results(self.db.update(skill))
+            results(self.collection.update(skill))
             self.send_update(skill["config"]["name"])
 
     def send_update(self, name=None, with_config=False, **kwargs):
@@ -73,10 +66,53 @@ class Skills:
         :param kwargs: additional arguments for socketio.emit
         """
         if name:
-            self.socketio.emit("skillUpdate", [self.get_skill(name, with_config=with_config)], **kwargs)
+            skill = self.get_skill(name, with_config=with_config)
+            print(skill)
+            exit()
+            if 'roles' in skill['config']:
+                for role in skill['config']['roles']:
+                    self.socketio.emit("skillUpdate", [skill], room="role:{}".format(role), **kwargs)
+            else:
+                self.socketio.emit("skillUpdate", [skill], **kwargs)
         else:
             all_skills = self.get_skills(with_config=with_config)
-            self.socketio.emit("skillUpdate", [all_skills[key] for key in all_skills.keys()], **kwargs)
+
+            if len(all_skills) == 0:
+                return
+
+            # TODO check skill are only send to the users with the right role
+            print("All Skills", all_skills)
+
+            all_skills = [all_skills[key] for key in all_skills.keys()]
+
+            # distribute to roles
+            skills_admin = []
+            skills_user = []
+            skills_guest = []
+
+            print(all_skills)
+            exit()
+
+            for skill in all_skills:
+                if 'role' in skill['config']:
+                    for role in skill['config']['roles']:
+                        if role == 'admin':
+                            skills_admin.append(skill)
+                        elif role == 'user':
+                            skills_user.append(skill)
+                        elif role == 'guest':
+                            skills_guest.append(skill)
+                else:
+                    skills_guest.append(skill)
+
+            if len(skills_admin) > 0:
+                self.socketio.emit("skillUpdate", skills_admin, room="role:admin", **kwargs)
+
+            if len(skills_user) > 0:
+                self.socketio.emit("skillUpdate", skills_user, room="role:user", **kwargs)
+
+            if len(skills_guest) > 0:
+                self.socketio.emit("skillUpdate", skills_guest, room="role:guest", **kwargs)
 
     def get_node(self, name):
         """
@@ -85,9 +121,11 @@ class Skills:
         :param name: Skill name
         :return: random node id (session id)
         """
-        skills = results(self.db.find({"config.name": name, "connected": True}))
+        skills = results(self.collection.find({"config.name": name, "connected": True}))
         if len(skills) == 0:
             return None
+
+        # TODO check if the user can use this skill!
 
         pos = random.randint(0, len(skills) - 1)
         for i in range(0, pos):
@@ -101,7 +139,7 @@ class Skills:
         :param name: Skill name
         :param with_config: with config
         """
-        skills = results(self.db.find({"config.name": name, "connected": True}))
+        skills = results(self.collection.find({"config.name": name, "connected": True}))
         if len(skills) == 0:
             return {
                 "nodes": 0,
@@ -123,7 +161,14 @@ class Skills:
 
         :param with_config: with config
         """
-        skills = results(self.db.find({"connected": True}))
+        skills = results(self.collection.find({"connected": True}))
+        return [{
+            "name": skill["config"]["name"],
+            "nodes": 1,
+        }
+            for skill in skills
+        ]
+
         skill_list = {}
         for skill in skills:
             name = skill["config"]["name"]
@@ -142,5 +187,5 @@ class Skills:
         """
         Clean up database
         """
-        cleaned = results(self.db.update_match({"connected": True}, {"connected": False, "cleaned": True}))
+        cleaned = results(self.collection.update_match({"connected": True}, {"connected": False, "cleaned": True}))
         self.logger.info("Cleaned up {} skills".format(cleaned))

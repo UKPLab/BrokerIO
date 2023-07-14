@@ -31,3 +31,24 @@ Example:
 .. option:: donate
 
     This option marks the dataset as donated to allow permanent usage. By default, this option is set to ``false``.
+
+.. option:: max_runtime
+
+    This option is used to set the maximum runtime of a skill. By default, this option is set to ``0``.
+
+.. options:: status
+
+    This option can be activated to get status updates from the broker if available. By default, this option is set to ``false``.
+    An integer value can be used to set the minimum delay between the status updates.
+    This guarantees not receiving any message, if the skill sends nothing, there is nothing to send!
+
+    .. warning::
+
+        This will reduce the quota of the user. The quota is reduced by the number of status updates.
+
+    .. note::
+
+        The broker will only send status updates if the skill container implements the feature.
+
+    .. option::
+
