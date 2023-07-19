@@ -1,7 +1,7 @@
 import threading
 
 from broker import init_logging
-from broker.db import results
+from broker.db.utils import results
 
 
 class Collection:

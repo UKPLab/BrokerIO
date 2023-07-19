@@ -25,10 +25,13 @@ class Skill(Socket):
         Get configuration from a skill by name
         """
         try:
-            if self.clients.quota(session["sid"], append=True):
+            if self.db.clients.quota(session["sid"], append=True):
                 return
 
-            self.skills.send_update(data['name'], with_config=True, to=session["sid"])
+            client = self.db.clients.get(session["sid"])
+            skills = self.db.skills.get_skills(filter_role=client["role"], filter_name=data["name"], with_config=True)
+
+            self.socketio.emit("skillUpdate", skills, to=session["sid"])
         except:
             self.logger.error("Error in request {}: {}".format("skillGetConfig", data))
             self.socketio.emit("error", {"code": 500}, to=session["sid"])
@@ -41,10 +44,12 @@ class Skill(Socket):
         "skillRegister" event.
         """
         try:
-            if self.clients.quota(session["sid"], append=True):
+            if self.db.clients.quota(session["sid"], append=True):
                 return
 
-            self.skills.send_update(to=session["sid"])
+            client = self.db.clients.get(session["sid"])
+
+            self.db.skills.send_all(role=client['role'], to=session["sid"])
         except:
             self.logger.error("Error in request {}".format("skillGetAll"))
             self.socketio.emit("error", {"code": 500}, to=session["sid"])
@@ -59,10 +64,11 @@ class Skill(Socket):
             if isinstance(data, str):  # needed for c++ socket.io client
                 data = json.loads(data)
 
-            if self.clients.quota(session["sid"], append=True):
+            if self.db.clients.quota(session["sid"], append=True):
                 return
 
-            self.skills.register(session["sid"], data)
+            if 'name' in data:
+                self.db.skills.register(session["sid"], data)
         except:
             self.logger.error("Error in request {}: {}".format("skillRegister", data))
             self.socketio.emit("error", {"code": 500}, to=session["sid"])

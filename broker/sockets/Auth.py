@@ -35,7 +35,7 @@ class Auth(Socket):
             client = self.db.clients.get(session["sid"])
             if "secret" in client:
                 if verify(client['secret'], data['sig'], data['pub']):
-                    user = self.db.users.auth(data['pub'])
+                    user = self.db.users.auth(session["sid"], data['pub'])
                     user = self.db.users.get(user['_key'])
                     client['user'] = user['_key']
 

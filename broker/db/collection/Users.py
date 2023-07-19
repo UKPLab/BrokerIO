@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from broker.db import results
+from broker.db.utils import results
 from broker.db.collection import Collection
 from broker.utils.Keys import Keys
 
@@ -55,13 +55,16 @@ class Users(Collection):
                     }
                 ))
 
-    def auth(self, public):
+    def auth(self, sid, public):
         """
         Register user
+        :param sid: session id
         :param data: public key and additional infos
         :return:
         """
-        # make sure the public key doesn't exists
+        # send skill updates as role changed
+        self.db.skills.send_all(role="user", to=sid)
+
         client = results(self.collection.find({"key": public}))
         if client.count() > 0:
             c = client.next()

@@ -1,4 +1,4 @@
-from broker.db import results
+from broker.db.utils import results
 from broker.db.collection import Collection
 
 

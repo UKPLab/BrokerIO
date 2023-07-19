@@ -60,6 +60,7 @@ Sometimes the broker will return an error code, here is a list of all possible e
 - 103 - Lost connection to node - and no other node available
 - 104 - Lost connection to node - job is started on another node
 - 200 - Skill not available
+- 201 - Skill config is not the same as in the database currently registered
 - 401 - Signature cannot be verified by message
 - 500 - Undefined error in request
 

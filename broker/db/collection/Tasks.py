@@ -4,8 +4,8 @@ import time
 from datetime import datetime
 from datetime import timedelta
 
-from broker.db import results
 from broker.db.collection import Collection
+from broker.db.utils import results
 
 
 class Tasks(Collection):
@@ -146,11 +146,13 @@ class Tasks(Collection):
         """
         while self.config['taskKiller']['enabled']:
             aql_query = """
-                FOR doc IN tasks
-                FILTER doc.max_runtime > @timestamp && 
-                (doc.status == 'running' or doc.status == 'created')
+                FOR doc IN @@collection
+                FILTER doc.status == 'running' or doc.status == 'created'
+                FILTER doc.max_runtime > @timestamp
+                RETURN doc
             """
-            cursor = results(self._sysdb.aql.execute(aql_query, bind_vars={"timestamp": datetime.now()}))
+            cursor = results(self._sysdb.aql.execute(aql_query, bind_vars={"@collection": self.name,
+                                                                           "timestamp": datetime.now().isoformat()}))
             for task in cursor:
                 self.abort(task)
             time.sleep(self.config['taskKiller']['interval'])
@@ -175,7 +177,7 @@ class Tasks(Collection):
         for task in cursor:
             if task['nid'] == sid:
                 # node disconnected, is there another node?
-                node = self.db.skills.get_node(task['request']["name"])
+                node = self.db.skills.get_node(task['rid'], task['request']["name"])
                 if node is None:
                     self.abort(task, reason="node disconnected", kill=False, error=103)
                 else:

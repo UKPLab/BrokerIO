@@ -2,7 +2,7 @@ from datetime import datetime
 
 from flask_socketio import join_room
 
-from broker.db import results
+from broker.db.utils import results
 from broker.db.collection import Collection
 from broker.utils.JobQuota import JobQuota
 from broker.utils.Quota import Quota
@@ -49,7 +49,7 @@ class Clients(Collection):
         self._apply_quota(sid, role['name'])
 
         # send skills
-        self.db.skills.send_update(to=sid)
+        self.db.skills.send_all(role['name'], to=sid)
 
         return user
 

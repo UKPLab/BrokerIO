@@ -16,7 +16,6 @@ from test.TestAuth import TestAuth
 from test.TestClient import TestClient
 from test.TestContainer import TestContainer
 
-
 class TestBroker(unittest.TestCase):
     _broker = None
     _container = None
@@ -38,7 +37,7 @@ class TestBroker(unittest.TestCase):
         cls._config = load_config()
 
         logger.info("Connect to db...")
-        cls._db, cls._syncdb, cls._sysdb = connect_db()
+        cls._db = connect_db(cls._config, None)
 
         logger.info("Starting broker ...")
         logger.info("Broker URL: {}".format(os.getenv("TEST_URL")))

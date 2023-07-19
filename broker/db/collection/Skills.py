@@ -1,9 +1,7 @@
-import random
 from datetime import datetime
-from uuid import uuid4
 
-from broker.db import results
 from broker.db.collection import Collection
+from broker.db.utils import results
 
 
 class Skills(Collection):
@@ -27,9 +25,12 @@ class Skills(Collection):
         :param sid: session id of skill node
         :param data: skill data
         """
-        results(self.collection.insert(
-            {
-                "uid": str(uuid4()),
+        skills = self.get_skills(filter_name=data['name'], with_config=True)
+        if len(skills) > 0:
+            if not skills[0]['config'] == data['config']:
+                self.socketio.emit("error", {"code": 201}, to=sid)
+
+        skill = {
                 "sid": sid,
                 "config": data,
                 "connected": True,
@@ -38,150 +39,128 @@ class Skills(Collection):
                 "last_contact": datetime.now().isoformat(),
                 "first_contact": datetime.now().isoformat(),
             }
+
+        results(self.collection.insert(
+            skill
         ))
-        self.send_update(data["name"])
+        self.send_update(skill, len(skills) + 1)
 
     def unregister(self, sid):
         """
-        Unregister a skill
+        Unregister all skills from a node
 
         :param sid: session id of skill node
         """
         skills = results(self.collection.find({"sid": sid, "connected": True}))
-        if len(skills) > 0:
-            skill = skills.next()
+        for skill in skills:
+            # send update first
+            skills = self.get_skills(filter_name=skill['config']['name'], with_config=True)
+            self.send_update(skill, len(skills) - 1)
+
             skill["connected"] = False
             skill["last_contact"] = datetime.now().isoformat()
             results(self.collection.update(skill))
-            self.send_update(skill["config"]["name"])
 
-    def send_update(self, name=None, with_config=False, **kwargs):
+    def send_update(self, skill, nodes, **kwargs):
         """
         Send update to all connected clients
 
         If name is given, only send update for this skill
 
-        :param name: name of skill
+        :param nodes: number of nodes available for this skill
+        :param skill: skill data entry from db
         :param with_config: send with config
         :param kwargs: additional arguments for socketio.emit
         """
-        if name:
-            skill = self.get_skill(name, with_config=with_config)
-            print(skill)
-            exit()
-            if 'roles' in skill['config']:
-                for role in skill['config']['roles']:
-                    self.socketio.emit("skillUpdate", [skill], room="role:{}".format(role), **kwargs)
-            else:
-                self.socketio.emit("skillUpdate", [skill], **kwargs)
+        self.logger.error(skill)
+        if 'roles' in skill['config']:
+            for role in skill['config']['roles']:
+                self.socketio.emit("skillUpdate", [{"name": skill['config']['name'], "nodes": nodes}],
+                                   room="role:{}".format(role), **kwargs)
         else:
-            all_skills = self.get_skills(with_config=with_config)
+            self.socketio.emit("skillUpdate", [{"name": skill['config']['name'], "nodes": nodes}], **kwargs)
 
-            if len(all_skills) == 0:
-                return
+    def send_all(self, role, with_config=False, **kwargs):
+        """
+        Send update to all connected clients
+        :param with_config:
+        :param role: filter skills for role
+        :param kwargs:
+        :return:
+        """
+        all_skills = self.get_skills(filter_role=role, with_config=with_config)
 
-            # TODO check skill are only send to the users with the right role
-            print("All Skills", all_skills)
+        if all_skills:
+            self.socketio.emit("skillUpdate", all_skills, **kwargs)
 
-            all_skills = [all_skills[key] for key in all_skills.keys()]
-
-            # distribute to roles
-            skills_admin = []
-            skills_user = []
-            skills_guest = []
-
-            print(all_skills)
-            exit()
-
-            for skill in all_skills:
-                if 'role' in skill['config']:
-                    for role in skill['config']['roles']:
-                        if role == 'admin':
-                            skills_admin.append(skill)
-                        elif role == 'user':
-                            skills_user.append(skill)
-                        elif role == 'guest':
-                            skills_guest.append(skill)
-                else:
-                    skills_guest.append(skill)
-
-            if len(skills_admin) > 0:
-                self.socketio.emit("skillUpdate", skills_admin, room="role:admin", **kwargs)
-
-            if len(skills_user) > 0:
-                self.socketio.emit("skillUpdate", skills_user, room="role:user", **kwargs)
-
-            if len(skills_guest) > 0:
-                self.socketio.emit("skillUpdate", skills_guest, room="role:guest", **kwargs)
-
-    def get_node(self, name):
+    def get_node(self, sid, name):
         """
         Get a random node by name
 
         :param name: Skill name
+        :param sid: session id of the requested user
         :return: random node id (session id)
         """
-        skills = results(self.collection.find({"config.name": name, "connected": True}))
-        if len(skills) == 0:
-            return None
+        user = self.db.clients.get(sid)
+        aql_query = """
+                FOR doc IN @@collection
+                FILTER doc.connected 
+                FILTER (!HAS("roles", doc.config) or @role IN doc.config.roles)
+                SORT RAND()
+                LIMIT 1
+                RETURN doc
+            """
+        cursor = results(
+            self._sysdb.aql.execute(aql_query, bind_vars={"@collection": self.name, "role": user["role"]}, count=True))
 
-        # TODO check if the user can use this skill!
+        if cursor.count() > 0:
+            return cursor[0]["sid"]
 
-        pos = random.randint(0, len(skills) - 1)
-        for i in range(0, pos):
-            skill = skills.next()
-        return skills.next()["sid"]
-
-    def get_skill(self, name, with_config=False):
+    def get_skill(self, name):
         """
         Get a skill by name (aggregated, only first config is used)
 
         :param name: Skill name
-        :param with_config: with config
         """
-        skills = results(self.collection.find({"config.name": name, "connected": True}))
-        if len(skills) == 0:
-            return {
-                "nodes": 0,
-                "name": name,
-            }
+        return results(self.collection.find({"config.name": name, "connected": True}, limit=1))
 
-        skill = skills.next()
-        data = {
-            "nodes": len(skills),
-            "name": skill["config"]["name"],
-        }
-        if with_config:
-            data["config"] = skill["config"]
-        return data
-
-    def get_skills(self, with_config=False):
+    def get_skills(self, filter_name=None, filter_role=None, with_config=False):
         """
         Get list of skills (aggregated)
 
         :param with_config: with config
+        :param filter_name: filter by name
+        :param filter_role: filter by role
+        :return: list of skills
         """
-        skills = results(self.collection.find({"connected": True}))
-        return [{
-            "name": skill["config"]["name"],
-            "nodes": 1,
-        }
-            for skill in skills
-        ]
+        skills = []
 
-        skill_list = {}
-        for skill in skills:
-            name = skill["config"]["name"]
-            if name not in skill_list:
-                skill_list[name] = {
-                    "nodes": 1,
-                    "name": name,
-                }
-                if with_config:
-                    skill_list[name]["config"] = skill["config"]
-            else:
-                skill_list[name]["nodes"] += 1
-        return skill_list
+        filtering = {
+            "filter_name": "FILTER doc.config.name == @name" if filter_name is not None else "",
+            "filter_role": "FILTER (!HAS('roles', doc.config) or @role IN doc.config.roles)" if filter_role is not None else "",
+            "return": "RETURN { name: name, nodes: nodes }"
+        }
+        aql_query = """
+            FOR doc IN @@collection
+            FILTER doc.connected 
+            {filter_name}
+            {filter_role}
+            COLLECT name = doc.config.name, node = doc.config.name WITH COUNT INTO nodes
+            {return}
+        """.format(**filtering)
+        bind_vars = {"@collection": self.name}
+        if filter_name is not None:
+            bind_vars["name"] = filter_name
+        if filter_role is not None:
+            bind_vars["role"] = filter_role
+        cursor = results(self._sysdb.aql.execute(aql_query, bind_vars=bind_vars, count=True))
+        for skill in cursor:
+            if with_config:
+                skill_config = results(self.collection.find({"config.name": skill["name"], "connected": True}, limit=1, count=Tru))
+                if skill_config.count() > 0:
+                    skill["config"] = skill_config.next()["config"]
+            skills.append(skill)
+        return skills
 
     def clean(self):
         """
