@@ -104,6 +104,9 @@ class Tasks(Collection):
             task["fid"] = node  # finish id
             self.collection.update(task)
 
+            # update job quota
+            self.db.clients.quotas[task['rid']]['jobs'].remove(task['_key'])
+
             output = {
                 'id': task['request']['id'],
                 'clientId': task['request']['clientId'] if 'clientId' in task['request'] else None,
@@ -235,6 +238,9 @@ class Tasks(Collection):
         task['updated'] = datetime.now().isoformat()
         self.collection.update(task)
 
+        # update job quota
+        self.db.clients.quotas[task['rid']]['jobs'].remove(task['_key'])
+
         # send results to client
         if error:
             self.socketio.emit("error", {"code": 102}, room=task['rid'])
@@ -250,7 +256,7 @@ class Tasks(Collection):
 
     def clean(self):
         """
-        Clean up tasks
+        Clean up tasks on start
         """
         cleaned = results(self.collection.update_match({"connected": True}, {"connected": False, "cleaned": True}))
         self.logger.info("Cleaned up {} tasks".format(cleaned))
@@ -266,9 +272,9 @@ class Tasks(Collection):
         while run_forever or once:
             aql_query = """
                 FOR doc IN tasks
+                FILTER !doc.status == 'running' && !doc.status == 'created'
                 FILTER doc.updated < @timestamp
-                && (NOT HAS(doc.request.config, 'donate')
-                || doc.request.config.donate == false)
+                FILTER (NOT HAS(doc.request.config, 'donate') || doc.request.config.donate == false)
                 RETURN doc
             """
             if self.config['scrub']['enabled'] and self.config['scrub']['maxAge'] > 0:

@@ -29,17 +29,17 @@ class Request(Socket):
 
             # get a node that provides this skill
             node = self.db.skills.get_node(session["sid"], data["name"])
-            self.logger.error(node)
             if node is None:
                 self.socketio.emit("error", {"code": 200}, to=session["sid"])
             else:
-                # check users' quota for jobs
-                if self.db.clients.quota(session["sid"], append=True, is_job=True):
+                # check if the client has enough quota to run this job
+                if self.db.clients.quota(session["sid"], append=False, is_job=True):
                     self.socketio.emit("error", {"code": 101}, to=session["sid"])
                     return
 
                 task = self.db.tasks.create(session["sid"], node, data)
                 self.socketio.emit("taskRequest", {'id': task['_key'], 'data': data['data']}, room=node)
+                self.db.clients.quotas[session["sid"]]["jobs"].append(task['_key'])
         except:
             self.logger.error("Error in request {}: {}".format("skillRequest", data))
             self.socketio.emit("error", {"code": 500}, to=session["sid"])

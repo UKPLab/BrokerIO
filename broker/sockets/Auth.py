@@ -31,6 +31,7 @@ class Auth(Socket):
         """
         try:
             if self.db.clients.quota(session["sid"], append=True):
+                self.socketio.emit("error", {"code": 100}, to=session["sid"])
                 return
             client = self.db.clients.get(session["sid"])
             if "secret" in client:
@@ -55,7 +56,7 @@ class Auth(Socket):
             self.logger.error("Error in request {}: {}".format("authRegister", data))
             self.socketio.emit("error", {"code": 500}, to=session["sid"])
 
-    def request(self):
+    def request(self, data=None):
         """
         Authenticate a user, assign client to user
         :param data: object with public and signature
@@ -63,6 +64,7 @@ class Auth(Socket):
         """
         try:
             if self.db.clients.quota(session["sid"], append=True):
+                self.socketio.emit("error", {"code": 100}, to=session["sid"])
                 return
             # create secret message to sign by client
             secret_message = "{}{}".format(request.sid, os.getenv("SECRET", "astringency"))

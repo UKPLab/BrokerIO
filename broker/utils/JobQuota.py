@@ -22,7 +22,7 @@ class JobQuota(Quota):
         else:
             if append:
                 pos = (self.queue != 0).argmax(axis=0)
-                self.queue[pos] = True
+                self.queue[pos] = append
             return False
 
     def exceed(self):
@@ -35,6 +35,23 @@ class JobQuota(Quota):
             return False
         else:
             return True
+
+    def remove(self, task_id):
+        """
+        Remove a job from the quota
+
+        :param task_id: task id
+        """
+        self.queue[self.queue == task_id] = False
+
+    def append(self, task_id):
+        """
+        Append a job to the quota
+        :param task_id:
+        :return:
+        """
+        pos = (self.queue != 0).argmax(axis=0)
+        self.queue[pos] = task_id
 
     def reset(self):
         """

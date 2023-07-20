@@ -14,7 +14,9 @@ from broker.utils import scrub_job
 from broker.utils.Guard import Guard
 from test.TestAuth import TestAuth
 from test.TestClient import TestClient
+from test.TestClientA import TestClientA
 from test.TestContainer import TestContainer
+
 
 class TestBroker(unittest.TestCase):
     _broker = None
@@ -289,34 +291,31 @@ class TestBroker(unittest.TestCase):
         for container in containers:
             container.stop()
 
-    def test_quota(self):
+    def test_request_quota(self):
         """
         Check if quota is working
         :return:
         """
+        # check for auth request to not interfere with job quota
+        client = TestClientA(logger=self._logger, url=os.getenv("TEST_URL"))
+        client.start()
+
         total_requests = 0
         for i in range(int(self._config['quota']['guest']['requests']) * 2):
             total_requests += 1
-            self.client.put({'id': "quota", 'name': "test_skill",
-                             'data': {'start': time.perf_counter(), 'request': total_requests}})
+            client.put({'event': "authRequest", 'data': "test"})
 
         timeout = time.perf_counter() + 2
-        first_message = None
-        last_message = None
-        messages = []
-        while time.perf_counter() < timeout:
-            m = self.client.check_queue()
-            if m and m['id'] == "quota":
-                if len(messages) == 0:
-                    first_message = m['data']['start']
-                last_message = m['data']['start']
-                messages.append(m['data']['request'])
+        messages = 0
 
-        self._logger.info("Total requests sent: {}".format(total_requests))
-        self._logger.info("Time between first and last received message: {}".format(last_message - first_message))
-        self._logger.info("Messages received: {}".format(messages))
-        self.assertLess(len(messages), total_requests)
-        self.assertEqual(int(self._config['quota']['guest']['requests']), len(messages))
+        while time.perf_counter() < timeout:
+            m = client.check_queue()
+            if m:
+                if 'event' in m and m['event'] == "authChallenge":
+                    messages += 1
+
+        client.stop()
+        self.assertEqual(int(self._config['quota']['guest']['requests']), messages)
 
     def test_delay(self):
         """
@@ -433,12 +432,35 @@ class TestBroker(unittest.TestCase):
         pass
         # TODO
 
+    def test_job_quota(self):
+        pass
+        total_requests = 0
+        for i in range(int(self._config['quota']['guest']['requests']) * 2):
+            total_requests += 1
+            self.client.put({'id': "quota", 'name': "test_skill",
+                             'data': {'start': time.perf_counter(), 'request': total_requests}})
+
+        timeout = time.perf_counter() + 2
+        first_message = None
+        last_message = None
+        messages = []
+        while time.perf_counter() < timeout:
+            m = self.client.check_queue()
+            if m and m['id'] == "quota":
+                if len(messages) == 0:
+                    first_message = m['data']['start']
+                last_message = m['data']['start']
+                messages.append(m['data']['request'])
+
+        self._logger.info("Total requests sent: {}".format(total_requests))
+        self._logger.info("Time between first and last received message: {}".format(last_message - first_message))
+        self._logger.info("Messages received: {}".format(messages))
+        self.assertLess(len(messages), total_requests)
+        self.assertEqual(int(self._config['quota']['guest']['requests']), len(messages))
+
     def test_abort(self):
         pass
         # TODO
-
-
-
 
 
 if __name__ == '__main__':

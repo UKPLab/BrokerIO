@@ -8,7 +8,7 @@ from broker import init_logging
 from broker.utils.Keys import Keys
 
 
-def auth_client(url, queue: mp.Queue):
+def auth_client(url, queue: mp.Queue, challengeQueue: mp.Queue = None):
     logger = init_logging("Auth Client", level=logging.getLevelName("INFO"))
     sio = socketio.Client(logger=logger, engineio_logger=logger)
     keys = Keys(private_key_path="./private_key.pem")
@@ -16,6 +16,8 @@ def auth_client(url, queue: mp.Queue):
     @sio.on('authChallenge')
     def task(data):
         logger.info("authChallenge data: {}".format(data))
+        if challengeQueue:
+            challengeQueue.put(data)
         sig = keys.sign(data['secret'])
         sio.emit('authResponse', {'pub': keys.get_public(), 'sig': sig})
 
@@ -42,13 +44,19 @@ class TestAuth:
         self.url = url
         self.logger = logger
         self.queue = mp.Manager().Queue(5)
+        self.challenge_queue = mp.Manager().Queue(200)
 
     def test(self):
         self.logger.info("Start auth client ...")
         ctx = mp.get_context('spawn')
-        self.client = ctx.Process(target=auth_client, args=(self.url, self.queue))
+        self.client = ctx.Process(target=auth_client, args=(self.url, self.queue, self.challenge_queue))
         self.client.start()
+
+    def wait_auth(self):
         return self.queue.get()
+
+    def test_challenge(self):
+        return self.challenge_queue.get()
 
     def terminate(self):
         self.client.terminate()

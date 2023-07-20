@@ -31,14 +31,14 @@ class Skills(Collection):
                 self.socketio.emit("error", {"code": 201}, to=sid)
 
         skill = {
-                "sid": sid,
-                "config": data,
-                "connected": True,
-                "created": datetime.now().isoformat(),
-                "updated": datetime.now().isoformat(),
-                "last_contact": datetime.now().isoformat(),
-                "first_contact": datetime.now().isoformat(),
-            }
+            "sid": sid,
+            "config": data,
+            "connected": True,
+            "created": datetime.now().isoformat(),
+            "updated": datetime.now().isoformat(),
+            "last_contact": datetime.now().isoformat(),
+            "first_contact": datetime.now().isoformat(),
+        }
 
         results(self.collection.insert(
             skill
@@ -114,7 +114,7 @@ class Skills(Collection):
             self._sysdb.aql.execute(aql_query, bind_vars={"@collection": self.name, "role": user["role"]}, count=True))
 
         if cursor.count() > 0:
-            return cursor[0]["sid"]
+            return cursor.next()["sid"]
 
     def get_skill(self, name):
         """
@@ -156,8 +156,9 @@ class Skills(Collection):
         cursor = results(self._sysdb.aql.execute(aql_query, bind_vars=bind_vars, count=True))
         for skill in cursor:
             if with_config:
-                skill_config = results(self.collection.find({"config.name": skill["name"], "connected": True}, limit=1, count=Tru))
-                if skill_config.count() > 0:
+                skill_config = results(
+                    self.collection.find({"config.name": skill["name"], "connected": True}, limit=1))
+                if skill_config.has_more():
                     skill["config"] = skill_config.next()["config"]
             skills.append(skill)
         return skills

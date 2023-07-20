@@ -83,8 +83,8 @@ class Clients(Collection):
         role = self.db.roles(role)
         self.quotas[sid] = {
             "role": role,
-            "requests": Quota(max_len=role['quota']['requests'] + 1),
-            "results": Quota(max_len=role['quota']['results'] + 1),
+            "requests": Quota(max_len=role['quota']['requests']),
+            "results": Quota(max_len=role['quota']['results']),
             "jobs": JobQuota(max_len=role['quota']['jobs']),
         }
 
