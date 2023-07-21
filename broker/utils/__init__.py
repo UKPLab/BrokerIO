@@ -5,7 +5,7 @@ import time
 import socketio
 
 from broker import init_logging, load_config
-from broker.db.Database import Database
+from broker.db import connect_db
 from broker.db.collection.Tasks import Tasks
 from broker.db.collection.Users import Users
 
@@ -55,7 +55,7 @@ def scrub_job(overwrite_config=None):
     if overwrite_config:
         config.update(overwrite_config)
 
-    db = Database(config=config)
+    db = connect_db(config, None)
     db.tasks.scrub(run_forever=False)
 
 

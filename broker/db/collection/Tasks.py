@@ -52,7 +52,8 @@ class Tasks(Collection):
             "request": payload,
             "status": "created",
             "parent": parent,
-            "max_runtime": max_runtime.isoformat() if max_runtime > 0 else None,
+            "max_runtime": (datetime.now() + timedelta(
+                seconds=max_runtime)).isoformat() if max_runtime > 0 else "9999-12-31T23:59:59.999Z",
             "start_timer": time.perf_counter(),
             "created": datetime.now().isoformat(),
             "updated": datetime.now().isoformat(),
@@ -147,15 +148,15 @@ class Tasks(Collection):
         """
         Cronjob for cleaning up tasks
         """
+        # TODO this function returns often an error
+        # arango.exceptions.AQLQueryExecuteError: [HTTP 400][ERR 600] VPackError error: Expecting digit
         while self.config['taskKiller']['enabled']:
-            aql_query = """
-                FOR doc IN @@collection
+            cursor = results(self._sysdb.aql.execute("""
+                FOR doc IN tasks
                 FILTER doc.status == 'running' or doc.status == 'created'
-                FILTER doc.max_runtime > @timestamp
+                FILTER doc.max_runtime < DATE_NOW()
                 RETURN doc
-            """
-            cursor = results(self._sysdb.aql.execute(aql_query, bind_vars={"@collection": self.name,
-                                                                           "timestamp": datetime.now().isoformat()}))
+            """))
             for task in cursor:
                 self.abort(task)
             time.sleep(self.config['taskKiller']['interval'])
@@ -272,7 +273,7 @@ class Tasks(Collection):
         while run_forever or once:
             aql_query = """
                 FOR doc IN tasks
-                FILTER !doc.status == 'running' && !doc.status == 'created'
+                FILTER doc.status != 'running' && doc.status != 'created'
                 FILTER doc.updated < @timestamp
                 FILTER (NOT HAS(doc.request.config, 'donate') || doc.request.config.donate == false)
                 RETURN doc

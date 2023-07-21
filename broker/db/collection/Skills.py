@@ -72,11 +72,10 @@ class Skills(Collection):
         :param with_config: send with config
         :param kwargs: additional arguments for socketio.emit
         """
-        self.logger.error(skill)
-        if 'roles' in skill['config']:
+        if 'roles' in skill['config'] and len(skill['config']['roles']) > 0:
             for role in skill['config']['roles']:
                 self.socketio.emit("skillUpdate", [{"name": skill['config']['name'], "nodes": nodes}],
-                                   room="role:{}".format(role), **kwargs)
+                                   to="role:{}".format(role), **kwargs)
         else:
             self.socketio.emit("skillUpdate", [{"name": skill['config']['name'], "nodes": nodes}], **kwargs)
 
@@ -136,8 +135,13 @@ class Skills(Collection):
         skills = []
 
         filtering = {
-            "filter_name": "FILTER doc.config.name == @name" if filter_name is not None else "",
-            "filter_role": "FILTER (!HAS('roles', doc.config) or @role IN doc.config.roles)" if filter_role is not None else "",
+            "filter_name": "FILTER doc.config.name == @name"
+            if filter_name is not None else "",
+            "filter_role": "FILTER @role == 'admin'"
+                           "or !HAS(doc.config, 'roles') "
+                           "or LENGTH(doc.config.roles) == 0 "
+                           "or @role IN doc.config.roles"
+            if filter_role is not None else "",
             "return": "RETURN { name: name, nodes: nodes }"
         }
         aql_query = """

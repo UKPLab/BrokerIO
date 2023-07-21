@@ -1,6 +1,6 @@
 import time
 from collections import deque
-
+import numpy as np
 
 class Quota:
     """
@@ -13,7 +13,8 @@ class Quota:
         self.max_len = max_len
         self.queue = None
 
-        self.reset()
+        if max_len > 0:
+            self.reset()
 
     def __call__(self, append=True):
         """
@@ -22,6 +23,9 @@ class Quota:
         :param append: add current time to queue if quota is not exceeded
         :return:
         """
+        if self.queue is None:
+            return False
+
         if self.exceed():
             return True
         else:
@@ -35,7 +39,6 @@ class Quota:
 
         :return: True if quota is exceeded
         """
-
         if len(self.queue) >= self.max_len:
             elapsed_time = time.perf_counter() - self.queue[0]
             if elapsed_time >= 1:  # greater than 1 second

@@ -45,8 +45,12 @@ class Keys:
     @author: Dennis Zyska
     """
 
-    def __init__(self, private_key_path):
-        self.private_key = read_private(private_key_path)
+    def __init__(self, private_key_path=None):
+        if private_key_path is None:
+            # Generate new key
+            self.private_key = RSA.generate(2048)
+        else:
+            self.private_key = read_private(private_key_path)
         self.public_key = self.private_key.publickey()
 
     def sign(self, message):

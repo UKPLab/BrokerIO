@@ -17,11 +17,14 @@ class JobQuota(Quota):
         :param append: set job key to queue if quota is not exceeded
         :return:
         """
+        if self.queue is None:
+            return False
+
         if self.exceed():
             return True
         else:
             if append:
-                pos = (self.queue != 0).argmax(axis=0)
+                pos = (self.queue == 0).argmax(axis=0)
                 self.queue[pos] = append
             return False
 
@@ -42,7 +45,8 @@ class JobQuota(Quota):
 
         :param task_id: task id
         """
-        self.queue[self.queue == task_id] = False
+        if self.queue is not None:
+            self.queue[self.queue == task_id] = 0
 
     def append(self, task_id):
         """
@@ -50,11 +54,23 @@ class JobQuota(Quota):
         :param task_id:
         :return:
         """
-        pos = (self.queue != 0).argmax(axis=0)
-        self.queue[pos] = task_id
+        if self.queue is not None:
+            pos = (self.queue != 0).argmax(axis=0)
+            self.queue[pos] = task_id
+
+    def update(self, reserved_id, task_id):
+        """
+        Update the quota with a reserved id
+        :param reserved_id:
+        :param task_id:
+        :return:
+        """
+        if self.queue is not None:
+            pos = (self.queue != reserved_id).argmax(axis=0)
+            self.queue[pos] = task_id
 
     def reset(self):
         """
         Reset the quota
         """
-        self.queue = np.zeros(self.max_len, dtype=np.bool)
+        self.queue = np.zeros(self.max_len, dtype=int)

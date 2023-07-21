@@ -4,6 +4,7 @@ from broker.db.utils import results
 from broker.db.collection import Collection
 from broker.utils.Keys import Keys
 
+from arango.exceptions import DocumentRevisionError
 
 class Users(Collection):
     """
@@ -62,15 +63,16 @@ class Users(Collection):
         :param data: public key and additional infos
         :return:
         """
-        # send skill updates as role changed
-        self.db.skills.send_all(role="user", to=sid)
-
-        client = results(self.collection.find({"key": public}))
+        client = results(self.collection.find({"key": public}, limit=1))
         if client.count() > 0:
             c = client.next()
             c['authenticated'] = c['authenticated'] + 1
             c["updated"]: datetime.now().isoformat()
-            return results(self.collection.update(c))
+            try:
+                return results(self.collection.update(c))
+            except DocumentRevisionError as e:
+                self.logger.error(e)
+                return results(self.collection.get(c['key']))
         else:
             return results(self.collection.insert(
                 {

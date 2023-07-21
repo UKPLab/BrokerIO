@@ -45,6 +45,9 @@ class Auth(Socket):
                     leave_room("role:guests")
                     join_room("role:{}".format(user['role']))
 
+                    # send skill updates as role changed
+                    self.db.skills.send_all(role=user['role'], to=session["sid"])
+
                     self.db.clients.save(client)
                     self.status()
                 else:
@@ -83,12 +86,17 @@ class Auth(Socket):
         """
         try:
             if self.db.clients.quota(session["sid"], append=True):
+                self.socketio.emit("error", {"code": 100}, to=session["sid"])
                 return
-            user = self.db.users.get(self.db.clients.get(session["sid"])['user'])
-            if user:
-                self.socketio.emit("authInfo", {"role": user['role']})
+            client = self.db.clients.get(session["sid"])
+            if "user" in client:
+                user = self.db.users.get(client['user'])
+                if user:
+                    self.socketio.emit("authInfo", {"role": user['role']}, to=session["sid"])
+                else:
+                    self.socketio.emit("authInfo", {"role": "guest"}, to=session["sid"])
             else:
-                self.socketio.emit("authInfo", {"role": "guest"})
+                self.socketio.emit("authInfo", {"role": "guest"}, to=session["sid"])
         except:
-            self.logger.error("Error in request {}".format("authStatus"))
+            self.logger.error("Error in request {}.".format("authStatus"))
             self.socketio.emit("error", {"code": 500}, to=session["sid"])

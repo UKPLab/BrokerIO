@@ -1,7 +1,7 @@
 from flask import session
 
 from broker.sockets import Socket
-
+import numpy as np
 
 class Request(Socket):
     """
@@ -33,13 +33,14 @@ class Request(Socket):
                 self.socketio.emit("error", {"code": 200}, to=session["sid"])
             else:
                 # check if the client has enough quota to run this job
-                if self.db.clients.quota(session["sid"], append=False, is_job=True):
+                reserve_quota = np.random.randint(1000000, 2**31-1)
+                if self.db.clients.quota(session["sid"], append=reserve_quota, is_job=True):
                     self.socketio.emit("error", {"code": 101}, to=session["sid"])
                     return
 
                 task = self.db.tasks.create(session["sid"], node, data)
                 self.socketio.emit("taskRequest", {'id': task['_key'], 'data': data['data']}, room=node)
-                self.db.clients.quotas[session["sid"]]["jobs"].append(task['_key'])
+                self.db.clients.quotas[session["sid"]]["jobs"].update(reserve_quota, task['_key'])
         except:
             self.logger.error("Error in request {}: {}".format("skillRequest", data))
             self.socketio.emit("error", {"code": 500}, to=session["sid"])

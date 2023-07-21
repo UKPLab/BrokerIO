@@ -1,6 +1,6 @@
 quota:
   guest:
-    jobs: 1
+    jobs: 5
     requests: 20
     results: 100
   user:
