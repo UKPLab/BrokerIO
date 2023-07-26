@@ -37,6 +37,14 @@ class Collection:
 
         return True
 
+    def get(self, key):
+        """
+        Get entry by db key
+        :param key: database key of entry
+        :return:
+        """
+        return results(self.collection.get(key))
+
     def clean(self):
         """
         Clean the database

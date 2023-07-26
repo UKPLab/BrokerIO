@@ -46,24 +46,35 @@ class Tasks(Collection):
             if max_runtime > max_duration:
                 max_runtime = max_duration
 
-        return results(self.collection.insert({
+        # is simulation set?
+        if "config" in payload and 'simulate' in payload['config']:
+            node_key = None
+        else:
+            node_key = node['_key']
+
+        new_task = results(self.collection.insert({
             "rid": sid,  # request id
-            "nid": node,  # node id
+            "nid": node['sid'],  # node id
+            "skill": node_key,  # node key
             "request": payload,
             "status": "created",
             "parent": parent,
             "max_runtime": (datetime.now() + timedelta(
-                seconds=max_runtime)).isoformat() if max_runtime > 0 else "9999-12-31T23:59:59.999Z",
+                seconds=max_runtime)).isoformat() if max_runtime > 0 else "9999-12-31T23:59:59.000000",
             "start_timer": time.perf_counter(),
             "created": datetime.now().isoformat(),
             "updated": datetime.now().isoformat(),
         }))
 
-    def get(self, key):
-        """
-        Get task by key (sync)
-        """
-        return results(self.collection.get(key))
+        if "config" in payload and 'simulate' in payload['config']:
+            if "output" in node['config'] and "example" in node['config']['output']:
+                result = node['config']['output']['example']
+            else:
+                result = {}
+            self.update(new_task['_key'], 0, result)
+            return 0
+        else:
+            return new_task['_key']
 
     def update(self, key, node, payload):
         """
@@ -74,6 +85,11 @@ class Tasks(Collection):
         :param payload: results of task
         """
         task = self.get(key)
+        # if simulate task has set an integer value, wait for this time
+        if "config" in task['request'] and 'simulate' in task['request']['config']:
+            if isinstance(task['request']['config']['simulate'], int):
+                time.sleep(task['request']['config']['simulate'])
+
         if 'status' in payload and payload['status'] != 'finished':
             last_update = task['updated']
             task['status'] = payload['status']
@@ -150,13 +166,16 @@ class Tasks(Collection):
         """
         # TODO this function returns often an error
         # arango.exceptions.AQLQueryExecuteError: [HTTP 400][ERR 600] VPackError error: Expecting digit
+        # or arango.exceptions.AsyncJobStatusError: [HTTP 404][ERR 404] job 258578 not found
+        return False
+
         while self.config['taskKiller']['enabled']:
-            cursor = results(self._sysdb.aql.execute("""
-                FOR doc IN tasks
-                FILTER doc.status == 'running' or doc.status == 'created'
-                FILTER doc.max_runtime < DATE_NOW()
-                RETURN doc
-            """))
+            aql_query = "FOR doc IN @@collection " \
+                        "FILTER (doc.status == 'running' OR doc.status == 'created') " \
+                        "RETURN doc"
+            # FILTER doc.status == 'running' or doc.status == 'created'
+            # FILTER doc.max_runtime < DATE_NOW()
+            cursor = self.db.sync_db.aql.execute(aql_query, bind_vars={"@collection": self.name}, count=True)
             for task in cursor:
                 self.abort(task)
             time.sleep(self.config['taskKiller']['interval'])
@@ -190,7 +209,9 @@ class Tasks(Collection):
                     self.socketio.emit("taskRequest", {'id': task['_key'], 'data': task['request']['data']}, room=node)
                     self.abort(task, reason="node disconnected", kill=False, error=104)
             else:
-                self.abort(task, reason="client disconnected", kill=True, error=False)
+                # client disconnected
+                if self.db.skills.check_feature(task['skill'], feature=['kill', 'abort'], check_all=False):
+                    self.abort(task, reason="client disconnected", kill=True, error=False)
 
     def abort_by_user(self, id, sid):
         """
@@ -199,23 +220,27 @@ class Tasks(Collection):
         :param sid: session id of user
         :return:
         """
-        aql_query = """
-                FOR doc IN @@collection
-                FILTER (doc.status == "running" OR doc.status == "created")
-                AND doc.rid == @rid
-                AND doc.request.id == @id
-                RETURN doc
-                LIMIT 1
-            """
-        cursor = results(self._sysdb.aql.execute(aql_query, bind_vars=
-        {
+        cursor = results(self._sysdb.aql.execute("""
+            FOR doc IN @@collection
+            FILTER doc.rid == @rid 
+            AND doc.request.id == @id
+            LIMIT 1
+            RETURN doc
+        """, bind_vars={
             "@collection": self.name,
             "rid": sid,
             "id": id
-        }))
+        }, count=True))
         if cursor.count() > 0:
             task = cursor.next()
-            self.abort(task)
+            if self.db.skills.check_feature(task['skill'], feature=['kill', 'abort'], check_all=False):
+                if task['status'] == "finished" or task['status'] == "aborted":
+                    self.socketio.emit("error", {"code": 105}, room=sid)
+                else:
+                    self.abort(task)
+                return True
+            else:
+                self.socketio.emit("error", {"code": 107}, room=sid)
             return True
         return False
 
@@ -228,19 +253,17 @@ class Tasks(Collection):
         :param error: send error code to client
         :return:
         """
-        # send kill signal to node
         if kill:
-            # TODO check if node accept kill feature
             self.socketio.emit("taskKill", {"id": task['_key']}, room=task['nid'])
+
+        # update job quota
+        self.db.clients.quotas[task['rid']]['jobs'].remove(task['_key'])
 
         # update task
         task['status'] = "aborted"
         task['reason'] = reason
         task['updated'] = datetime.now().isoformat()
         self.collection.update(task)
-
-        # update job quota
-        self.db.clients.quotas[task['rid']]['jobs'].remove(task['_key'])
 
         # send results to client
         if error:

@@ -84,10 +84,4 @@ class Users(Collection):
                 }
             ))
 
-    def get(self, key):
-        """
-        Get user by key
-        :param key: key
-        :return:
-        """
-        return results(self.collection.get(key))
+

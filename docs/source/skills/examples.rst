@@ -13,6 +13,7 @@ Sentiment Classification
     description: This is a classification task for semtiment classification
     needs: []
     roles: []
+    features: []
     config:
       data:
         task:

@@ -59,6 +59,9 @@ Sometimes the broker will return an error code, here is a list of all possible e
 - 102 - Job cancelled - maximum execution time exceeded
 - 103 - Lost connection to node - and no other node available
 - 104 - Lost connection to node - job is started on another node
+- 105 - Job cannot aborted - already finished or aborted
+- 106 - Job cannot aborted - task not found
+- 107 - Job cannot aborted - node did not support abort/kill feature
 - 200 - Skill not available
 - 201 - Skill config is not the same as in the database currently registered
 - 401 - Signature cannot be verified by message

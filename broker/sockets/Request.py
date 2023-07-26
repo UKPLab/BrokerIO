@@ -3,6 +3,7 @@ from flask import session
 from broker.sockets import Socket
 import numpy as np
 
+
 class Request(Socket):
     """
     Basic socket.io event handlers for authentication
@@ -16,7 +17,7 @@ class Request(Socket):
     def _init(self):
         self.socketio.on_event("skillRequest", self.request)
         self.socketio.on_event("taskResults", self.results)
-        self.socketio.on_event("taskAbort", self.abort)
+        self.socketio.on_event("requestAbort", self.abort)
 
     def request(self, data):
         """
@@ -24,23 +25,29 @@ class Request(Socket):
         """
         try:
             if self.db.clients.quota(session["sid"], append=True):
-                self.socketio.emit("error", {"code": 100}, to=session["sid"])
+                self.socketio.emit("error", {"id": data['id'] if 'id' in data else None, "code": 100},
+                                   to=session["sid"])
                 return
 
             # get a node that provides this skill
             node = self.db.skills.get_node(session["sid"], data["name"])
             if node is None:
-                self.socketio.emit("error", {"code": 200}, to=session["sid"])
+                self.socketio.emit("error", {"id": data['id'] if 'id' in data else None, "code": 200},
+                                   to=session["sid"])
             else:
                 # check if the client has enough quota to run this job
-                reserve_quota = np.random.randint(1000000, 2**31-1)
+                reserve_quota = np.random.randint(1000000, 2 ** 31 - 1)
                 if self.db.clients.quota(session["sid"], append=reserve_quota, is_job=True):
-                    self.socketio.emit("error", {"code": 101}, to=session["sid"])
+                    self.socketio.emit("error", {"id": data['id'] if 'id' in data else None, "code": 101},
+                                       to=session["sid"])
                     return
 
-                task = self.db.tasks.create(session["sid"], node, data)
-                self.socketio.emit("taskRequest", {'id': task['_key'], 'data': data['data']}, room=node)
-                self.db.clients.quotas[session["sid"]]["jobs"].update(reserve_quota, task['_key'])
+                task_id = self.db.tasks.create(session["sid"], node, data)
+
+                if task_id > 0:
+                    self.socketio.emit("taskRequest", {'id': task_id, 'name': data['name'], 'data': data['data']}, room=node['sid'])
+
+                self.db.clients.quotas[session["sid"]]["jobs"].update(reserve_quota, task_id)
         except:
             self.logger.error("Error in request {}: {}".format("skillRequest", data))
             self.socketio.emit("error", {"code": 500}, to=session["sid"])
@@ -69,7 +76,9 @@ class Request(Socket):
                 self.socketio.emit("error", {"code": 100}, to=session["sid"])
                 return
 
-            self.db.tasks.abort_by_user(data["id"], session["sid"])
+            aborted = self.db.tasks.abort_by_user(data["id"], session["sid"])
+            if not aborted:
+                self.socketio.emit("error", {"code": 106}, to=session["sid"])
         except:
-            self.logger.error("Error in request {}: {}".format("taskKilled", data))
+            self.logger.error("Error in request {}: {}".format("requestAbort", data))
             self.socketio.emit("error", {"code": 500}, to=session["sid"])

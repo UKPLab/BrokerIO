@@ -105,15 +105,39 @@ class Skills(Collection):
                 FOR doc IN @@collection
                 FILTER doc.connected 
                 FILTER (!HAS("roles", doc.config) or @role IN doc.config.roles)
+                FILTER doc.config.name == @name
                 SORT RAND()
                 LIMIT 1
                 RETURN doc
             """
         cursor = results(
-            self._sysdb.aql.execute(aql_query, bind_vars={"@collection": self.name, "role": user["role"]}, count=True))
+            self._sysdb.aql.execute(aql_query, bind_vars={"@collection": self.name, "role": user["role"], "name": name},
+                                    count=True))
 
         if cursor.count() > 0:
-            return cursor.next()["sid"]
+            return cursor.next()
+
+    def check_feature(self, key, feature, check_all=False):
+        """
+        Check if a feature is available for a skill
+        :param key: db key
+        :param feature: feature as string or list of features
+        :param check_all: check if all features are available, otherwise only one is enough
+        :return:
+        """
+        if key is None:
+            return False
+        if isinstance(feature, str):
+            feature = [feature]
+
+        skill = self.get(key)
+        if 'feature' in skill['config']:
+            if check_all:
+                return all(f in skill['config']['feature'] for f in feature)
+            else:
+                return any(f in skill['config']['feature'] for f in feature)
+        else:
+            return False
 
     def get_skill(self, name):
         """

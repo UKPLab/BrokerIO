@@ -52,3 +52,9 @@ Example:
 
     .. option::
 
+.. option:: simulate
+
+    If set to true, the task will be created but not send to a node. Note that the skill must exists!
+    If an integer is given it is used to set the delay between the creation of the task and the sending the response.
+    The response is the skill example output if set, otherwise an empty response is send.
+

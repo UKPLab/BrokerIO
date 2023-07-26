@@ -7,6 +7,7 @@ import socketio
 
 from broker import init_logging
 from broker.utils.Keys import Keys
+from collections import deque
 
 
 def client(name, url, in_queue: mp.Queue, out_queue: mp.Queue):
@@ -18,6 +19,8 @@ def client(name, url, in_queue: mp.Queue, out_queue: mp.Queue):
         out_queue.put({"event": event, "data": data})
 
     sio.on('connect', lambda: [out_queue.put({"event": "connected", "data": {}})])
+    # always send task requests back to broker
+    sio.on("taskRequest", lambda data: sio.emit('taskResults', {"id": data["id"], "data": data['data']}))
 
     while True:
         try:
@@ -39,13 +42,14 @@ class TestClient:
     @author: Dennis Zyska
     """
 
-    def __init__(self, logger, url, queue_size=200, name="Simple Client"):
+    def __init__(self, logger, url, queue_size=200, buffer_size=300, name="Simple Client"):
         self.url = url
         self.logger = logger
         self.in_queue = mp.Manager().Queue(queue_size)
         self.out_queue = mp.Manager().Queue(queue_size)
         self.skills = []
         self.client = None
+        self.results_buffer = deque(maxlen=buffer_size)
         self.name = name
 
     def start(self):
@@ -74,7 +78,7 @@ class TestClient:
         else:
             return False
 
-    def wait_for_event(self, event, timeout=5):
+    def wait_for_event(self, event, timeout=10):
         """
         Wait for a specific event
         :param event: event name
@@ -84,6 +88,7 @@ class TestClient:
         start = time.time()
         while time.time() - start < timeout:
             m = self.check_queue()
+            self.logger.error(m)
             if m:
                 if m['event'] == event:
                     return m
@@ -104,10 +109,58 @@ class TestClient:
             if 'event' in m and m['event'] == "error":
                 self.logger.error(m['data'])
             if 'event' in m and m['event'] == "skillUpdate":
-                self.skills = m['data']
+                new_skills = m['data']
+                for skill in new_skills:
+                    self.update_skills(skill)
+            if 'event' in m and m['event'] == "skillResults":
+                self.results_buffer.append(m['data'])
             return m
         except queue.Empty:
             return False
+
+    def check_skill(self, skill):
+        """
+        Check if skill is available
+        :param skill: name of the skill
+        :return:
+        """
+        self.clear()
+        return next((i for i, s in enumerate(self.skills) if s['name'] == skill), None) is not None
+
+    def update_skills(self, skill):
+        """
+        Update skill list with new skill
+        :param skill: skill to update
+        :return:
+        """
+        # find position of skill in list
+        idx = next((i for i, s in enumerate(self.skills) if s['name'] == skill['name']), None)
+        if idx is not None:
+            if skill['nodes'] == 0:
+                del self.skills[idx]
+            else:
+                self.skills[idx]['nodes'] = skill['nodes']
+                if 'config' in skill:
+                    self.skills[idx]['config'] = skill['config']
+        else:
+            self.skills.append(skill)
+
+    def find_results(self, id):
+        """
+        Find results in the queue
+        :param id: id of the request
+        :return: results if found, otherwise None
+        """
+        # add all results to the buffer
+        while self.check_queue():
+            pass
+
+        # check if there are results in the buffer
+        try:
+            return next(i for i in self.results_buffer if i['id'] == id)
+        except StopIteration:
+            return None
+
 
     def get(self, *args, **kwargs):
         return self.out_queue.get(*args, **kwargs)
@@ -118,7 +171,7 @@ class TestClient:
         :return:
         """
         while not self.out_queue.empty():
-            self.out_queue.get()
+            self.check_queue()
 
     def stop(self):
         if self.client:

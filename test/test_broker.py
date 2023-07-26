@@ -38,10 +38,11 @@ class TestBroker(unittest.TestCase):
         cls._logger = logger
 
         logger.info("Load config ...")
-        cls._config = load_config()
+        config = load_config()
+        cls._config = config
 
         logger.info("Connect to db...")
-        cls._db = connect_db(cls._config, None)
+        cls._db = connect_db(config, None)
 
         logger.info("Starting broker ...")
         logger.info("Broker URL: {}".format(os.getenv("TEST_URL")))
@@ -57,8 +58,15 @@ class TestBroker(unittest.TestCase):
             cls._broker = broker
 
         logger.info("Starting response container ...")
-        container = TestContainer(logger, os.getenv("TEST_URL"), os.getenv("TEST_TOKEN"), "test_skill")
-        container.start()
+        container = TestClient(logger=logger, url=os.getenv("TEST_URL"))
+        ready = container.start()
+        if not ready:
+            logger.error("Container not ready by time. Exiting ...")
+            exit(1)
+        # register basic skill
+        container.put({"event": "skillRegister", "data": {
+            "name": "test_skill"
+        }})
         cls._container = container
 
         logger.info("Starting client for testing that the environment is working ...")
@@ -67,7 +75,11 @@ class TestBroker(unittest.TestCase):
         if not ready:
             logger.error("Environment not ready by time. Exiting ...")
             exit(1)
-        logger.info("Environment ready!")
+        if client.check_skill("test_skill"):
+            logger.info("Environment ready!")
+        else:
+            logger.error("Environment not ready by time. Exiting ...")
+            exit(1)
         client.stop()
 
     @classmethod
@@ -82,13 +94,10 @@ class TestBroker(unittest.TestCase):
             cls._broker.terminate()
             cls._broker.join()
 
-        # cls._logger.info("Delete db ...")
-        # cls._sysdb.delete_database("broker_test")
-
     def setUp(self) -> None:
         self._logger.info("Start new client ...")
         self.client = TestClient(self._logger, os.getenv("TEST_URL"))
-        self.client.start()
+        unittest.skipIf(not self.client.start(), "Environment not ready by time. Skipping ...")
 
     def tearDown(self) -> None:
         self._logger.info("Stop client ...")
@@ -99,14 +108,18 @@ class TestBroker(unittest.TestCase):
         Test if a simple request is working
         :return:
         """
+        self.client.clear()
+
         self.client.put(
             {"event": 'skillRequest', "data": {'id': "simple", 'name': "test_skill", 'data': time.perf_counter()}})
 
         self._logger.info("Wait for response ...")
 
-        message = self.client.wait_for_event("skillResults")['data']
-
-        self._logger.info("Main process received message: {}".format(message))
+        result = self.client.wait_for_event("skillResults")
+        if result is None or not result:
+            self.fail("No message received.")
+        else:
+            message = result['data']
 
         self._logger.info("Simple response time: {:3f}ms".format((time.perf_counter() - message['data']) * 1000))
         self.assertEqual(message['id'], "simple")
@@ -117,14 +130,16 @@ class TestBroker(unittest.TestCase):
         Test if stats are returned if config['return_stats'] is set to True
         :return:
         """
-        ## Test simple response
+        self.client.clear()
         self.client.put({"event": 'skillRequest', "data": {'id': "stats", 'name': "test_skill",
                                                            'config': {'return_stats': True},
                                                            'data': time.perf_counter()}})
 
         self._logger.info("Wait for response ...")
 
-        message = self.client.wait_for_event("skillResults")['data']
+        message = self.client.wait_for_event("skillResults")
+        self._logger.info("Stats Main process received message: {}".format(message))
+        message = self.client.find_results("stats")
 
         self._logger.info("Simple response time: {:3f}ms".format((time.perf_counter() - message['data']) * 1000))
         self.assertEqual(message['id'], "stats")
@@ -136,24 +151,27 @@ class TestBroker(unittest.TestCase):
         Test different keyword arguments for the config parameter
         :return:
         """
-        self.client.put({"event": 'skillRequest', "data": {'id': "stats", 'name': "test_skill",
-                         'config': {'return_stats': True},
-                         'data': time.perf_counter()}})
-        self.client.put({"event": 'skillRequest', "data": {'id': "stats", 'name': "test_skill",
-                         'data': time.perf_counter()}})
-        self.client.put({"event": 'skillRequest', "data": {'id': "stats", 'name': "test_skill",
-                         'config': {},
-                         'data': time.perf_counter()}})
+        self.client.put({"event": 'skillRequest', "data": {'id': "stats1", 'name': "test_skill",
+                                                           'config': {'return_stats': True},
+                                                           'data': time.perf_counter()}})
+        self.client.put({"event": 'skillRequest', "data": {'id': "stats2", 'name': "test_skill",
+                                                           'data': time.perf_counter()}})
+        self.client.put({"event": 'skillRequest', "data": {'id': "stats3", 'name': "test_skill",
+                                                           'config': {},
+                                                           'data': time.perf_counter()}})
 
         self._logger.info("Wait for response ...")
 
-        message1 = self.client.wait_for_event("skillResults")['data']
-        message2 = self.client.wait_for_event("skillResults")['data']
-        message3 = self.client.wait_for_event("skillResults")['data']
+        self.client.wait_for_event("skillResults")
+        self.client.wait_for_event("skillResults")
+        self.client.wait_for_event("skillResults")
+        message1 = self.client.find_results("stats1")
+        message2 = self.client.find_results("stats2")
+        message3 = self.client.find_results("stats3")
 
-        self.assertEqual(message1['id'], "stats")
-        self.assertEqual(message2['id'], "stats")
-        self.assertEqual(message3['id'], "stats")
+        self.assertEqual(message1['id'], "stats1")
+        self.assertEqual(message2['id'], "stats2")
+        self.assertEqual(message3['id'], "stats3")
 
     def test_attack(self):
         """
@@ -251,6 +269,7 @@ class TestBroker(unittest.TestCase):
                     # start container
                     while len(containers) < container_i:
                         self._logger.info("Start container {} ...".format(len(containers) + 1))
+                        # TODO change to TestClient to remove TestContainer dependency
                         container = TestContainer(self._logger, os.getenv("TEST_URL"), os.getenv("TEST_TOKEN"),
                                                   "skill_test",
                                                   name="Container_{}".format(len(containers) + 1))
@@ -261,7 +280,7 @@ class TestBroker(unittest.TestCase):
                     while len(clients) < client_i:
                         self._logger.info("Start client {} ...".format(len(clients) + 1))
                         client = TestClient(self._logger, os.getenv("TEST_URL"),
-                                             name="Client_{}".format(len(clients) + 1))
+                                            name="Client_{}".format(len(clients) + 1))
                         client.start()
                         clients.append(client)
 
@@ -273,15 +292,16 @@ class TestBroker(unittest.TestCase):
                             for delay in [0, 25, 50]:  # ms
                                 for message_i in range(1, max_messages + 1, 10):
                                     client_check(client)
-                                    client.put({"event": 'skillRequest', "data": {'id': "stress_{}_{}_{}_{}".format(i, j, delay, message_i),
-                                                'name': "skill_test",
-                                                'data': {
-                                                    'start': time.perf_counter(),
-                                                    'client': i,
-                                                    'delay': delay,
-                                                    'message': message_i,
-                                                },
-                                                'config': {'return_stats': True}}})
+                                    client.put({"event": 'skillRequest',
+                                                "data": {'id': "stress_{}_{}_{}_{}".format(i, j, delay, message_i),
+                                                         'name': "skill_test",
+                                                         'data': {
+                                                             'start': time.perf_counter(),
+                                                             'client': i,
+                                                             'delay': delay,
+                                                             'message': message_i,
+                                                         },
+                                                         'config': {'return_stats': True}}})
                                     time.sleep(delay / 1000)
 
             self._logger.info("Check if there are open responses?")
@@ -301,6 +321,7 @@ class TestBroker(unittest.TestCase):
         Check if quota is working
         :return:
         """
+        self.client.clear()
         total_requests = 0
         for i in range(int(self._config['quota']['guest']['requests']) * 2):
             total_requests += 1
@@ -322,15 +343,16 @@ class TestBroker(unittest.TestCase):
         Check if simulated delay is working
         :return:
         """
+        self.client.clear()
         self.client.put({"event": 'skillRequest', "data": {'id': "delay", 'name': "test_skill",
-                         'config': {'min_delay': 1, "return_stats": True},  # 500ms
-                         'data': time.perf_counter()}})
+                                                           'config': {'min_delay': 1, "return_stats": True},  # 500ms
+                                                           'data': time.perf_counter()}})
 
         self._logger.info("Sending request in between ...")
         time.sleep(0.01)
         self.client.put({"event": 'skillRequest', "data": {'id': "between", 'name': "test_skill",
-                         'config': {"return_stats": True},
-                         'data': time.perf_counter()}})
+                                                           'config': {"return_stats": True},
+                                                           'data': time.perf_counter()}})
 
         message = self.client.wait_for_event("skillResults")['data']
         self._logger.debug("Main process received message: {}".format(message))
@@ -359,15 +381,19 @@ class TestBroker(unittest.TestCase):
 
         self.client.put({"event": 'skillRequest', "data":
             {'id': "donated", 'name': "test_skill", 'config': {'donate': True}, 'data': time.perf_counter()}})
-        message1 = self.client.wait_for_event("skillResults")['data']
-        self.assertEqual(message1['id'], "donated")
         self.client.put({"event": 'skillRequest', "data":
             {'id': "not_donated", 'name': "test_skill", 'config': {'donate': False}, 'data': time.perf_counter()}})
-        message2 = self.client.wait_for_event("skillResults")['data']
-        self.assertEqual(message2['id'], "not_donated")
         self.client.put({"event": 'skillRequest', "data":
             {'id': "not_donated_without_key", 'name': "test_skill", 'data': time.perf_counter()}})
-        message3 = self.client.wait_for_event("skillResults")['data']
+
+        self.client.wait_for_event("skillResults")
+        self.client.wait_for_event("skillResults")
+        self.client.wait_for_event("skillResults")
+        message1 = self.client.find_results("donated")
+        self.assertEqual(message1['id'], "donated")
+        message2 = self.client.find_results("not_donated")
+        self.assertEqual(message2['id'], "not_donated")
+        message3 = self.client.find_results("not_donated_without_key")
         self.assertEqual(message3['id'], "not_donated_without_key")
 
         aql_query = """
@@ -414,6 +440,7 @@ class TestBroker(unittest.TestCase):
         :return:
         """
         self._logger.info("Start container with user role")
+        # TODO change to TestClient to remove dependency on TestContainer
         container = TestContainer(self._logger, os.getenv("TEST_URL"), os.getenv("TEST_TOKEN"),
                                   "skill_role_test", roles=["user"],
                                   name="Container_Roles")
@@ -423,8 +450,8 @@ class TestBroker(unittest.TestCase):
         client = TestClient(logger=self._logger, url=os.getenv("TEST_URL"))
         client.start()
 
-        skills = client.wait_for_event("skillUpdate")
-        skills = [skill['name'] for skill in skills['data']]
+        client.wait_for_event("skillUpdate")
+        skills = [skill['name'] for skill in client.skills]
 
         self.assertNotIn("skill_role_test", skills)
 
@@ -452,10 +479,12 @@ class TestBroker(unittest.TestCase):
         total_requests = 0
         for i in range(int(self._config['quota']['guest']['requests']) * 2):
             total_requests += 1
-            self.client.put({"event": 'skillRequest', "data": {'id': "quota", 'name': "test_skill", 'config': {'min_delay': 2, "return_stats": True},
-                             'data': {'start': time.perf_counter(), 'request': total_requests}}})
+            self.client.put({"event": 'skillRequest', "data": {'id': "quota", 'name': "test_skill",
+                                                               'config': {'min_delay': 2, "return_stats": True},
+                                                               'data': {'start': time.perf_counter(),
+                                                                        'request': total_requests}}})
 
-        timeout = time.time() + 4
+        timeout = time.time() + 5
         messages = 0
         job_errors = 0
         request_errors = 0
@@ -475,17 +504,48 @@ class TestBroker(unittest.TestCase):
         self.assertLess(messages, total_requests)
         self.assertEqual(request_errors, total_requests - self._config['quota']['guest']['requests'])
         self.assertEqual(self._config['quota']['guest']['jobs'], messages)
-        self.assertEqual(job_errors, total_requests - (self._config['quota']['guest']['requests'] + self._config['quota']['guest']['jobs']))
-
-    def test_status_update(self):
-        pass
-        # TODO
+        self.assertEqual(job_errors, total_requests - (
+                self._config['quota']['guest']['requests'] + self._config['quota']['guest']['jobs']))
 
     def test_abort(self):
+
+        # TODO: add skill with support for abort and test if container gets killed message
+
+        # with simulate (not finished)
+        self.client.put({"event": 'skillRequest',
+                         "data": {'id': "abort", 'name': "test_skill",
+                                  'config': {'simulate': 10, 'min_delay': 10, "return_stats": True},
+                                  'data': {'start': time.perf_counter()}}})
+
+        time.sleep(1)
+
+        self.client.put({"event": 'requestAbort', "data": {'id': "abort"}})
+
+        result = self.client.wait_for_event("error")
+        message = result['data']
+        self.assertEqual(message['code'], 102)
+
+        # task already finished
+        self.client.put({"event": 'skillRequest',
+                         "data": {'id': "abort", 'name': "test_skill",
+                                  'config': {'min_delay': 10, "return_stats": True},
+                                  'data': {'start': time.perf_counter()}}})
+
+        time.sleep(1)
+
+        self.client.put({"event": 'requestAbort', "data": {'id': "abort"}})
+
+        result = self.client.wait_for_event("error")
+        message = result['data']
+        self.assertEqual(message['code'], 105)
+
+    def test_task_killer(self):
+        # Test if task killer sends kill signal to skill
+
         pass
         # TODO
 
-    def test_task_killer(self):
+    def test_status_update(self):
         pass
         # TODO
 

@@ -25,7 +25,7 @@ class JobQuota(Quota):
         else:
             if append:
                 pos = (self.queue == 0).argmax(axis=0)
-                self.queue[pos] = append
+                self.queue[pos] = int(append)
             return False
 
     def exceed(self):
@@ -46,7 +46,7 @@ class JobQuota(Quota):
         :param task_id: task id
         """
         if self.queue is not None:
-            self.queue[self.queue == task_id] = 0
+            self.queue[self.queue == int(task_id)] = 0
 
     def append(self, task_id):
         """
