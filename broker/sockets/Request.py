@@ -71,6 +71,8 @@ class Request(Socket):
         """
         Send results to client
         """
+        aborted = self.db.tasks.abort_by_user(data["id"], session["sid"])
+
         try:
             if self.db.clients.quota(session["sid"], append=True):
                 self.socketio.emit("error", {"code": 100}, to=session["sid"])

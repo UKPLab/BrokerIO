@@ -131,11 +131,11 @@ class Skills(Collection):
             feature = [feature]
 
         skill = self.get(key)
-        if 'feature' in skill['config']:
+        if 'features' in skill['config']:
             if check_all:
-                return all(f in skill['config']['feature'] for f in feature)
+                return all(f in skill['config']['features'] for f in feature)
             else:
-                return any(f in skill['config']['feature'] for f in feature)
+                return any(f in skill['config']['features'] for f in feature)
         else:
             return False
 

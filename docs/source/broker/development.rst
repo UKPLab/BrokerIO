@@ -62,6 +62,9 @@ Sometimes the broker will return an error code, here is a list of all possible e
 - 105 - Job cannot aborted - already finished or aborted
 - 106 - Job cannot aborted - task not found
 - 107 - Job cannot aborted - node did not support abort/kill feature
+- 108 - Task update failed - task not found
+- 109 - Job cancelled successfully - by user
+- 110 - Job cancelled successfully - other reason
 - 200 - Skill not available
 - 201 - Skill config is not the same as in the database currently registered
 - 401 - Signature cannot be verified by message

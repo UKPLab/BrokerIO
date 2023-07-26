@@ -43,7 +43,7 @@ class Collection:
         :param key: database key of entry
         :return:
         """
-        return results(self.collection.get(key))
+        return results(self.collection.get("{}".format(key)))
 
     def clean(self):
         """

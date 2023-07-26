@@ -507,37 +507,77 @@ class TestBroker(unittest.TestCase):
         self.assertEqual(job_errors, total_requests - (
                 self._config['quota']['guest']['requests'] + self._config['quota']['guest']['jobs']))
 
-    def test_abort(self):
-
-        # TODO: add skill with support for abort and test if container gets killed message
-
-        # with simulate (not finished)
+    def test_abort_unsupported(self):
+        """
+        Test if abort error without kill feature support
+        :return:
+        """
+        # with simulate (not finished) and kill feature disabled
         self.client.put({"event": 'skillRequest',
                          "data": {'id': "abort", 'name': "test_skill",
                                   'config': {'simulate': 10, 'min_delay': 10, "return_stats": True},
                                   'data': {'start': time.perf_counter()}}})
-
         time.sleep(1)
 
         self.client.put({"event": 'requestAbort', "data": {'id': "abort"}})
 
         result = self.client.wait_for_event("error")
         message = result['data']
-        self.assertEqual(message['code'], 102)
+        self.assertEqual(message['code'], 107)
+
+    def test_abort_finished(self):
+        """
+        Test abort error with finished task
+        :return:
+        """
+
+        # add not skill with kill feature support
+        self._container.put({"event": 'skillRegister', 'data': {"name": "test_skill_with_kill", "features": ['kill']}})
+        self.client.wait_for_event("skillUpdate")
+        self.assertTrue(self.client.check_skill("test_skill_with_kill"))
 
         # task already finished
         self.client.put({"event": 'skillRequest',
-                         "data": {'id': "abort", 'name': "test_skill",
-                                  'config': {'min_delay': 10, "return_stats": True},
+                         "data": {'id': "abort2", 'name': "test_skill_with_kill",
+                                  'config': {"return_stats": True},
                                   'data': {'start': time.perf_counter()}}})
 
         time.sleep(1)
 
-        self.client.put({"event": 'requestAbort', "data": {'id': "abort"}})
+        self.client.put({"event": 'requestAbort', "data": {'id': "abort2"}})
 
         result = self.client.wait_for_event("error")
         message = result['data']
         self.assertEqual(message['code'], 105)
+
+    def test_abort_success(self):
+        """
+        Test abort success
+        """
+        # add not skill with kill feature support
+        self._container.put({"event": 'skillRegister', 'data': {"name": "test_skill_with_kill", "features": ['kill']}})
+        self.client.wait_for_event("skillUpdate")
+        self.assertTrue(self.client.check_skill("test_skill_with_kill"))
+
+        # task already finished
+        self.client.put({"event": 'skillRequest',
+                         "data": {'id': "abort3", 'name': "test_skill_with_kill",
+                                  'config': {"return_stats": True},
+                                  'data': {'sleep': 20, 'start': time.perf_counter()}}})
+
+        time.sleep(1)
+
+        self.client.put({"event": 'requestAbort', "data": {'id': "abort3"}})
+
+        result = self.client.wait_for_event("error")
+        message = result['data']
+
+        self.assertEqual(message['code'], 109)
+
+        result = self._container.wait_for_event("taskKill")
+        self.assertIsNot(result, None)
+        self.assertIsNot(result, False)
+
 
     def test_task_killer(self):
         # Test if task killer sends kill signal to skill

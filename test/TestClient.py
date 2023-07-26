@@ -20,7 +20,12 @@ def client(name, url, in_queue: mp.Queue, out_queue: mp.Queue):
 
     sio.on('connect', lambda: [out_queue.put({"event": "connected", "data": {}})])
     # always send task requests back to broker
-    sio.on("taskRequest", lambda data: sio.emit('taskResults', {"id": data["id"], "data": data['data']}))
+
+    @sio.on('taskRequest')
+    def task_request(data):
+        if 'sleep' in data['data']:
+            time.sleep(data['data']['sleep'])
+        sio.emit('taskResults', {"id": data["id"], "data": data['data']})
 
     while True:
         try:
@@ -88,7 +93,6 @@ class TestClient:
         start = time.time()
         while time.time() - start < timeout:
             m = self.check_queue()
-            self.logger.error(m)
             if m:
                 if m['event'] == event:
                     return m
@@ -160,7 +164,6 @@ class TestClient:
             return next(i for i in self.results_buffer if i['id'] == id)
         except StopIteration:
             return None
-
 
     def get(self, *args, **kwargs):
         return self.out_queue.get(*args, **kwargs)

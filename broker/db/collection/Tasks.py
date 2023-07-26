@@ -74,7 +74,7 @@ class Tasks(Collection):
             self.update(new_task['_key'], 0, result)
             return 0
         else:
-            return new_task['_key']
+            return int(new_task['_key'])
 
     def update(self, key, node, payload):
         """
@@ -85,6 +85,10 @@ class Tasks(Collection):
         :param payload: results of task
         """
         task = self.get(key)
+        if task is None:
+            self.socketio.emit("error", {'id': key, 'code': 108}, room=node)
+            return
+
         # if simulate task has set an integer value, wait for this time
         if "config" in task['request'] and 'simulate' in task['request']['config']:
             if isinstance(task['request']['config']['simulate'], int):
@@ -237,14 +241,14 @@ class Tasks(Collection):
                 if task['status'] == "finished" or task['status'] == "aborted":
                     self.socketio.emit("error", {"code": 105}, room=sid)
                 else:
-                    self.abort(task)
+                    self.abort(task, error=109)
                 return True
             else:
                 self.socketio.emit("error", {"code": 107}, room=sid)
             return True
         return False
 
-    def abort(self, task, reason="", kill=True, error=102):
+    def abort(self, task, reason="", kill=True, error=110):
         """
         Abort task by key
         :param task: task to abort
@@ -267,7 +271,7 @@ class Tasks(Collection):
 
         # send results to client
         if error:
-            self.socketio.emit("error", {"code": 102}, room=task['rid'])
+            self.socketio.emit("error", {"code": error}, room=task['rid'])
 
     def send_results(self, rid, payload):
         """
