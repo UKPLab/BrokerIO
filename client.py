@@ -56,11 +56,11 @@ if __name__ == '__main__':
         scrub.start()
         scrub.join()
     else:
-        client = TestClient(logger, args.url, args.skill, queue_size=10)
+        client = TestClient(logger, args.url)
         client.start()
 
-        client.put({"id": "1", "name": args.skill,
-                    "data": {"text": "Rewrite this section to explain how this file fits into the project."}})
+        client.put({'event': 'skillRequest', 'data': {"id": "1", "name": args.skill,
+                    "data": {"text": "Rewrite this section to explain how this file fits into the project."}}})
 
         while True:
             print(client.get())
