@@ -42,6 +42,7 @@ class TestBroker(unittest.TestCase):
         cls._config = config
 
         logger.info("Connect to db...")
+        logger.info("http://{}:{}".format(os.getenv("ARANGODB_HOST", "localhost"), os.getenv("ARANGODB_PORT", "8529")))
         cls._db = connect_db(config, None)
 
         logger.info("Starting broker ...")
