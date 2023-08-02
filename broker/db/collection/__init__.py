@@ -18,7 +18,8 @@ class Collection:
         self.logger = init_logging("collection:{}".format(name))
 
         self._init()
-        self.clean()
+        if 'cleanDbOnStart' in self.config and self.config['cleanDbOnStart']:
+            self.clean()
 
     def _init(self):
         """

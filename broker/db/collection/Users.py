@@ -56,6 +56,21 @@ class Users(Collection):
                     }
                 ))
 
+    def set_role(self, public, role):
+        """
+        Set a role to user
+        :param public: public key
+        :param role: role name
+        :return:
+        """
+        client = results(self.collection.find({"key": public}, limit=1))
+        if client.count() > 0:
+            c = client.next()
+            c['role'] = role
+            c["updated"]: datetime.now().isoformat()
+            return results(self.collection.update(c))
+        return False
+
     def auth(self, sid, public):
         """
         Register user

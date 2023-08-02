@@ -19,4 +19,5 @@ taskKiller:
   enabled: true
   interval: 1
   maxDuration: 600
+cleanDbOnStart: true
 

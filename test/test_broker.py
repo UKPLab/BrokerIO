@@ -98,6 +98,9 @@ class TestBroker(unittest.TestCase):
         self._logger.info("Start new client ...")
         self.client = TestClient(self._logger, os.getenv("TEST_URL"))
         unittest.skipIf(not self.client.start(), "Environment not ready by time. Skipping ...")
+        time.sleep(0.5)
+        self.client.clear()
+
 
     def tearDown(self) -> None:
         self._logger.info("Stop client ...")
@@ -130,7 +133,6 @@ class TestBroker(unittest.TestCase):
         Test if stats are returned if config['return_stats'] is set to True
         :return:
         """
-        self.client.clear()
         self.client.put({"event": 'skillRequest', "data": {'id': "stats", 'name': "test_skill",
                                                            'config': {'return_stats': True},
                                                            'data': time.perf_counter()}})
@@ -412,7 +414,8 @@ class TestBroker(unittest.TestCase):
                 "enabled": True,
                 "maxAge": 1,
                 "interval": 1,
-            }
+            },
+            "cleanDbOnStart": False,
         }
         scrub_job(overwrite_config=scrub_config)
 
@@ -481,7 +484,7 @@ class TestBroker(unittest.TestCase):
             total_requests += 1
             self.client.put({"event": 'skillRequest', "data": {'id': "quota", 'name': "test_skill",
                                                                'config': {'min_delay': 2, "return_stats": True},
-                                                               'data': {'start': time.perf_counter(),
+                                                               'data': {'start': time.perf_counter(), 'sleep': 1,
                                                                         'request': total_requests}}})
 
         timeout = time.time() + 5
@@ -581,7 +584,6 @@ class TestBroker(unittest.TestCase):
 
     def test_task_killer(self):
         # Test if task killer sends kill signal to skill
-
         pass
         # TODO
 

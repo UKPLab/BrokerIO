@@ -42,9 +42,9 @@ The following options are available:
 
     The task killer is a mechanism to kill tasks that are running too long. This is useful to prevent a skill from blocking the whole system.
 
-.. warning::
+    .. warning::
 
-    Especially the job quota is highly affected by this! If a task is running forever, the job quota is not freed.
+        Especially the job quota is highly affected by this! If a task is running forever, the job quota is not freed.
 
     The following options are available:
 
@@ -62,5 +62,6 @@ The following options are available:
         If a task is running longer than this value, a kill signal will be sent to the node (if node support it).
         and the client will be notified that the task failed.
 
+.. option:: cleanDbOnStart
 
-
+    Clean the database on start. This means that not closed connection (e.g., skills, clients) are set to disconnected.

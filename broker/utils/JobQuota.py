@@ -24,8 +24,7 @@ class JobQuota(Quota):
             return True
         else:
             if append:
-                pos = (self.queue == 0).argmax(axis=0)
-                self.queue[pos] = int(append)
+                self.queue[(self.queue == 0).argmax(axis=0)] = int(append)
             return False
 
     def exceed(self):
@@ -55,8 +54,7 @@ class JobQuota(Quota):
         :return:
         """
         if self.queue is not None:
-            pos = (self.queue != 0).argmax(axis=0)
-            self.queue[pos] = task_id
+            self.queue[(self.queue != 0).argmax(axis=0)] = task_id
 
     def update(self, reserved_id, task_id):
         """
@@ -66,8 +64,7 @@ class JobQuota(Quota):
         :return:
         """
         if self.queue is not None:
-            pos = (self.queue != reserved_id).argmax(axis=0)
-            self.queue[pos] = task_id
+            self.queue[(self.queue == reserved_id).argmax(axis=0)] = task_id
 
     def reset(self):
         """

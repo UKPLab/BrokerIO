@@ -135,3 +135,10 @@ The following roles are currently supported:
 .. tip::
 
     See :doc:`./config` for more information about how to configure settings for roles.
+
+
+To change the role of a user, you can use the brokers' client:
+
+.. code-block:: bash
+
+    python3 client.py --assign_role 1 --key "<public key>" --role "<role>"
