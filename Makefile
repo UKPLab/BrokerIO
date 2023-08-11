@@ -78,7 +78,7 @@ broker:
 
 .PHONY: build
 build:
-	docker-compose -f docker-compose.yml -p "nlp_api_main" --env-file ".env.main" up --build -d
+	docker-compose -f docker-compose.yml -p "nlp_api_main" --env-file ".env.main" up --build
 
 .PHONY: build-dev
 build-dev:
