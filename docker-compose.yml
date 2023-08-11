@@ -57,6 +57,11 @@ services:
     expose:
       - "8529"
     restart: unless-stopped
+    healthcheck:
+      test: arangosh --server.endpoint tcp://localhost:8529 | grep -q 'for a tutorial' || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
     environment:
       - ARANGO_ROOT_PASSWORD=${ARANGODB_ROOT_PASSWORD}
       - ARANGO_NO_AUTH=1
