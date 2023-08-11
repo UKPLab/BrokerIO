@@ -20,6 +20,8 @@ from broker.sockets.Auth import Auth
 import os
 from broker import init_logging, load_config
 from broker.db import connect_db
+from dotenv import load_dotenv
+
 
 
 __version__ = os.getenv("BROKER_VERSION")
@@ -33,6 +35,11 @@ def init():
     :return:
     """
     logger = init_logging("broker")
+
+    if os.getenv("ENV", None) is not None:
+        load_dotenv(dotenv_path=".env.{}".format(os.getenv("ENV", None)))
+    else:
+        load_dotenv(dotenv_path=".env")
 
     # check if dev mode
     DEV_MODE = "--dev" in sys.argv
