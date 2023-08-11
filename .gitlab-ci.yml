@@ -46,7 +46,7 @@ build_test:
     - apt update && apt install make -y
   script:
     - make ENV=main build
-    - docker attach nlp_api_main_arangodb_1
+    - sleep 2
     - while [ "`docker inspect -f {{.State.Health.Status}} nlp_api_main_arangodb_1`" != "healthy" ]; do sleep 2; done
     - make ENV=main test-build
     - docker wait nlp_api_main_docs_asyncapi_1
