@@ -18,7 +18,7 @@ RUN cat /etc/apt/sources.list
 RUN apt update && apt install make -y
 
 RUN set -x && \
-    conda install -n base -c defaults conda=4.* && \
+    #conda install -n base -c defaults conda=4.* && \
     conda env create -f environment.yaml # Installs environment.yml && \
     conda clean -a \
 
