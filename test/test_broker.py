@@ -1,3 +1,7 @@
+from eventlet import monkey_patch  # mandatory! leave at the very top
+
+monkey_patch()
+
 import json
 import logging
 import multiprocessing as mp
@@ -636,7 +640,8 @@ class TestBroker(unittest.TestCase):
         # Send update
         time.sleep(1)
         task = self._container.wait_for_event("taskRequest")
-        self._container.put({"event": 'taskResults', "data": {'id': task['data']['id'], "status": "running", 'data': {'info': 'test'}}})
+        self._container.put(
+            {"event": 'taskResults', "data": {'id': task['data']['id'], "status": "running", 'data': {'info': 'test'}}})
 
         result = self.client.wait_for_event("skillStatus")
         self.assertEqual(isinstance(result['data']['data'], list), True)
