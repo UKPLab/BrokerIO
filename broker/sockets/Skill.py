@@ -26,6 +26,7 @@ class Skill(Socket):
         """
         try:
             if self.db.clients.quota(session["sid"], append=True):
+                self.socketio.emit("error", {"code": 100}, to=session["sid"])
                 return
 
             client = self.db.clients.get(session["sid"])
@@ -45,6 +46,7 @@ class Skill(Socket):
         """
         try:
             if self.db.clients.quota(session["sid"], append=True):
+                self.socketio.emit("error", {"code": 100}, to=session["sid"])
                 return
 
             client = self.db.clients.get(session["sid"])
@@ -60,6 +62,15 @@ class Skill(Socket):
 
         :param data: Data Object
         """
+        if isinstance(data, str):  # needed for c++ socket.io client
+            data = json.loads(data)
+
+        if self.db.clients.quota(session["sid"], append=True):
+            self.socketio.emit("error", {"code": 100}, to=session["sid"])
+            return
+
+        if 'name' in data:
+            self.db.skills.register(session["sid"], data)
         try:
             if isinstance(data, str):  # needed for c++ socket.io client
                 data = json.loads(data)

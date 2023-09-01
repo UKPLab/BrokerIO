@@ -27,8 +27,10 @@ class Skills(Collection):
         """
         skills = self.get_skills(filter_name=data['name'], with_config=True)
         if len(skills) > 0:
-            if not skills[0]['config'] == data['config']:
+            print(skills)
+            if not skills[0]['config'] == data:
                 self.socketio.emit("error", {"code": 201}, to=sid)
+                return
 
         skill = {
             "sid": sid,
@@ -186,7 +188,7 @@ class Skills(Collection):
             if with_config:
                 skill_config = results(
                     self.collection.find({"config.name": skill["name"], "connected": True}, limit=1))
-                if skill_config.has_more():
+                if skill_config.count() > 0:
                     skill["config"] = skill_config.next()["config"]
             skills.append(skill)
         return skills

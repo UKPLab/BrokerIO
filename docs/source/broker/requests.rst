@@ -4,8 +4,6 @@ Requests
 Options
 -------
 
-
-
 In addition to the configuration options described in the :doc:`Skills <./skills/definition>` section,
 the following options are available during runtime for each skill request.
 
@@ -49,8 +47,8 @@ Example:
     .. note::
 
         The broker will only send status updates if the skill container implements the feature.
-
-    .. option::
+        If the container sends skill updates, but the time limit is reached,
+        open status updates will sent to the user at the time the container sends new status updates.
 
 .. option:: simulate
 

@@ -13,7 +13,6 @@ from broker.db import connect_db
 from broker.utils import scrub_job
 from broker.utils.Guard import Guard
 from test.TestClient import TestClient
-from test.TestContainer import TestContainer
 
 
 class TestBroker(unittest.TestCase):
@@ -101,7 +100,6 @@ class TestBroker(unittest.TestCase):
         unittest.skipIf(not self.client.start(), "Environment not ready by time. Skipping ...")
         time.sleep(0.5)
         self.client.clear()
-
 
     def tearDown(self) -> None:
         self._logger.info("Stop client ...")
@@ -247,23 +245,24 @@ class TestBroker(unittest.TestCase):
             def client_check(c):
                 m = c.check_queue()
                 if m:
-                    data = [
-                        time.perf_counter() - test_start,  # time
-                        m['stats']['duration'],  # duration_container
-                        time.perf_counter() - m['data']['start'],  # duration_request
-                        m['data']['client'],  # client
-                        m['stats']['host'],  # container
-                        m['data']['delay'],  # delay
-                        m['data']['message'],  # message_id
-                        len(json.dumps(m['data'])),  # data_length
-                        len(clients),  # current_clients
-                        len(containers),  # current_containers
-                        max_clients,  # max_clients
-                        max_container,  # max_containers
-                        max_messages,  # max_messages
-                    ]
+                    if 'event' in m and m['event'] == "skillResults":
+                        data = [
+                            time.perf_counter() - test_start,  # time
+                            m['data']['stats']['duration'],  # duration_container
+                            time.perf_counter() - m['data']['data']['start'],  # duration_request
+                            m['data']['data']['client'],  # client
+                            m['data']['stats']['host'],  # container
+                            m['data']['data']['delay'],  # delay
+                            m['data']['data']['message'],  # message_id
+                            len(json.dumps(m['data']['data'])),  # data_length
+                            len(clients),  # current_clients
+                            len(containers),  # current_containers
+                            max_clients,  # max_clients
+                            max_container,  # max_containers
+                            max_messages,  # max_messages
+                        ]
 
-                    file.write("{}\n".format(",".join(str(e) for e in data)))
+                        file.write("{}\n".format(",".join(str(e) for e in data)))
 
             self._logger.info("Start stress test ...")
             for container_i in range(1, max_container + 1):
@@ -272,10 +271,11 @@ class TestBroker(unittest.TestCase):
                     # start container
                     while len(containers) < container_i:
                         self._logger.info("Start container {} ...".format(len(containers) + 1))
-                        # TODO change to TestClient to remove TestContainer dependency
-                        container = TestContainer(self._logger, os.getenv("TEST_URL"), os.getenv("TEST_TOKEN"),
-                                                  "skill_test",
-                                                  name="Container_{}".format(len(containers) + 1))
+                        container = TestClient(self._logger, os.getenv("TEST_URL"),
+                                               name="Container_{}".format(len(containers) + 1))
+                        container.put({"event": "skillRegister", "data": {
+                            "name": "skill_test"
+                        }})
                         container.start()
                         containers.append(container)
 
@@ -285,6 +285,7 @@ class TestBroker(unittest.TestCase):
                         client = TestClient(self._logger, os.getenv("TEST_URL"),
                                             name="Client_{}".format(len(clients) + 1))
                         client.start()
+                        auth = client.auth()
                         clients.append(client)
 
                     # send request
@@ -444,10 +445,11 @@ class TestBroker(unittest.TestCase):
         :return:
         """
         self._logger.info("Start container with user role")
-        # TODO change to TestClient to remove dependency on TestContainer
-        container = TestContainer(self._logger, os.getenv("TEST_URL"), os.getenv("TEST_TOKEN"),
-                                  "skill_role_test", roles=["user"],
-                                  name="Container_Roles")
+        container = TestClient(self._logger, os.getenv("TEST_URL"),
+                               name="Container_Roles")
+        container.put({"event": "skillRegister", "data": {
+            "name": "skill_role_test", "roles": ["user"]
+        }})
         container.start()
 
         # get skills
@@ -554,6 +556,37 @@ class TestBroker(unittest.TestCase):
         message = result['data']
         self.assertEqual(message['code'], 105)
 
+    def test_register_skill_multiple_times(self):
+
+        containers = []
+        for i in range(1, 2, 1):
+            self._logger.info("Start container {} ...".format(len(containers) + 1))
+            container = TestClient(self._logger, os.getenv("TEST_URL"), name="Container_{}".format(len(containers) + 1))
+            container.put({"event": "skillRegister", "data": {
+                "name": "multiple_skill_test"
+            }})
+            container.start()
+            containers.append(container)
+
+        time.sleep(1)
+        while self.client.check_queue():
+            time.sleep(0.1)
+
+        self.assertEqual(next(skill for skill in self.client.skills if skill['name'] == "multiple_skill_test")['nodes'],
+                         2)
+
+        container = TestClient(self._logger, os.getenv("TEST_URL"), name="Container_{}".format(len(containers) + 1))
+        container.put({"event": "skillRegister", "data": {
+            "name": "multiple_skill_test", "anotherConfig": "fail"
+        }})
+        container.start()
+        error = container.wait_for_event("error")
+        self.assertEqual(error['data']['code'], 201)
+
+        container.stop()
+        for container in containers:
+            container.stop()
+
     def test_abort_success(self):
         """
         Test abort success
@@ -582,13 +615,35 @@ class TestBroker(unittest.TestCase):
         self.assertIsNot(result, None)
         self.assertIsNot(result, False)
 
+    def test_status_update(self):
+        """
+        Test if status updates are working
+        :return:
+        """
+
+        # clean container queue
+        while self._container.check_queue():
+            pass
+
+        self._container.put({"event": 'skillRegister', 'data': {"name": "status_skill", "features": ['status']}})
+        self.client.wait_for_event("skillUpdate")
+
+        self.client.put({"event": 'skillRequest', "data": {'id': "status_update", 'name': "status_skill",
+                                                           'config': {'min_delay': 2, "return_stats": True,
+                                                                      "status": 1},
+                                                           'data': {'start': time.perf_counter(), 'sleep': 10}}})
+
+        # Send update
+        time.sleep(1)
+        task = self._container.wait_for_event("taskRequest")
+        self._container.put({"event": 'taskResults', "data": {'id': task['data']['id'], "status": "running", 'data': {'info': 'test'}}})
+
+        result = self.client.wait_for_event("skillStatus")
+        self.assertEqual(isinstance(result['data']['data'], list), True)
+        self.assertEqual(result['data']['data'][0]['data']['info'], "test")
 
     def test_task_killer(self):
         # Test if task killer sends kill signal to skill
-        pass
-        # TODO
-
-    def test_status_update(self):
         pass
         # TODO
 

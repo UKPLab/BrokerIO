@@ -17,6 +17,7 @@ class Request(Socket):
     def _init(self):
         self.socketio.on_event("skillRequest", self.request)
         self.socketio.on_event("taskResults", self.results)
+        self.socketio.on_event("taskUpdate", self.results)
         self.socketio.on_event("requestAbort", self.abort)
 
     def request(self, data):
@@ -59,6 +60,7 @@ class Request(Socket):
         try:
             node = session["sid"]
             if self.db.clients.quota(node, append=True, is_result=True):
+                self.socketio.emit("error", {"code": 100}, to=session["sid"])
                 return
 
             if type(data) is dict and "id" in data and "data" in data:

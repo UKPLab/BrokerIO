@@ -94,28 +94,45 @@ class Tasks(Collection):
             if isinstance(task['request']['config']['simulate'], int):
                 time.sleep(task['request']['config']['simulate'])
 
-        if 'status' in payload and payload['status'] != 'finished':
-            last_update = task['updated']
+        if ('status' in payload
+                and payload['status'] != 'finished'
+                and payload['status'] != ''):
+
             task['status'] = payload['status']
             task['updated'] = datetime.now().isoformat()
-            task['updates'] = payload
-            self.collection.update(task)
+            if 'updates' not in task:
+                task['updates'] = []
+            task['updates'].append({
+                'status': payload['status'],
+                'updated': task['updated'],
+                'notSent': True,
+                'data': payload['data'] if isinstance(payload, dict) and 'data' in payload.keys() else {}
+            })
 
+            # send status update to client
             if "config" in task['request'] and 'status' in task['request']['config']:
-                last_update = datetime.fromisoformat(last_update)
-                now = datetime.now()
-                seconds = (now - last_update).total_seconds()
-                if (task['request']['config'] < seconds):
-                    # send status update to client
-                    self.db.clients.quota(task['rid'], append=True)
+                if (isinstance(task['request']['config']['status'], bool)
+                        and task['request']['config']['status']):
+                    updates = [x for x in task['updates'] if x['notSent']]
+                else:
+                    sent_before = datetime.now() - timedelta(seconds=task['request']['config']['status'])
+                    updates = [x for x in task['updates'] if
+                               x['notSent'] and datetime.fromisoformat(x['updated']) > sent_before]
+
+                # send status update to client
+                if not self.db.clients.quota(task['rid'], append=True):
+                    for update in updates:
+                        del (update['notSent'])
 
                     output = {
                         'id': task['request']['id'],
                         'clientId': task['request']['clientId'] if 'clientId' in task['request'] else None,
-                        'data': payload['data'] if isinstance(payload, dict) and 'data' in payload.keys() else {}
+                        'data': updates
                     }
-                    # sending status update to client if
+                    # sending status update to client
                     self.socketio.emit("skillStatus", output, room=task['rid'])
+
+            self.collection.update(task)
 
         else:
             task['end_timer'] = time.perf_counter()
