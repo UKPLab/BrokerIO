@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3:23.5.2-0
+FROM continuumio/miniconda3:23.3.1-0
 ARG ENV
 ENV ENV=$ENV
 
