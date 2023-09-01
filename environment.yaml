@@ -6,7 +6,7 @@ dependencies:
   - pip>=22.1.2
   - numpy>=1.23.1
   - pip:
-    - Flask>=2.1.3
+    - Flask==2.3.2
     - flask-socketio>=5.1.1
     - eventlet>=0.33.1
     - redis==4.6.0
