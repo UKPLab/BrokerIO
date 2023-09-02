@@ -110,6 +110,7 @@ class TestBroker(unittest.TestCase):
         Test if a simple request is working
         :return:
         """
+        self._logger.info("Start test simple request ...")
         self.client.clear()
 
         self.client.put(
@@ -132,6 +133,7 @@ class TestBroker(unittest.TestCase):
         Test if stats are returned if config['return_stats'] is set to True
         :return:
         """
+        self._logger.info("Start test stats ...")
         self.client.put({"event": 'skillRequest', "data": {'id': "stats", 'name': "test_skill",
                                                            'config': {'return_stats': True},
                                                            'data': time.perf_counter()}})
@@ -152,6 +154,7 @@ class TestBroker(unittest.TestCase):
         Test different keyword arguments for the config parameter
         :return:
         """
+        self._logger.info("Start test config ...")
         self.client.put({"event": 'skillRequest', "data": {'id': "stats1", 'name': "test_skill",
                                                            'config': {'return_stats': True},
                                                            'data': time.perf_counter()}})
@@ -179,6 +182,7 @@ class TestBroker(unittest.TestCase):
         Attacks Broker with fault requests
         :return:
         """
+        self._logger.info("Start test attack ...")
         self.client.put({"event": 'skillRequest', "data": {}})
         self.client.put({"event": 'skillRequest', "data": ""})
         self.client.put({"event": 'skillRequest', "data": []})
@@ -197,6 +201,7 @@ class TestBroker(unittest.TestCase):
         Test if guard is working
         :return:
         """
+        self._logger.info("Start test guard ...")
         self._logger.info("Start client ...")
         ctx = mp.get_context('spawn')
 
@@ -213,6 +218,7 @@ class TestBroker(unittest.TestCase):
         Stress test for broker with multiple clients
         :return:
         """
+        self._logger.info("Start stress test ...")
         test_start = time.perf_counter()
         max_clients = int(os.getenv("TEST_STRESS_MAX_CLIENTS"))
         max_container = int(os.getenv("TEST_STRESS_MAX_CONTAINER"))
@@ -325,6 +331,7 @@ class TestBroker(unittest.TestCase):
         Check if quota is working
         :return:
         """
+        self._logger.info("Start test request quota ...")
         self.client.clear()
         total_requests = 0
         for i in range(int(self._config['quota']['guest']['requests']) * 2):
@@ -347,6 +354,7 @@ class TestBroker(unittest.TestCase):
         Check if simulated delay is working
         :return:
         """
+        self._logger.info("Start test delay ...")
         self.client.clear()
         self.client.put({"event": 'skillRequest', "data": {'id': "delay", 'name': "test_skill",
                                                            'config': {'min_delay': 1, "return_stats": True},  # 500ms
@@ -372,6 +380,7 @@ class TestBroker(unittest.TestCase):
         Check if scrubbing is working
         :return:
         """
+        self._logger.info("Start test scrub ...")
         # run scrub
         self._logger.info("Clean db")
         aql_query = """
@@ -429,6 +438,8 @@ class TestBroker(unittest.TestCase):
         Check authentication work
         :return:
         """
+        self._logger.info("Start test auth ...")
+
         self._logger.info("Start container for auth")
         client = TestClient(logger=self._logger, url=os.getenv("TEST_URL"))
         client.start()
@@ -444,6 +455,8 @@ class TestBroker(unittest.TestCase):
         Check if skills can be selected for specific roles
         :return:
         """
+        self._logger.info("Start test roles ...")
+
         self._logger.info("Start container with user role")
         container = TestClient(self._logger, os.getenv("TEST_URL"),
                                name="Container_Roles")
@@ -482,6 +495,8 @@ class TestBroker(unittest.TestCase):
         """
         Test if job quota is working
         """
+        self._logger.info("Start test job quota ...")
+
         total_requests = 0
         for i in range(int(self._config['quota']['guest']['requests']) * 2):
             total_requests += 1
@@ -518,6 +533,8 @@ class TestBroker(unittest.TestCase):
         Test if abort error without kill feature support
         :return:
         """
+        self._logger.info("Start test abort unsupported ...")
+
         # with simulate (not finished) and kill feature disabled
         self.client.put({"event": 'skillRequest',
                          "data": {'id': "abort", 'name': "test_skill",
@@ -536,6 +553,7 @@ class TestBroker(unittest.TestCase):
         Test abort error with finished task
         :return:
         """
+        self._logger.info("Start test abort finished ...")
 
         # add not skill with kill feature support
         self._container.put({"event": 'skillRegister', 'data': {"name": "test_skill_with_kill", "features": ['kill']}})
@@ -557,7 +575,11 @@ class TestBroker(unittest.TestCase):
         self.assertEqual(message['code'], 105)
 
     def test_register_skill_multiple_times(self):
-
+        """
+        Test if skill can be registered multiple times
+        :return:
+        """
+        self._logger.info("Start test register skill multiple times ...")
         containers = []
         for i in range(1, 2, 1):
             self._logger.info("Start container {} ...".format(len(containers) + 1))
@@ -591,6 +613,8 @@ class TestBroker(unittest.TestCase):
         """
         Test abort success
         """
+        self._logger.info("Start test abort success ...")
+
         # add not skill with kill feature support
         self._container.put({"event": 'skillRegister', 'data': {"name": "test_skill_with_kill", "features": ['kill']}})
         self.client.wait_for_event("skillUpdate")
@@ -620,6 +644,7 @@ class TestBroker(unittest.TestCase):
         Test if status updates are working
         :return:
         """
+        self._logger.info("Start test status update ...")
 
         # clean container queue
         while self._container.check_queue():
@@ -644,7 +669,12 @@ class TestBroker(unittest.TestCase):
         self.assertEqual(result['data']['data'][0]['data']['info'], "test")
 
     def test_task_killer(self):
-        # Test if task killer sends kill signal to skill
+        """
+        Test if task killer is working
+        :return:
+        """
+        self._logger.info("Start test task killer ...")
+
         pass
         # TODO
 
