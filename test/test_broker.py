@@ -1,7 +1,3 @@
-from eventlet import monkey_patch  # mandatory! leave at the very top
-
-monkey_patch()
-
 import json
 import logging
 import multiprocessing as mp
