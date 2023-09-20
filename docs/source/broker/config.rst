@@ -11,13 +11,21 @@ The following options are available:
 
     For each role, you can specify the following options:
 
+    .. option:: jobs
+
+        The maximum of concurrent jobs. If ``0``, no limit is applied.
+
     .. option:: requests
 
-        The maximum number of requests per second. If ``0``, no limit is applied.
+        The maximum number of requests per ``quotaInterval`` seconds. If ``0``, no limit is applied.
 
     .. option:: results
 
-        The maximum number of results can be sent by a skill per second. If ``0``, no limit is applied.
+        The maximum number of results can be sent by a skill per ``quotaInterval`` seconds. If ``0``, no limit is applied.
+
+.. option:: quotaInterval
+
+    Period in seconds for which the quota should apply. Default is ``1`` second.
 
 .. option:: scrub
 

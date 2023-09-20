@@ -11,6 +11,7 @@ quota:
     jobs: 0
     requests: 0
     results: 0
+quotaInterval: 1
 scrub:
   enabled: true
   interval: 60

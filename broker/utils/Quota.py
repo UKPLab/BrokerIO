@@ -2,6 +2,7 @@ import time
 from collections import deque
 import numpy as np
 
+
 class Quota:
     """
     This class is used to limit the number of requests per second for a specific client.
@@ -9,9 +10,10 @@ class Quota:
     @author: Dennis Zyska
     """
 
-    def __init__(self, max_len=100):
+    def __init__(self, max_len=100, interval=1):
         self.max_len = max_len
         self.queue = None
+        self.interval = interval
 
         if max_len > 0:
             self.reset()
@@ -41,7 +43,7 @@ class Quota:
         """
         if len(self.queue) >= self.max_len:
             elapsed_time = time.perf_counter() - self.queue[0]
-            if elapsed_time >= 1:  # greater than 1 second
+            if elapsed_time >= self.interval:
                 self.queue.popleft()
                 return False
             else:

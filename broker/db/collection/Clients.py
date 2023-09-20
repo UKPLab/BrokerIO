@@ -80,11 +80,16 @@ class Clients(Collection):
         if sid in self.quotas:
             del self.quotas[sid]
 
+        # set quota interval if set
+        quotaInterval = 1
+        if 'quotaInterval' in self.config:
+            quotaInterval = self.config['quotaInterval']
+
         role = self.db.roles(role)
         self.quotas[sid] = {
             "role": role,
-            "requests": Quota(max_len=role['quota']['requests']),
-            "results": Quota(max_len=role['quota']['results']),
+            "requests": Quota(max_len=role['quota']['requests'], interval=quotaInterval),
+            "results": Quota(max_len=role['quota']['results'], interval=quotaInterval),
             "jobs": JobQuota(max_len=role['quota']['jobs']),
         }
 
