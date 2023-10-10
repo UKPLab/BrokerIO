@@ -96,7 +96,7 @@ class TestBroker(unittest.TestCase):
 
     def setUp(self) -> None:
         self._logger.info("Start new client ...")
-        self.client = Client(self._logger, os.getenv("TEST_URL"))
+        self.client = Client(os.getenv("TEST_URL"), logger=self._logger)
         unittest.skipIf(not self.client.start(), "Environment not ready by time. Skipping ...")
         time.sleep(0.5)
         self.client.clear()
@@ -277,8 +277,8 @@ class TestBroker(unittest.TestCase):
                     # start container
                     while len(containers) < container_i:
                         self._logger.info("Start container {} ...".format(len(containers) + 1))
-                        container = Client(self._logger, os.getenv("TEST_URL"),
-                                               name="Container_{}".format(len(containers) + 1))
+                        container = Client(os.getenv("TEST_URL"), logger=self._logger,
+                                           name="Container_{}".format(len(containers) + 1))
                         container.put({"event": "skillRegister", "data": {
                             "name": "skill_test"
                         }})
@@ -288,8 +288,8 @@ class TestBroker(unittest.TestCase):
                     # start client
                     while len(clients) < client_i:
                         self._logger.info("Start client {} ...".format(len(clients) + 1))
-                        client = Client(self._logger, os.getenv("TEST_URL"),
-                                            name="Client_{}".format(len(clients) + 1))
+                        client = Client(os.getenv("TEST_URL"), logger=self._logger,
+                                        name="Client_{}".format(len(clients) + 1))
                         client.start()
                         auth = client.auth()
                         clients.append(client)
@@ -458,8 +458,8 @@ class TestBroker(unittest.TestCase):
         self._logger.info("Start test roles ...")
 
         self._logger.info("Start container with user role")
-        container = Client(self._logger, os.getenv("TEST_URL"),
-                               name="Container_Roles")
+        container = Client(os.getenv("TEST_URL"), logger=self._logger,
+                           name="Container_Roles")
         container.put({"event": "skillRegister", "data": {
             "name": "skill_role_test", "roles": ["user"]
         }})
@@ -583,7 +583,8 @@ class TestBroker(unittest.TestCase):
         containers = []
         for i in range(1, 2, 1):
             self._logger.info("Start container {} ...".format(len(containers) + 1))
-            container = Client(self._logger, os.getenv("TEST_URL"), name="Container_{}".format(len(containers) + 1))
+            container = Client(os.getenv("TEST_URL"), logger=self._logger,
+                               name="Container_{}".format(len(containers) + 1))
             container.put({"event": "skillRegister", "data": {
                 "name": "multiple_skill_test"
             }})
@@ -597,7 +598,7 @@ class TestBroker(unittest.TestCase):
         self.assertEqual(next(skill for skill in self.client.skills if skill['name'] == "multiple_skill_test")['nodes'],
                          2)
 
-        container = Client(self._logger, os.getenv("TEST_URL"), name="Container_{}".format(len(containers) + 1))
+        container = Client(os.getenv("TEST_URL"), logger=self._logger, name="Container_{}".format(len(containers) + 1))
         container.put({"event": "skillRegister", "data": {
             "name": "multiple_skill_test", "anotherConfig": "fail"
         }})

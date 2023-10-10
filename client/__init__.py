@@ -19,6 +19,7 @@ def client_process(name, url, in_queue: mp.Queue, out_queue: mp.Queue):
         out_queue.put({"event": event, "data": data})
 
     sio.on('connect', lambda: [out_queue.put({"event": "connected", "data": {}})])
+
     # always send task requests back to broker
 
     @sio.on('taskRequest')
@@ -48,7 +49,7 @@ class Client:
     @author: Dennis Zyska
     """
 
-    def __init__(self, logger, url, queue_size=200, buffer_size=300, name="Simple Client"):
+    def __init__(self, url, queue_size=200, buffer_size=300, name="Simple Client", logger=None):
         self.url = url
         self.logger = logger
         self.in_queue = mp.Manager().Queue(queue_size)
@@ -59,7 +60,8 @@ class Client:
         self.name = name
 
     def start(self):
-        self.logger.info("Start auth client ...")
+        if self.logger is not None:
+            self.logger.info("Start auth client ...")
         ctx = mp.get_context('spawn')
         self.client = ctx.Process(target=client_process, args=(self.name, self.url, self.in_queue, self.out_queue))
         self.client.start()
@@ -74,7 +76,8 @@ class Client:
 
         # wait for auth challenge
         challenge = self.wait_for_event("authChallenge")
-        self.logger.error(challenge)
+        if self.logger is not None:
+            self.logger.error(challenge)
         if challenge:
             sig = keys.sign(challenge['data']['secret'])
             self.put({"event": "authResponse", "data": {'pub': keys.get_public(), 'sig': sig}})
@@ -112,7 +115,8 @@ class Client:
         try:
             m = self.out_queue.get(block=False)
             if 'event' in m and m['event'] == "error":
-                self.logger.error(m['data'])
+                if self.logger is not None:
+                    self.logger.error(m['data'])
             if 'event' in m and m['event'] == "skillUpdate":
                 new_skills = m['data']
                 for skill in new_skills:
@@ -179,6 +183,7 @@ class Client:
 
     def stop(self):
         if self.client:
-            self.logger.info("Kill client ...")
+            if self.logger is not None:
+                self.logger.info("Kill client ...")
             self.client.terminate()
             self.client.join()
