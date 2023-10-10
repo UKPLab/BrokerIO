@@ -7,7 +7,7 @@ setup(
     author_email="dennis.zyska@tu-darmstadt.de",
     description="A broker for natural language processing tasks",
     long_description="README.md",
-    packages=['client'],
+    packages=find_packages(),
     install_requires=[
         "python-socketio[client]"
     ],
