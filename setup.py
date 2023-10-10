@@ -10,7 +10,8 @@ setup(
     packages=find_packages(),
     install_requires=[
         "python-socketio[client]",
-        "python-arango"
+        "python-arango",
+        "flask-socketio",
     ],
     python_requires=">=3.10",
 )
