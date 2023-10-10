@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+
 setup(
     name="nlp-broker",
     version='0.3.0',
@@ -6,5 +7,9 @@ setup(
     author_email="dennis.zyska@tu-darmstadt.de",
     description="A broker for natural language processing tasks",
     long_description="README.md",
-    packages=find_packages(),
+    packages=['client'],
+    install_requires=[
+        "python-socketio[client]"
+    ],
+    python_requires=">=3.10",
 )
