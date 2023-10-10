@@ -10,7 +10,7 @@ from broker.utils.Keys import Keys
 from collections import deque
 
 
-def client(name, url, in_queue: mp.Queue, out_queue: mp.Queue):
+def client_process(name, url, in_queue: mp.Queue, out_queue: mp.Queue):
     logger = init_logging(name, level=logging.getLevelName("INFO"))
     sio = socketio.Client(logger=logger, engineio_logger=logger)
 
@@ -42,9 +42,9 @@ def client(name, url, in_queue: mp.Queue, out_queue: mp.Queue):
             time.sleep(5)
 
 
-class TestClient:
+class Client:
     """
-    Example client for testing
+    Example API Client for testing
     @author: Dennis Zyska
     """
 
@@ -61,7 +61,7 @@ class TestClient:
     def start(self):
         self.logger.info("Start auth client ...")
         ctx = mp.get_context('spawn')
-        self.client = ctx.Process(target=client, args=(self.name, self.url, self.in_queue, self.out_queue))
+        self.client = ctx.Process(target=client_process, args=(self.name, self.url, self.in_queue, self.out_queue))
         self.client.start()
 
         return self.wait_for_event("connected", timeout=30)
