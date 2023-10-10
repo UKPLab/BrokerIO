@@ -9,7 +9,8 @@ setup(
     long_description="README.md",
     packages=find_packages(),
     install_requires=[
-        "python-socketio[client]"
+        "python-socketio[client]",
+        "python-arango"
     ],
     python_requires=">=3.10",
 )
