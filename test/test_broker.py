@@ -12,7 +12,7 @@ from broker.app import init
 from broker.db import connect_db
 from broker.utils import scrub_job
 from broker.utils.Guard import Guard
-from client import Client
+from broker.client import Client
 
 
 class TestBroker(unittest.TestCase):

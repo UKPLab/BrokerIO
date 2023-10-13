@@ -56,6 +56,7 @@ class Client:
         self.out_queue = mp.Manager().Queue(queue_size)
         self.skills = []
         self.client = None
+        self.role = "guest"
         self.results_buffer = deque(maxlen=buffer_size)
         self.name = name
 
@@ -83,7 +84,12 @@ class Client:
             self.put({"event": "authResponse", "data": {'pub': keys.get_public(), 'sig': sig}})
 
             # return auth info
-            return self.wait_for_event("authInfo")
+            auth_info = self.wait_for_event("authInfo")
+            if auth_info:
+                self.role = auth_info['data']['role']
+                return auth_info
+            else:
+                return False
         else:
             return False
 

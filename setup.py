@@ -12,7 +12,8 @@ setup(
         "python-socketio[client]",
         "python-arango",
         "flask-socketio",
-        "pycryptodome"
+        "pycryptodome",
+        "numpy",
     ],
     python_requires=">=3.10",
 )
