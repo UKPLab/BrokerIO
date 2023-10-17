@@ -7,13 +7,10 @@ from broker import init_logging, load_config
 from broker.utils import scrub_job, init_job
 from broker.db import connect_db
 
-from test.TestClient import TestClient
-
 
 def args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--url", help="Broker URL", default=os.getenv("BROKER_URL", "http://localhost:4852"))
-    parser.add_argument("--skill", help="Skill name to test", default="test_skill")
     parser.add_argument("--scrub", help="Start a scrub job", type=bool)
     parser.add_argument("--init", help="Reinit the default users (reading keys)", type=bool)
     parser.add_argument('--role', help="Assign role to user (only if assign_role is set to true)", type=str,
@@ -25,7 +22,7 @@ def args():
 
 
 if __name__ == '__main__':
-    logger = init_logging("ClientTester", logging.DEBUG)
+    logger = init_logging("Broker Manager", logging.DEBUG)
     args = args().parse_args()
 
     if args.assign_role:
@@ -56,11 +53,4 @@ if __name__ == '__main__':
         scrub.start()
         scrub.join()
     else:
-        client = TestClient(logger, args.url)
-        client.start()
-
-        client.put({'event': 'skillRequest', 'data': {"id": "1", "name": args.skill,
-                    "data": {"text": "Rewrite this section to explain how this file fits into the project."}}})
-
-        while True:
-            print(client.get())
+        print("Please provide a valid argument")

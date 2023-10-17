@@ -1,11 +1,7 @@
-import logging
 import multiprocessing as mp
 import queue
 import time
 
-import socketio
-
-from broker import init_logging
 from broker.utils.Keys import Keys
 from collections import deque
 from .utils import client_process
@@ -196,7 +192,7 @@ class Client:
         """
         self.clear()
         self.put({"event": "skillRequest", "data": {
-            "skill": skill,
+            "name": skill,
             "id": message_id,
             "config": {} if config is None else config,
             "data": data}})

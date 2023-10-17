@@ -5,6 +5,8 @@ build
 broker/__pycache__
 broker/**/__pycache__
 
+examples/private_key.pem
+
 # docs
 docs/build
 docs/html
