@@ -581,7 +581,7 @@ class TestBroker(unittest.TestCase):
         """
         self._logger.info("Start test register skill multiple times ...")
         containers = []
-        for i in range(1, 2, 1):
+        for i in range(1, 3, 1):
             self._logger.info("Start container {} ...".format(len(containers) + 1))
             container = Client(os.getenv("TEST_URL"), logger=self._logger,
                                name="Container_{}".format(len(containers) + 1))
