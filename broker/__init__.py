@@ -1,5 +1,7 @@
 import logging
 
+import yaml
+
 
 def init_logging(name=None, level=logging.INFO):
     if name is None:
@@ -12,3 +14,8 @@ def init_logging(name=None, level=logging.INFO):
     logger.addHandler(console_handler)
     logger.setLevel(level)
     return logger
+
+
+def load_config():
+    with open("./config.yaml", "r") as f:
+        return yaml.load(f, Loader=yaml.FullLoader)

@@ -12,14 +12,27 @@ default: help
 help:
 	@echo "make clean             	Delete development files"
 	@echo "make guard             	Start guard"
+	@echo "make scrub             	Scrub database"
+	@echo "make init              	Initialize keys"
+	@echo "make stress            	Run stress test"
 	@echo "make broker              Start broker"
 	@echo "make dev               	Start broker in development environment"
 	@echo "make docker		  	    Start docker images for local development"
+	@echo "make test				Run tests"
 	@echo "make doc 			 	Generate documentation"
 	@echo "make build      			Build all docker images - complete environment"
 	@echo "make env_create			Create a virtual environment"
 	@echo "make env_activate		Activate the virtual environment"
 	@echo "make env_update			Update the virtual environment"
+
+.PHONY: init
+init:
+	openssl genrsa -out private_key.pem 1024
+	python3 client.py --init True
+
+.PHONY: scrub
+scrub:
+	python3 client.py --scrub True
 
 .PHONY: guard
 guard:
@@ -43,19 +56,21 @@ stress:
 
 .PHONY: test-build
 test-build:
-	docker run --env-file ".env.main" -v ${CURDIR}/test:/test --network=nlp_api_main_default  broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
+	docker exec nlp_api_main_broker_1 conda run --no-capture-output -n nlp_api ENV=main python3 -u -m unittest discover test
 
 .PHONY: test-build-dev
 test-build-dev:
-	docker run --env-file ".env.dev" -v ${CURDIR}/test:/test --network=nlp_api_dev_default broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest discover test
+	docker exec nlp_api_dev_broker_1 conda run --no-capture-output -n nlp_api ENV=dev python3 -u -m unittest discover test
 
 .PHONY: test-stress
 test-stress:
-	docker run --env-file ".env.main" -v ${CURDIR}/test:/test --network=nlp_api_main_default  broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest test.test_broker.TestBroker.stressTest
+	docker exec nlp_api_main_broker_1 conda run --no-capture-output -n nlp_api ENV=main python3 -u -m unittest test.test_broker.TestBroker.stressTest
+	docker cp nlp_api_main_broker_1:/tmp/stress_results.csv ./test/stress_results.csv
 
 .PHONY: test-stress-dev
 test-stress-dev:
-	docker run --env-file ".env.dev" -v ${CURDIR}/test:/test --network=nlp_api_dev_default broker_image conda run --no-capture-output -n nlp_api python3 -u -m unittest test.test_broker.TestBroker.stressTest
+	docker exec nlp_api_dev_broker_1 conda run --no-capture-output -n nlp_api ENV=dev python3 -u -m unittest test.test_broker.TestBroker.stressTest
+	docker cp nlp_api_dev_broker_1:/tmp/stress_results.csv ./test/stress_results.csv
 
 .PHONY: broker
 broker:

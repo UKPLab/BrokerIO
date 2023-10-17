@@ -45,6 +45,31 @@ To run them, execute the following command:
 
 The test are located in the ``tests`` folder.
 
+.. tip::
+
+    You also can run the tests individually by using, e.g. ``python3 -u -m unittest test.test_broker.TestBroker.test_auth``.
+
+Error Codes
+===========
+
+Sometimes the broker will return an error code, here is a list of all possible error codes:
+
+- 100 - Request Quota exceeded
+- 101 - Job Quota exceeded
+- 102 - Job cancelled - maximum execution time exceeded
+- 103 - Lost connection to node - and no other node available
+- 104 - Lost connection to node - job is started on another node
+- 105 - Job cannot aborted - already finished or aborted
+- 106 - Job cannot aborted - task not found
+- 107 - Job cannot aborted - node did not support abort/kill feature
+- 108 - Task update failed - task not found
+- 109 - Job cancelled successfully - by user
+- 110 - Job cancelled successfully - other reason
+- 200 - Skill not available
+- 201 - Skill config is not the same as in the database currently registered
+- 401 - Signature cannot be verified by message
+- 500 - Undefined error in request
+
 Debugging
 *********
 
@@ -55,4 +80,12 @@ To debug the redis server, you can use the redis-cli:
     sudo apt-get install redis-tools
     redis-cli --stat
     redis-cli --scan | head -10
+
+Frameworks
+**********
+
+The following frameworks are used inside the broker:
+
+- https://docs.python-arango.com/
+- https://www.pycryptodome.org/
 

@@ -31,8 +31,18 @@ The broker is developed as part of the `CARE project <https://github.com/UKPLab/
 
    getting_started/quickstart
    getting_started/installation
-   getting_started/development
-   getting_started/db
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Broker
+
+   broker/config
+   broker/authentication
+   broker/client
+   broker/requests
+   broker/development
+   broker/db
+
 
 
 .. toctree::
@@ -40,7 +50,7 @@ The broker is developed as part of the `CARE project <https://github.com/UKPLab/
    :caption: Skills
 
    skills/definition
-   skills/configuration
+   skills/features
    skills/skill_definition_file
    skills/examples
 

@@ -150,6 +150,12 @@ The SDF template contains the following sections:
    - Input of the model, the input data is defined in the data section.
  * - output
    - Output of the model, the output data is defined in the data section.
+ * - roles
+   - | List of roles that are allowed to use this skill.
+     | If not set, all roles are allowed to use this skill. See :doc:`../broker/authentication` for more information.
+ * - features
+   - | List of features that is provided by this skill.
+     | See possible skill features :doc:`./features` for more information.
  * - needs
    - | List of task that should be handles by the broker before running the own task,
      | because we want not provide it by the own model. The order matters!

@@ -30,9 +30,13 @@ services:
     <<: *default
     links:
       - redis
+      - arangodb
     depends_on:
       - redis
+      - arangodb
     command: conda run -n nlp_api --no-capture-output make ENV=${ENV} broker
+    expose:
+      - ${BROKER_PORT}
     ports:
       - ${BROKER_PORT}:${BROKER_PORT}
     restart: unless-stopped
@@ -49,9 +53,15 @@ services:
     image: redis
     restart: unless-stopped
   arangodb:
-    image: arangodb/arangodb:3.10.5
+    image: arangodb/arangodb:3.10.9
+    expose:
+      - "8529"
     restart: unless-stopped
+    healthcheck:
+      test: arangosh --server.endpoint tcp://localhost:8529 | grep -q 'for a tutorial' || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
     environment:
       - ARANGO_ROOT_PASSWORD=${ARANGODB_ROOT_PASSWORD}
       - ARANGO_NO_AUTH=1
-      - ARANGODB_SOCKETIO_PORT=${ARANGODB_SOCKETIO_PORT}

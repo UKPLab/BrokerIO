@@ -43,9 +43,12 @@ build_test:
     - docker info
     - docker version
     - docker-compose version
-    - apt update && apt install make -y
+    - apt update && apt install make openssl -y
   script:
+    - openssl genrsa -out private_key.pem 2048
     - make ENV=main build
+    - sleep 2
+    - while [ "`docker inspect -f {{.State.Health.Status}} nlp_api_main_arangodb_1`" != "healthy" ]; do sleep 2; done
     - make ENV=main test-build
     - docker wait nlp_api_main_docs_asyncapi_1
     - docker wait nlp_api_main_docs_sphinx_1
@@ -75,6 +78,7 @@ deploy-dev:
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git checkout $CI_COMMIT_SHORT_SHA"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git submodule update --init"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make build-dev-clean"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && openssl genrsa -out private_key.pem 2048"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=dev build-dev"
   only:
     - dev
@@ -90,6 +94,7 @@ deploy-main:
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git checkout $CI_COMMIT_SHORT_SHA"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git submodule update --init"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make build-clean"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && openssl genrsa -out private_key.pem 2048"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=main build"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && docker wait nlp_api_main_docs_asyncapi_1"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && cp -r ./docs/html $DOCS_PATH_ASYNC_API"

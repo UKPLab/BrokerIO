@@ -1,12 +1,7 @@
-""" app -- Bootstrapping the server
+"""
+Broker entry point for bootstrapping the server
 
-This is the file used to start the flask (and socketio) server. It is also the file considered
-by the celery client to setup RPCs to the celery server.
-
-At the moment, the file contains examples to test your setup and get a feeling for how
-celery + socketio can work together.
-
-Author: Nils Dycke, Dennis Zyska
+This is the file used to start the flask (and socketio) server.
 """
 
 from eventlet import monkey_patch  # mandatory! leave at the very top
@@ -17,13 +12,17 @@ import sys
 from flask import Flask, session, request
 from flask_socketio import SocketIO
 from broker.config.WebConfiguration import instance as WebInstance
-from broker.db.Clients import Clients
-from broker.db.Tasks import Tasks
-from broker.db.Skills import Skills
-from broker.sockets.Register import Register
-from arango import ArangoClient
+
+from broker.sockets.Request import Request
+from broker.sockets.Skill import Skill
+
+from broker.sockets.Auth import Auth
 import os
-from broker import init_logging
+from broker import init_logging, load_config
+from broker.db import connect_db
+from dotenv import load_dotenv
+
+
 
 __version__ = os.getenv("BROKER_VERSION")
 __author__ = "Dennis Zyska, Nils Dycke"
@@ -37,39 +36,36 @@ def init():
     """
     logger = init_logging("broker")
 
+    if os.getenv("ENV", None) is not None:
+        load_dotenv(dotenv_path=".env.{}".format(os.getenv("ENV", None)))
+    else:
+        load_dotenv(dotenv_path=".env")
+
     # check if dev mode
     DEV_MODE = "--dev" in sys.argv
     DEBUG_MODE = "--debug" in sys.argv
-    config = WebInstance(dev=DEV_MODE, debug=DEBUG_MODE)
-
-    # arango db
-    logger.info("Connecting to db...")
-    db_client = ArangoClient(
-        hosts="http://{}:{}".format(os.getenv("ARANGODB_HOST", "localhost"), os.getenv("ARANGODB_PORT", "8529")))
-    sys_db = db_client.db('_system', username='root', password=os.getenv("ARANGODB_ROOT_PASSWORD", "root"))
-    if not sys_db.has_database('broker'):
-        sys_db.create_database('broker')
-    sync_db = db_client.db('broker', username='root', password=os.getenv("ARANGODB_ROOT_PASSWORD", "root"))
-    db = sync_db.begin_async_execution(return_result=True)
+    web_config = WebInstance(dev=DEV_MODE, debug=DEBUG_MODE)
+    config = load_config()
 
     logger.info("Initializing server...")
     # flask server
     app = Flask("broker")
     app.logger = logger
-    app.config.update(config.flask)
-    app.config.update(config.session)
-    socketio = SocketIO(app, **config.socketio, logger=logger, engineio_logger=logger)
+    app.config.update(web_config.flask)
+    app.config.update(web_config.session)
+    socketio = SocketIO(app, **web_config.socketio, logger=logger, engineio_logger=logger)
 
-    # clients
-    logger.info("Initializing db tables...")
-    db.clear_async_jobs()
-    clients = Clients(db, socketio)
-    tasks = Tasks(db, socketio)
-    skills = Skills(db, socketio)
+    # get db and collection
+    logger.info("Connecting to db...")
+    db = connect_db(config, socketio)
 
     # add socket routes
-    logger.info("Initializing socket routes...")
-    routes = Register(socketio=socketio, tasks=tasks, skills=skills, clients=clients)
+    logger.info("Initializing socket...")
+    sockets = {
+        "request": Request(db=db, socketio=socketio),
+        "auth": Auth(db=db, socketio=socketio),
+        "skill": Skill(db=db, socketio=socketio)
+    }
 
     # socketio
     @socketio.on("connect")
@@ -80,13 +76,8 @@ def init():
 
         :return: the sid of the connection
         """
-        logger.debug(data)
-
-        clients.connect(sid=request.sid, ip=request.remote_addr, data=data)
+        db.clients.connect(sid=request.sid, ip=request.remote_addr, data=data)
         session["sid"] = request.sid
-
-        # send available skills
-        skills.send_update(to=request.sid)
 
         logger.debug(f"New socket connection established with sid: {request.sid} and ip: {request.remote_addr}")
 
@@ -99,26 +90,12 @@ def init():
 
         :return: void
         """
-        # todo
-        # terminate running jobs
-        # clear pending results
-
-        # close connection
-        clients.disconnect(sid=request.sid)
-
-        # remove skills by sid if exists
-        skills.unregister(sid=request.sid)
-
-        # Terminate running jobs
-        # 1. Docker container disconnect
-        # TODO send task eventually to the next node if available
-        # 2. Client disconnect
-        # TODO send cancel request via socket io emit to container
+        db.clients.disconnect(sid=request.sid)
 
         logger.debug(f"Socket connection teared down for sid: {request.sid}")
 
-    logger.info("App starting ...", config.app)
-    socketio.run(app, **config.app, log_output=True)
+    logger.info("App starting ...", web_config.app)
+    socketio.run(app, **web_config.app, log_output=True)
 
 
 if __name__ == '__main__':
