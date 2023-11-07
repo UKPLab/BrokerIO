@@ -36,15 +36,15 @@ services:
 
 build_test:
   stage: build
-  image: docker/compose:debian-1.29.2
+  image: debian:stable-20231030
   before_script:
-    - *add-debian-archiv
+   # - *add-debian-archiv
    # - *add-debian-mirror
+    - apt update && apt install make openssl -y
+    - apt update && apt install docker -y
+    - apt update && apt install docker-compose-plugin -y
     - docker info
     - docker version
-    - docker-compose version
-    - apt update && apt install make openssl -y
-    - apt update && apt install docker-compose-plugin
   script:
     - openssl genrsa -out private_key.pem 2048
     - make ENV=main build
