@@ -40,7 +40,7 @@ guard:
 
 .PHONY: docker
 docker:
-	docker-compose -f docker-compose.yml -f docker-dev.yml up arangodb
+	docker compose -f docker-compose.yml -f docker-dev.yml up arangodb
 
 .PHONY: dev
 dev:
@@ -78,25 +78,25 @@ broker:
 
 .PHONY: build
 build:
-	docker-compose -f docker-compose.yml -p "nlp_api_main" --env-file ".env.main" up --build -d
+	docker compose -f docker-compose.yml -p "nlp_api_main" --env-file ".env.main" up --build -d
 
 .PHONY: build-dev
 build-dev:
-	docker-compose -f docker-compose.yml -p "nlp_api_dev" --env-file ".env.dev" up --build -d
+	docker compose -f docker-compose.yml -p "nlp_api_dev" --env-file ".env.dev" up --build -d
 
 .PHONY: build-dev-clean
 build-dev-clean:
-	docker-compose -p "nlp_api_dev" rm -f -s -v
+	docker compose -p "nlp_api_dev" rm -f -s -v
 	docker network rm nlp_api_dev_default || echo "IGNORING ERROR"
 
 .PHONY: build-clean
 build-clean: clean
-	docker-compose -p "nlp_api_main" rm -f -s -v
+	docker compose -p "nlp_api_main" rm -f -s -v
 	docker network rm nlp_api_main_default || echo "IGNORING ERROR"
 
 .PHONY: clean
 clean:
-	docker-compose rm -f -s -v
+	docker compose rm -f -s -v
 	docker network rm nlp_api_default || echo "IGNORING ERROR"
 
 .PHONY: env_create
@@ -125,7 +125,7 @@ doc_asyncapi:
 
 .PHONY: doc_sphinx
 doc_sphinx:
-	docker-compose -f docker-compose.yml build docs_sphinx
+	docker compose -f docker-compose.yml build docs_sphinx
 	docker run --rm -v ${CURDIR}/docs:/docs broker_docs_sphinx make html
 
 
