@@ -20,6 +20,11 @@ To build the NLP server, run the following command in the root directory of the 
 
 .. code-block:: bash
 
-    make build
+    make ENV=main build
 
 This will build all docker image for the NLP server.
+
+.. warning::::
+
+    The ``ENV`` variable must be set to ``main`` or ``dev``, otherwise connection to the DB is not possible!
+    The ``dev`` environment is used for development purpose only.
