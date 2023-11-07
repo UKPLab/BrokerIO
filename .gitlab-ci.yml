@@ -50,7 +50,7 @@ services:
 
 build_test:
   stage: build
-  image: debian:stable-20231030
+  image: ubuntu:23.10
   before_script:
    # - *add-debian-archiv
    # - *add-debian-mirror
