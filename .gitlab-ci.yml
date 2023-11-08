@@ -65,7 +65,7 @@ build_test:
     - openssl genrsa -out private_key.pem 2048
     - make ENV=main build
     - sleep 2
-    - while [ "`docker inspect -f {{.State.Health.Status}} nlp_api_main_arangodb_1`" != "healthy" ]; do sleep 2; done
+    - while [ "`docker inspect -f {{.State.Health.Status}} nlp_api_main-arangodb-1`" != "healthy" ]; do sleep 2; done
     - make ENV=main test-build
     - docker wait nlp_api_main_docs_asyncapi_1
     - docker wait nlp_api_main_docs_sphinx_1
