@@ -67,8 +67,8 @@ build_test:
     - sleep 2
     - while [ "`docker inspect -f {{.State.Health.Status}} nlp_api_main-arangodb-1`" != "healthy" ]; do sleep 2; done
     - make ENV=main test-build
-    - docker wait nlp_api_main-docs-asyncapi-1
-    - docker wait nlp_api_main-docs-sphinx-1
+    - docker wait nlp_api_main-docs_asyncapi-1
+    - docker wait nlp_api_main-docs_sphinx-1
     - tar -czvf ${PWD}/doc_api.tar.gz ./docs/html
     - tar -czvf ${PWD}/doc_main.tar.gz ./docs/build
   artifacts:
