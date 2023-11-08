@@ -50,11 +50,11 @@ services:
 
 build_test:
   stage: build
-  image: ubuntu:22.04
+  image: docker:24.0.7-dind
   before_script:
    # - *add-debian-archiv
    # - *add-debian-mirror
-    - *add-debian-docker
+   # - *add-debian-docker
     - apt update && apt install make openssl -y
     #- apt update && apt install docker -y
     #- apt update && apt install docker-compose-plugin -y
