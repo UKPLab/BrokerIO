@@ -121,7 +121,7 @@ clean_doc:
 
 .PHONY: doc_asyncapi
 doc_asyncapi:
-	docker run --rm -v ${CURDIR}/docs/api.yml:/app/api.yml -v ${CURDIR}/docs/html:/app/output asyncapi/generator --force-write -o ./output api.yml @asyncapi/html-template
+	docker run --rm -v ${CURDIR}/docs/api.yml:/app/api.yml -v ${CURDIR}/docs/html:/app/output asyncapi/generator:1.14.0 --force-write -o ./output api.yml @asyncapi/html-template
 
 .PHONY: doc_sphinx
 doc_sphinx:
