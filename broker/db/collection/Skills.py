@@ -186,12 +186,30 @@ class Skills(Collection):
         cursor = results(self._sysdb.aql.execute(aql_query, bind_vars=bind_vars, count=True))
         for skill in cursor:
             if with_config:
-                skill_config = results(
-                    self.collection.find({"config.name": skill["name"], "connected": True}, limit=1))
-                if skill_config.count() > 0:
-                    skill["config"] = skill_config.next()["config"]
+                skill["config"] = self.get_skill_config(skill['name'])
             skills.append(skill)
         return skills
+
+    def get_skill_config(self, name):
+        """
+        Get a skill config by name
+
+        :param name: Skill name
+        """
+
+        aql_query = """
+                    FOR doc IN @@collection
+                    FILTER doc.connected 
+                    FILTER doc.config.name == @name
+                    RETURN doc
+                """
+        bind_vars = {"@collection": self.name, "name": name}
+        cursor = results(self._sysdb.aql.execute(aql_query, bind_vars=bind_vars, count=True))
+        if cursor.count() > 0:
+            skill_data = cursor.next()
+            return skill_data["config"] if "config" in skill_data else {}
+        else:
+            return {}
 
     def clean(self):
         """

@@ -71,6 +71,8 @@ class Skill(Socket):
 
             if 'name' in data:
                 self.db.skills.register(session["sid"], data)
+            else:
+                self.socketio.emit("error", {"code": 202}, to=session["sid"])
         except:
             self.logger.error("Error in request {}: {}".format("skillRegister", data))
             self.socketio.emit("error", {"code": 500}, to=session["sid"])

@@ -62,6 +62,7 @@ class TestBroker(unittest.TestCase):
         ready = container.start()
         if not ready:
             logger.error("Container not ready by time. Exiting ...")
+            logger.error(ready)
             exit(1)
         # register basic skill
         container.put({"event": "skillRegister", "data": {
@@ -585,13 +586,13 @@ class TestBroker(unittest.TestCase):
             self._logger.info("Start container {} ...".format(len(containers) + 1))
             container = Client(os.getenv("TEST_URL"), logger=self._logger,
                                name="Container_{}".format(len(containers) + 1))
-            container.put({"event": "skillRegister", "data": {
-                "name": "multiple_skill_test"
-            }})
             container.start()
+            container.put({"event": "skillRegister", "data": {
+                "name": "multiple_skill_test", "config": {}
+            }})
             containers.append(container)
 
-        time.sleep(1)
+        time.sleep(3)
         while self.client.check_queue():
             time.sleep(0.1)
 

@@ -1,21 +1,15 @@
-FROM continuumio/miniconda3:23.5.2-0
+FROM continuumio/miniconda3:23.3.1-0-alpine
 ARG ENV
 ENV ENV=$ENV
+RUN apk update
+RUN apk add --no-cache make
+
+RUN conda --version
 
 # COPY SERVER CODE
 WORKDIR /
 ADD . /broker
 WORKDIR broker
-
-# Install debian mirror
-RUN echo "deb http://debian.tu-bs.de/debian/ bullseye-updates main" >> /etc/apt/sources.list
-RUN echo "deb-src http://debian.tu-bs.de/debian/ bullseye-updates main" >> /etc/apt/sources.list
-RUN echo "deb http://debian.tu-bs.de/debian/ bullseye main" >> /etc/apt/sources.list
-RUN echo "deb-src http://debian.tu-bs.de/debian/ bullseye main" >> /etc/apt/sources.list
-RUN cat /etc/apt/sources.list
-
-# Install make
-RUN apt update && apt install make -y
 
 RUN set -x && \
     #conda install -n base -c defaults conda=4.* && \
