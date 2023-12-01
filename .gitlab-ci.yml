@@ -78,9 +78,9 @@ deploy-main:
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make build-clean"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && openssl genrsa -out private_key.pem 2048"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=main build"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && docker wait nlp_api_main_docs_asyncapi_1"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && docker wait nlp_api_main-docs_sphinx-1"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && cp -r ./docs/html $DOCS_PATH_ASYNC_API"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && docker wait nlp_api_main_docs_sphinx_1"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && docker wait nlp_api_main-docs_sphinx-1"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && cp -r ./docs/build/html $DOCS_PATH"
   only:
     - main
