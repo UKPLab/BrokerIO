@@ -64,12 +64,12 @@ test-build-dev:
 
 .PHONY: test-stress
 test-stress:
-	docker exec nlp_api_main-broker-1 conda run --no-capture-output -n nlp_api ENV=main python3 -u -m unittest test.test_broker.TestBroker.stressTest
+	docker exec nlp_api_main-broker-1 python3 -u -m unittest test.test_broker.TestBroker.stressTest
 	docker cp nlp_api_main-broker-1:/tmp/stress_results.csv ./test/stress_results.csv
 
 .PHONY: test-stress-dev
 test-stress-dev:
-	docker exec nlp_api_dev-broker-1 conda run --no-capture-output -n nlp_api ENV=dev python3 -u -m unittest test.test_broker.TestBroker.stressTest
+	docker exec nlp_api_dev-broker-1 python3 -u -m unittest test.test_broker.TestBroker.stressTest
 	docker cp nlp_api_dev-broker-1:/tmp/stress_results.csv ./test/stress_results.csv
 
 .PHONY: broker

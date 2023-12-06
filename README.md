@@ -7,7 +7,9 @@ A model example for inference can be found [here](https://github.com/UKPLab/CARE
 ## Requirements
 
 * [Docker](https://docs.docker.com/get-docker/)
-* [Docker Compose](https://docs.docker.com/compose/install/)
+* [GNU Make](https://www.gnu.org/software/make/)
+
+__Note:__ On Windows, you need to install [GnuWin32 Make](http://gnuwin32.sourceforge.net/packages/make.htm) or just run `winget install GnuWin32.Make` and make it executable with `set PATH=%PATH%;C:/Program Files (x86)/GnuWin32/bin`.
 
 ## Documentation
 
