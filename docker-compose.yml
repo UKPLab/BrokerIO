@@ -11,7 +11,7 @@ services:
       - ./docs:/docs
     command: make html
   docs_asyncapi:
-    image: asyncapi/generator
+    image: asyncapi/generator:1.15.5
     volumes:
       - ./docs:/docs
       - ./docs/api.yml:/app/api.yml
