@@ -1,27 +1,24 @@
-FROM continuumio/miniconda3:23.3.1-0-alpine
+FROM python:3.10.8-slim-bullseye
 ARG ENV
 ENV ENV=$ENV
-RUN apk update
-RUN apk add --no-cache make
 
-RUN conda --version
+# echo build type
+RUN echo "ENV=$ENV"
 
 # COPY SERVER CODE
 WORKDIR /
 ADD . /broker
 WORKDIR broker
 
-RUN set -x && \
-    #conda install -n base -c defaults conda=4.* && \
-    conda env create -f environment.yaml # Installs environment.yml && \
-    conda clean -a \
+# INSTALL Requirements
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
 
-SHELL ["conda", "run", "-n", "nlp_api", "/bin/bash", "-c"]
-RUN conda init bash
+# Generate private key if not exists
+RUN if [ ! -f /broker/private_key.pem ]; then \
+    openssl genrsa -out /broker/private_key.pem 2048; fi
 
-ENV PATH /opt/conda/envs/condaenv/bin:$PATH
-# echo build type
-RUN echo $ENV
+# Add current dir to python path
+ENV PYTHONPATH="${PYTHONPATH}:/broker"
 
-CMD ["conda", "run", "-n", "nlp_api", "make", "broker"]
-
+CMD ["python3", "broker/app.py"]

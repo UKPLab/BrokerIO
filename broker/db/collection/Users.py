@@ -20,10 +20,19 @@ class Users(Collection):
         self.index = results(self.collection.add_hash_index(fields=['sid'], name='sid_index', unique=False))
         self.index = results(self.collection.add_hash_index(fields=['connected'], name='connected_index', unique=False))
 
-    def _init(self, reinit=False):
+    def reinit(self, private_key_path = "./private_key.pem"):
+        """
+        Reinitialize the collection
+        :param private_key_path: path to private key
+        :return:
+        """
+        self._init(reinit=True, private_key_path=private_key_path)
+
+    def _init(self, reinit=False, private_key_path="./private_key.pem"):
         """
         Check if necessary keys exists, if not create
         :param reinit: overwrite basic clients
+        :param private_key_path: path to private key
         :return:
         """
         super()._init()
@@ -32,7 +41,7 @@ class Users(Collection):
         if reinit or basic_client.count() == 0:
 
             # load keys
-            keys = Keys(private_key_path="./private_key.pem")
+            keys = Keys(private_key_path=private_key_path)
             if basic_client.count() > 0:
                 for c in basic_client:
                     if basic_client.has_more():

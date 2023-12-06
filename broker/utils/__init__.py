@@ -6,11 +6,10 @@ import socketio
 
 from broker import init_logging, load_config
 from broker.db import connect_db
-from broker.db.collection.Tasks import Tasks
-from broker.db.collection.Users import Users
 
 
-def simple_client(name, url, client_queue: mp.Queue, message_queue: mp.Queue, skill_queue: mp.Queue = None, skill_name="test_skill",
+def simple_client(name, url, client_queue: mp.Queue, message_queue: mp.Queue, skill_queue: mp.Queue = None,
+                  skill_name="test_skill",
                   logging_level="INFO"):
     logger = init_logging(name, level=logging.getLevelName(logging_level))
     sio = socketio.Client(logger=logger, engineio_logger=logger)
@@ -65,10 +64,10 @@ def init_job():
     :return:
     """
     logger = init_logging("Init Job", level=logging.getLevelName("INFO"))
-    logger.info("Connecting to db...")
-    db, _, _ = connect_db()
 
+    logger.info("Loading config...")
     config = load_config()
-    tasks = Users(db, config, socketio)
-    tasks.init(True)
 
+    logger.info("Connecting to db...")
+    db = connect_db(config, None)
+    db.users.reinit(private_key_path="./private_key.pem")
