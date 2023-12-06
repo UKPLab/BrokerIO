@@ -28,7 +28,7 @@ help:
 .PHONY: init
 init:
 	openssl genrsa -out private_key.pem 1024
-	python3 client.py --init True
+	python3 client.py --init True || echo "IGNORING ERROR"
 
 .PHONY: scrub
 scrub:
@@ -56,20 +56,20 @@ stress:
 
 .PHONY: test-build
 test-build:
-	docker exec nlp_api_main-broker-1 conda run --no-capture-output -n nlp_api ENV=main python3 -u -m unittest discover test
+	docker exec nlp_api_main-broker-1 python3 -u -m unittest discover test
 
 .PHONY: test-build-dev
 test-build-dev:
-	docker exec nlp_api_dev-broker-1 conda run --no-capture-output -n nlp_api ENV=dev python3 -u -m unittest discover test
+	docker exec nlp_api_dev-broker-1 python3 -u -m unittest discover test
 
 .PHONY: test-stress
 test-stress:
-	docker exec nlp_api_main-broker-1 conda run --no-capture-output -n nlp_api ENV=main python3 -u -m unittest test.test_broker.TestBroker.stressTest
+	docker exec nlp_api_main-broker-1 python3 -u -m unittest test.test_broker.TestBroker.stressTest
 	docker cp nlp_api_main-broker-1:/tmp/stress_results.csv ./test/stress_results.csv
 
 .PHONY: test-stress-dev
 test-stress-dev:
-	docker exec nlp_api_dev-broker-1 conda run --no-capture-output -n nlp_api ENV=dev python3 -u -m unittest test.test_broker.TestBroker.stressTest
+	docker exec nlp_api_dev-broker-1 python3 -u -m unittest test.test_broker.TestBroker.stressTest
 	docker cp nlp_api_dev-broker-1:/tmp/stress_results.csv ./test/stress_results.csv
 
 .PHONY: broker
@@ -78,11 +78,11 @@ broker:
 
 .PHONY: build
 build:
-	docker compose -f docker-compose.yml -p "nlp_api_main" --env-file ".env.main" up --build -d
+	docker compose -f docker-compose.yml -p "nlp_api_main" up --build -d
 
 .PHONY: build-dev
 build-dev:
-	docker compose -f docker-compose.yml -p "nlp_api_dev" --env-file ".env.dev" up --build -d
+	docker compose -f docker-compose.yml -p "nlp_api_dev" up --build -d
 
 .PHONY: build-dev-clean
 build-dev-clean:
@@ -117,11 +117,15 @@ doc: doc_asyncapi doc_sphinx
 .PHONY: clean_doc
 clean_doc:
 	cd ./docs && make clean
+ifeq ($(OS),Windows_NT)
+	rmdir /S /Q docs\docs
+else
 	rm -rf docs/docs
+endif
 
 .PHONY: doc_asyncapi
 doc_asyncapi:
-	docker run --rm -v ${CURDIR}/docs/api.yml:/app/api.yml -v ${CURDIR}/docs/html:/app/output asyncapi/generator:1.14.0 --force-write -o ./output api.yml @asyncapi/html-template
+	docker run --rm -v ${CURDIR}/docs/api.yml:/app/api.yml -v ${CURDIR}/docs/html:/app/output asyncapi/generator:1.15.5 --force-write -o ./output api.yml @asyncapi/html-template
 
 .PHONY: doc_sphinx
 doc_sphinx:

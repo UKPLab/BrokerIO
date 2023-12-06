@@ -8,21 +8,19 @@ from eventlet import monkey_patch  # mandatory! leave at the very top
 
 monkey_patch()
 
-import sys
 from flask import Flask, session, request
 from flask_socketio import SocketIO
-from broker.config.WebConfiguration import instance as WebInstance
 
 from broker.sockets.Request import Request
 from broker.sockets.Skill import Skill
 
 from broker.sockets.Auth import Auth
 import os
-from broker import init_logging, load_config
+from broker import init_logging, load_config, load_env
 from broker.db import connect_db
-from dotenv import load_dotenv
-
-
+import random
+import string
+import redis
 
 __version__ = os.getenv("BROKER_VERSION")
 __author__ = "Dennis Zyska, Nils Dycke"
@@ -36,24 +34,21 @@ def init():
     """
     logger = init_logging("broker")
 
-    if os.getenv("ENV", None) is not None:
-        load_dotenv(dotenv_path=".env.{}".format(os.getenv("ENV", None)))
-    else:
-        load_dotenv(dotenv_path=".env")
-
     # check if dev mode
-    DEV_MODE = "--dev" in sys.argv
-    DEBUG_MODE = "--debug" in sys.argv
-    web_config = WebInstance(dev=DEV_MODE, debug=DEBUG_MODE)
+    load_env()
     config = load_config()
 
     logger.info("Initializing server...")
     # flask server
     app = Flask("broker")
-    app.logger = logger
-    app.config.update(web_config.flask)
-    app.config.update(web_config.session)
-    socketio = SocketIO(app, **web_config.socketio, logger=logger, engineio_logger=logger)
+    app.config.update({
+        "SECRET_KEY": ''.join(random.choice(string.printable) for i in range(8)),
+        "SESSION_TYPE": "redis",
+        "SESSION_PERMANENT": False,
+        "SESSION_USE_SIGNER": True,
+        "SESSION_REDIS": redis.from_url("redis://{}:{}".format(os.getenv("REDIS_HOST"), os.getenv("REDIS_PORT")), )
+    })
+    socketio = SocketIO(app, cors_allowed_origins='*', logger=logger, engineio_logger=logger)
 
     # get db and collection
     logger.info("Connecting to db...")
@@ -94,8 +89,13 @@ def init():
 
         logger.debug(f"Socket connection teared down for sid: {request.sid}")
 
-    logger.info("App starting ...", web_config.app)
-    socketio.run(app, **web_config.app, log_output=True)
+    app_config = {
+        "debug": os.getenv("FLASK_DEBUG", False),
+        "host": os.getenv("BROKER_HOST", "127.0.0.1"),
+        "port": os.getenv("BROKER_PORT", 4852)
+    }
+    logger.info("App starting ...", app_config)
+    socketio.run(app, **app_config, log_output=True)
 
 
 if __name__ == '__main__':
