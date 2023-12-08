@@ -141,4 +141,4 @@ To change the role of a user, you can use the brokers' client:
 
 .. code-block:: bash
 
-    python3 client.py --assign_role 1 --key "<public key>" --role "<role>"
+    python3 client.py broker assign --key "<public key>" --role "<role>"

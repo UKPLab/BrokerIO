@@ -28,11 +28,11 @@ help:
 .PHONY: init
 init:
 	openssl genrsa -out private_key.pem 1024
-	python3 client.py --init True || echo "IGNORING ERROR"
+	python3 client.py broker init || echo "IGNORING ERROR"
 
 .PHONY: scrub
 scrub:
-	python3 client.py --scrub True
+	python3 client.py broker scrub
 
 .PHONY: guard
 guard:

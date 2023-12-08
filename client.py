@@ -1,56 +1,24 @@
 import argparse
 import logging
-import multiprocessing as mp
-import os
 
-from broker import init_logging, load_config
-from broker.utils import scrub_job, init_job
-from broker.db import connect_db
-
-
-def args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--url", help="Broker URL", default=os.getenv("BROKER_URL", "http://localhost:4852"))
-    parser.add_argument("--scrub", help="Start a scrub job", type=bool)
-    parser.add_argument("--init", help="Reinit the default users (reading keys)", type=bool)
-    parser.add_argument('--role', help="Assign role to user (only if assign_role is set to true)", type=str,
-                        default='admin')
-    parser.add_argument('--key', help="Public key of user for assigning a role (only if assign_role is set to true)",
-                        type=str, default=None)
-    parser.add_argument('--assign_role', help="Assign role to user", type=bool, default=False)
-    return parser
-
+from broker import init_logging
+from client import register_client_module
+from client.Broker import Broker
+from client.Models import Models
 
 if __name__ == '__main__':
     logger = init_logging("Broker Manager", logging.DEBUG)
-    args = args().parse_args()
 
-    if args.assign_role:
-        if args.key is None:
-            print("Please provide a public key for assigning a role")
-            exit(1)
+    # Argument parser
+    parser = argparse.ArgumentParser(description="Broker Manager")
+    subparser = parser.add_subparsers(title="Broker Manager", dest='command')
+    modules = {}
+    register_client_module(modules, subparser, Models)
+    register_client_module(modules, subparser, Broker)
 
-        config = load_config()
-        config['cleanDbOnStart'] = False
-        config['scrub']['enabled'] = False
-        config['taskKiller']['enabled'] = False
-        db = connect_db(config, None)
-
-        user = db.users.set_role(args.key, args.role)
-        if user:
-            print("Role assigned to user, db entry: {}".format(user['_key']))
-        else:
-            print("User not found in db, please check the public key")
-
-    elif args.scrub:
-        ctx = mp.get_context('spawn')
-        scrub = ctx.Process(target=scrub_job)
-        scrub.start()
-        scrub.join()
-    elif args.init:
-        ctx = mp.get_context('spawn')
-        scrub = ctx.Process(target=init_job)
-        scrub.start()
-        scrub.join()
+    # parse arguments
+    args = parser.parse_args()
+    if args.command is None:
+        parser.print_help()
     else:
-        print("Please provide a valid argument")
+        modules[args.command].handle(args)
