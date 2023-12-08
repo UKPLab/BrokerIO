@@ -12,7 +12,7 @@ The following parameters are available:
 
 * ``-h`` or ``--help``: Show the help message.
 * ``broker``: Submenu for broker commands.
-* ``models``: Submenu for model commands.
+* ``skills``: Submenu for skill commands.
 
 Broker
 ------
@@ -25,10 +25,10 @@ The broker submenu contains the following commands:
 * ``assign``: Assign a role to a user (with the user's public key).
 
 
-Models
+Skills
 ------
 
-The model submenu contains the following commands:
+The skill submenu contains the following commands:
 
 * ``-h`` or ``--help``: Show the help message.
-* ``list``: List all available models.
+* ``list``: List all available skills.
