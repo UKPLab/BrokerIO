@@ -1,8 +1,7 @@
 import os
 
+from SkillSimple import SkillSimple
 from openai import OpenAI
-
-from skills.SkillSimple import SkillSimple
 
 
 class Skill(SkillSimple):
@@ -30,8 +29,8 @@ class Skill(SkillSimple):
         chat_completion = self.client.chat.completions.create(
             messages=[
                 {
-                    "role": "user",
-                    "content": "Say this is a test",
+                    "role": data['data']['role'],
+                    "content": data['data']['prompt']
                 }
             ],
             model="gpt-3.5-turbo"

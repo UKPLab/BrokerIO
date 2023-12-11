@@ -1,12 +1,8 @@
-FROM python:3.8
+FROM broker_simple_skill
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
 RUN pip install openai
 
-COPY connect.py connect.py
-
-CMD ["python", "connect.py"]
+COPY Skill.py Skill.py
+COPY sdf.yaml sdf.yaml

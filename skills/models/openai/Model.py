@@ -6,6 +6,7 @@ class Model(SkillModel):
     def __init__(self):
         super().__init__('openai')
         self.help = 'Open AI client'
+        self.template = 'simpleSkill'
 
     def run(self, args):
         """
@@ -16,17 +17,27 @@ class Model(SkillModel):
         # Check if the container is already built
         client = docker.from_env()
         try:
+            print("Running skill {}".format(self.name))
+
             image = client.images.get(self.tag)
+            print("Found image {}".format(image.short_id))
             # Run the container
             container = client.containers.run(
                 self.tag,
                 detach=True,
-                command='python3 -m skills.openai.OASkill',
+                command='python3 /app/connect.py',
                 environment={
-                    'OPENAI_API_KEY': "test"
-                }
+                    'OPENAI_API_KEY': "test",
+                    'BROKER_URL': args.url,
+
+                },
+                network="nlp_api_main_default"
             )
-            print("Running skill {}".format(self.name))
+            print("Build container {}".format(container.short_id))
+
+            # Print the container logs
+            print(container.logs().decode('utf-8'))
+
         except docker.errors.ImageNotFound:
             print("Image not found. Please build the container first.")
             exit()
@@ -42,13 +53,15 @@ class Model(SkillModel):
         :param nocache: Do not use cache
         :return:
         """
+        super().build(nocache)
+
         # Create a Docker client
         client = docker.from_env()
 
         try:
             build_logs = client.api.build(
-                dockerfile="./models/openai/Dockerfile",
-                path="./skills",
+                dockerfile="Dockerfile",
+                path="./skills/models/openai",
                 tag=self.tag,
                 decode=True, rm=True,
                 nocache=nocache,

@@ -8,7 +8,6 @@ For socketio, see https://python-socketio.readthedocs.io
 
 Author: Dennis Zyska
 """
-import importlib
 import logging
 import os
 import time
@@ -19,11 +18,12 @@ import yaml
 from Skill import Skill
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
     logging.info("Create SocketIO Client...")
     sio = socketio.Client()
 
     logging.info("Load skill config...")
-    with open("./app/sdf.yaml", "r") as f:
+    with open("sdf.yaml", "r") as f:
         skill_config = yaml.load(f, Loader=yaml.FullLoader)
         print("Skill config loaded: {}".format(skill_config))
 
