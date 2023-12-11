@@ -6,13 +6,14 @@ from Crypto.PublicKey import RSA
 from broker import load_config
 from broker.utils import scrub_job, init_job
 from broker.db import connect_db
+from . import CLI
 
 
-class Broker:
+class Broker(CLI):
     def __init__(self):
+        super().__init__()
         self.name = 'broker'
         self.help = "Menu for managing broker"
-        self.parser = None
         self.assign_parser = None
 
     def set_parser(self, parser):

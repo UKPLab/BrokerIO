@@ -4,7 +4,7 @@ model_path: ./llama.cpp/model/llama-model.gguf
 debug_level: INFO
 num_threads: 30
 num_ctx: 1024
-sdf:
+skill:
     name: LLM
     description: Prompt based text generation
     input:
