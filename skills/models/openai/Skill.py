@@ -1,7 +1,17 @@
+""" Skill for OpenAI Azure Client
+
+This skill is a simple wrapper for the OpenAI Azure Client.
+
+Documentation Azure Client
+https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line%2Cpython-new&pivots=programming-language-python
+
+Author: Dennis Zyska
+"""
+
 import os
 
 from SkillSimple import SkillSimple
-from openai import OpenAI
+from openai import AzureOpenAI
 
 
 class Skill(SkillSimple):
@@ -19,7 +29,12 @@ class Skill(SkillSimple):
         Initialize Open AI Connection
         :return:
         """
-        self.client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+        self.client = AzureOpenAI(
+            api_key=os.environ.get("AZURE_OPENAI_KEY"),
+            api_version=os.environ.get("API_VERSION"),
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
+        )
+        # OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
 
     def execute(self, data):
         """
@@ -27,16 +42,10 @@ class Skill(SkillSimple):
         :param data:
         :return:
         """
-        chat_completion = self.client.chat.completions.create(
-            messages=[
-                {
-                    "role": data['data']['role'] if 'role' in data['data'] else 'user',
-                    "content": data['data']['prompt']
-                }
-            ],
-            model="gpt-3.5-turbo"
-        )
-        return {'id': data['id'], 'data': chat_completion}
+        response = self.client.completions.create(model=os.environ.get('OPENAI_MODEL'), prompt=data['data']['prompt'],
+                                                  max_tokens=data['data']['max_tokens'] if 'max_tokens' in data[
+                                                      'data'] else 10)
+        return {'id': data['id'], 'data': response}
 
     def get_input(self):
         """

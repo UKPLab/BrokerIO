@@ -64,8 +64,15 @@ class Request(Socket):
                 self.socketio.emit("error", {"code": 100}, to=session["sid"])
                 return
 
-            if type(data) is dict and "id" in data and "data" in data:
+            if type(data) is dict and "id" in data and "error" in data:
+                self.db.tasks.update(data["id"], node, data, error=True)
+
+            elif type(data) is dict and "id" in data and "data" in data:
                 self.db.tasks.update(data["id"], node, data)
+
+            else:
+                self.socketio.emit("error", {"code": 111}, to=session["sid"])
+                return
         except Exception as e:
             self.logger.error("Error in request {}: {}".format("taskResults", data))
             self.logger.error(e)

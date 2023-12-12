@@ -13,8 +13,6 @@ import os
 import time
 
 import socketio
-import yaml
-
 from Skill import Skill
 
 if __name__ == '__main__':
@@ -26,13 +24,21 @@ if __name__ == '__main__':
     skill = Skill(os.environ.get('SKILL_NAME'))
     skill.init()
 
+
+    @sio.on('error')
+    def error(data):
+        logging.error("Received error: {}".format(data))
+
+
     @sio.on("taskRequest")
     def task(data):
         logging.info("Received new task: {}".format(data))
         try:
             sio.emit('taskResults', {'id': data['id'], 'data': skill.execute(data)})
-        except Exception as e:
-            logging.error("Error while processing task: {}".format(e))
+        except Exception as err:
+            logging.error("Error in task {}: {}".format("taskRequest", data))
+            logging.error(err)
+            sio.emit('taskResults', {'id': data['id'], 'error': {'code': 112, 'message': str(err)}})
 
 
     @sio.on('connect')

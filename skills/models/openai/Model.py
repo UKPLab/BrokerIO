@@ -1,5 +1,6 @@
-from skills.SkillModel import SkillModel
 import docker
+
+from skills.SkillModel import SkillModel
 
 
 class Model(SkillModel):
@@ -27,8 +28,11 @@ class Model(SkillModel):
                 detach=True,
                 command='python3 /app/connect.py',
                 environment={
-                    'OPENAI_API_KEY': args.api_key,
+                    'AZURE_OPENAI_KEY': args.api_key,
+                    'AZURE_OPENAI_ENDPOINT': args.api_endpoint,
                     'OPENAI_MODEL': args.model,
+                    'API_VERSION': "2023-10-01-preview",
+                    'OPENAI_API_TYPE': "azure",
                     'BROKER_URL': args.url,
                     'SKILL_NAME': args.skill,
                 },
@@ -46,8 +50,10 @@ class Model(SkillModel):
     def set_parser(self, parser):
         super().set_parser(parser)
         self.parser.add_argument('--api_key', help='OpenAI API Key', required=True)
-        self.parser.add_argument('--model', help='OpenAI Model (Default: gpt-35-turbo-0301', default='gpt-35-turbo-0301')
+        self.parser.add_argument('--model', help='OpenAI Model (Default: gpt-35-turbo-0301',
+                                 default='gpt-35-turbo-0301')
         self.parser.add_argument('--skill', help='Name of the skill (Default: openai)', default='openai')
+        self.parser.add_argument('--api_endpoint', help='OpenAI API Endpoint', default='https://api.openai.com')
 
     def build(self, nocache=False):
         """

@@ -40,6 +40,12 @@ components:
           code:
             type: integer
             description: Error code (see documentation)
+          message:
+            type: string
+            description: Error message
+          error:
+            type: object
+            description: Error data
     skillRegister:
       name: skillRegister
       title: Register a skill
@@ -126,7 +132,7 @@ components:
             type: string
             description: unique ID of the skill
           nodes:
-            type: int
+            type: integer
             description: Number of available nodes
           config:
             type: object
@@ -154,6 +160,19 @@ components:
           id:
             type: number
             description: ID of the task to be executed
+          error:
+            type: object
+            description: If an error occurred, this object contains the error data
+            properties:
+              code:
+                type: integer
+                description: Error code (see documentation)
+              message:
+                type: string
+                description: Error message
+              error:
+                type: object
+                description: Error data
           data:
             $ref: "#/components/schemas/SDFOutput"
     taskAbort:
