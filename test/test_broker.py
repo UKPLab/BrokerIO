@@ -670,6 +670,18 @@ class TestBroker(unittest.TestCase):
         self.assertEqual(isinstance(result['data']['data'], list), True)
         self.assertEqual(result['data']['data'][0]['data']['info'], "test")
 
+    def test_skill_config(self):
+        """
+        Test if config can be retrieved
+        :return:
+        """
+        self._logger.info("Start test skill config ...")
+
+        self.client.put({"event": 'skillGetConfig', "data": {'name': "test_skill"}})
+
+        result = self.client.wait_for_event("skillConfig")
+        self.assertEqual(result['data']['name'], "test_skill")
+
     def test_task_killer(self):
         """
         Test if task killer is working

@@ -32,9 +32,14 @@ class Skill(Socket):
             client = self.db.clients.get(session["sid"])
             skills = self.db.skills.get_skills(filter_role=client["role"], filter_name=data["name"], with_config=True)
 
-            self.socketio.emit("skillUpdate", skills, to=session["sid"])
-        except:
+            if len(skills) == 0:
+                self.socketio.emit("error", {"code": 203}, to=session["sid"])
+                return
+
+            self.socketio.emit("skillConfig", skills[0]['config'], to=session["sid"])
+        except Exception as e:
             self.logger.error("Error in request {}: {}".format("skillGetConfig", data))
+            self.logger.error(e)
             self.socketio.emit("error", {"code": 500}, to=session["sid"])
 
     def get_all(self):
@@ -52,8 +57,9 @@ class Skill(Socket):
             client = self.db.clients.get(session["sid"])
 
             self.db.skills.send_all(role=client['role'], to=session["sid"])
-        except:
+        except Exception as e:
             self.logger.error("Error in request {}".format("skillGetAll"))
+            self.logger.error(e)
             self.socketio.emit("error", {"code": 500}, to=session["sid"])
 
     def register(self, data):
@@ -73,6 +79,7 @@ class Skill(Socket):
                 self.db.skills.register(session["sid"], data)
             else:
                 self.socketio.emit("error", {"code": 202}, to=session["sid"])
-        except:
+        except Exception as e:
             self.logger.error("Error in request {}: {}".format("skillRegister", data))
+            self.logger.error(e)
             self.socketio.emit("error", {"code": 500}, to=session["sid"])

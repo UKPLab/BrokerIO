@@ -125,9 +125,9 @@ components:
           id:
             type: string
             description: unique ID of the skill
-          status:
-            type: string
-            description: Status of the skill
+          nodes:
+            type: int
+            description: Number of available nodes
           config:
             type: object
             description: Skill Definition File (SDF)

@@ -1,6 +1,7 @@
 class SkillSimple:
-    def __init__(self, config):
-        self.config = config
+    def __init__(self, name):
+        self.name = name
+        self.description = "This is just a template for a simple skill"
 
     def init(self):
         """
@@ -14,7 +15,12 @@ class SkillSimple:
         Register the skill at the broker
         :return: None
         """
-        return self.config
+        return {
+            'name': self.name,
+            'description': self.description,
+            'input': self.get_input(),
+            'output': self.get_output()
+        }
 
     def execute(self, data):
         """
@@ -23,3 +29,37 @@ class SkillSimple:
         :return: result object
         """
         return data
+
+    def get_input(self):
+        """
+        Get the input schema
+        :return:
+        """
+        return {
+            'data': {
+                '*': {
+                    'type': 'string',
+                    'required': True
+                }
+            },
+            'example': {
+                {'anything': 'Hello World'}
+            }
+        }
+
+    def get_output(self):
+        """
+        Get the output schema
+        :return:
+        """
+        return {
+            'data': {
+                '*': {
+                    'type': 'string',
+                    'required': True
+                }
+            },
+            'example': {
+                {'anything': 'Hello World'}
+            }
+        }

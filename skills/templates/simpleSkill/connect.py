@@ -22,13 +22,8 @@ if __name__ == '__main__':
     logging.info("Create SocketIO Client...")
     sio = socketio.Client()
 
-    logging.info("Load skill config...")
-    with open("sdf.yaml", "r") as f:
-        skill_config = yaml.load(f, Loader=yaml.FullLoader)
-        print("Skill config loaded: {}".format(skill_config))
-
     logging.info("Init skill...")
-    skill = Skill(skill_config)
+    skill = Skill(os.environ.get('SKILL_NAME'))
     skill.init()
 
     @sio.on("taskRequest")

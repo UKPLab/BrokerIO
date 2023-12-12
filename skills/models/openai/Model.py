@@ -27,9 +27,10 @@ class Model(SkillModel):
                 detach=True,
                 command='python3 /app/connect.py',
                 environment={
-                    'OPENAI_API_KEY': "test",
+                    'OPENAI_API_KEY': args.api_key,
+                    'OPENAI_MODEL': args.model,
                     'BROKER_URL': args.url,
-
+                    'SKILL_NAME': args.skill,
                 },
                 network="nlp_api_main_default"
             )
@@ -44,8 +45,9 @@ class Model(SkillModel):
 
     def set_parser(self, parser):
         super().set_parser(parser)
-        self.parser.add_argument('--api_key', help='OpenAI API Key')
-        self.parser.add_argument('--model', help='OpenAI Model', default='gpt-35-turbo-0301')
+        self.parser.add_argument('--api_key', help='OpenAI API Key', required=True)
+        self.parser.add_argument('--model', help='OpenAI Model (Default: gpt-35-turbo-0301', default='gpt-35-turbo-0301')
+        self.parser.add_argument('--skill', help='Name of the skill (Default: openai)', default='openai')
 
     def build(self, nocache=False):
         """

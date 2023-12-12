@@ -49,8 +49,9 @@ class Request(Socket):
                     self.socketio.emit("taskRequest", {'id': task_id, 'name': data['name'], 'data': data['data']}, room=node['sid'])
 
                 self.db.clients.quotas[session["sid"]]["jobs"].update(reserve_quota, task_id)
-        except:
+        except Exception as e:
             self.logger.error("Error in request {}: {}".format("skillRequest", data))
+            self.logger.error(e)
             self.socketio.emit("error", {"code": 500}, to=session["sid"])
 
     def results(self, data):
@@ -65,8 +66,9 @@ class Request(Socket):
 
             if type(data) is dict and "id" in data and "data" in data:
                 self.db.tasks.update(data["id"], node, data)
-        except:
+        except Exception as e:
             self.logger.error("Error in request {}: {}".format("taskResults", data))
+            self.logger.error(e)
             self.socketio.emit("error", {"code": 500}, to=session["sid"])
 
     def abort(self, data):
@@ -83,6 +85,7 @@ class Request(Socket):
             aborted = self.db.tasks.abort_by_user(data["id"], session["sid"])
             if not aborted:
                 self.socketio.emit("error", {"code": 106}, to=session["sid"])
-        except:
+        except Exception as e:
             self.logger.error("Error in request {}: {}".format("requestAbort", data))
+            self.logger.error(e)
             self.socketio.emit("error", {"code": 500}, to=session["sid"])
