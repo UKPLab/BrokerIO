@@ -28,7 +28,7 @@ class SkillSimple:
         :param data: data object from the broker
         :return: result object
         """
-        return data
+        return data, None
 
     def get_input(self):
         """

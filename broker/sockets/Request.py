@@ -1,7 +1,7 @@
+import numpy as np
 from flask import session
 
 from broker.sockets import Socket
-import numpy as np
 
 
 class Request(Socket):
@@ -46,7 +46,8 @@ class Request(Socket):
                 task_id = self.db.tasks.create(session["sid"], node, data)
 
                 if task_id > 0:
-                    self.socketio.emit("taskRequest", {'id': task_id, 'name': data['name'], 'data': data['data']}, room=node['sid'])
+                    self.socketio.emit("taskRequest", {'id': task_id, 'name': data['name'], 'data': data['data']},
+                                       room=node['sid'])
 
                 self.db.clients.quotas[session["sid"]]["jobs"].update(reserve_quota, task_id)
         except Exception as e:
@@ -64,12 +65,8 @@ class Request(Socket):
                 self.socketio.emit("error", {"code": 100}, to=session["sid"])
                 return
 
-            if type(data) is dict and "id" in data and "error" in data:
-                self.db.tasks.update(data["id"], node, data, error=True)
-
-            elif type(data) is dict and "id" in data and "data" in data:
+            if type(data) is dict and "id" in data and ("error" in data or "data" in data):
                 self.db.tasks.update(data["id"], node, data)
-
             else:
                 self.socketio.emit("error", {"code": 111}, to=session["sid"])
                 return

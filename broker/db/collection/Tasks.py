@@ -76,7 +76,7 @@ class Tasks(Collection):
         else:
             return int(new_task['_key'])
 
-    def update(self, key, node, data, error=False):
+    def update(self, key, node, data):
         """
         Update task by key
         :param key: key of task
@@ -144,6 +144,7 @@ class Tasks(Collection):
             self.collection.update(task)
 
         else:
+            # TODO add stats if available
             task['end_timer'] = time.perf_counter()
             task["duration"] = task['end_timer'] - task["start_timer"]
             task["result"] = data

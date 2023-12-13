@@ -34,10 +34,14 @@ if __name__ == '__main__':
     def task(data):
         logging.info("Received new task: {}".format(data))
         try:
-            response = skill.execute(data['data']) 
-            sio.emit('taskResults', {'id': data['id'], 'data': response.choices[0].text})
-            logging.info("Response:")
-            logging.info(response)
+            response, stats = skill.execute(data['data'])
+            # TODO split response
+            result = {'id': data['id'], 'data': response.choices[0].text}
+            if stats is not None:
+                result['stats'] = stats
+            sio.emit('taskResults', result)
+            logging.info("Result: {}".format(result))
+            logging.info("Stats: {}".format(stats))
         except Exception as err:
             logging.error("Error in task {}: {}".format("taskRequest", data))
             logging.error(err)

@@ -42,10 +42,11 @@ class Skill(SkillSimple):
         :param data:
         :return:
         """
-        print("Using model: {}".format(os.environ.get('OPENAI_MODEL')))
+        stats = None
         response = self.client.completions.create(model=os.environ.get('OPENAI_MODEL'), prompt=data['prompt'],
                                                   max_tokens=data['max_tokens'] if 'max_tokens' in data else 10)
-        return response
+        # TODO split response: response.choices[0].text
+        return response, stats
 
     def get_input(self):
         """
