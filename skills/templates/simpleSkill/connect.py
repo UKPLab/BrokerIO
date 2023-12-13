@@ -34,7 +34,10 @@ if __name__ == '__main__':
     def task(data):
         logging.info("Received new task: {}".format(data))
         try:
-            sio.emit('taskResults', {'id': data['id'], 'data': skill.execute(data)})
+            response = skill.execute(data['data']) 
+            sio.emit('taskResults', {'id': data['id'], 'data': response.choices[0].text})
+            logging.info("Response:")
+            logging.info(response)
         except Exception as err:
             logging.error("Error in task {}: {}".format("taskRequest", data))
             logging.error(err)

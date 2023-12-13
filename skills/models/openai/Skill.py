@@ -42,10 +42,10 @@ class Skill(SkillSimple):
         :param data:
         :return:
         """
-        response = self.client.completions.create(model=os.environ.get('OPENAI_MODEL'), prompt=data['data']['prompt'],
-                                                  max_tokens=data['data']['max_tokens'] if 'max_tokens' in data[
-                                                      'data'] else 10)
-        return {'id': data['id'], 'data': response}
+        print("Using model: {}".format(os.environ.get('OPENAI_MODEL')))
+        response = self.client.completions.create(model=os.environ.get('OPENAI_MODEL'), prompt=data['prompt'],
+                                                  max_tokens=data['max_tokens'] if 'max_tokens' in data else 10)
+        return response
 
     def get_input(self):
         """
@@ -58,15 +58,14 @@ class Skill(SkillSimple):
                     'type': 'string',
                     'required': True
                 },
-                'role': {
-                    'type': 'string',
+                'max_tokens': {
+                    'type': 'integer',
                     'required': False,
-                    'default': 'user'
+                    'default': 10
                 }
             },
             'example': {
-                'prompt': 'Say this is a test',
-                'role': 'user'
+                'prompt': 'Say this is a test'
             }
         }
 
