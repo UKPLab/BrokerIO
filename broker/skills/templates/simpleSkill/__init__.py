@@ -13,7 +13,7 @@ def create_docker(nocache=False):
     try:
         build_logs = client.api.build(
             dockerfile="Dockerfile",
-            path="./skills/templates/simpleSkill",
+            path="./broker/skills/templates/simpleSkill",
             tag="broker_simple_skill",
             decode=True, rm=True,
             nocache=nocache,

@@ -95,7 +95,6 @@ class Tasks(Collection):
                 time.sleep(task['request']['config']['simulate'])
 
         if 'error' in data:
-            # TODO try another node or same if available? (new option: retry)
             task['status'] = 'error'
             task['error'] = data['error']
             task['updated'] = datetime.now().isoformat()
@@ -144,7 +143,6 @@ class Tasks(Collection):
             self.collection.update(task)
 
         else:
-            # TODO add stats if available
             task['end_timer'] = time.perf_counter()
             task["duration"] = task['end_timer'] - task["start_timer"]
             task["result"] = data
@@ -165,6 +163,9 @@ class Tasks(Collection):
                     'duration': task["duration"],
                     'host': node,
                 }
+                if 'stats' in data:
+                    output['stats']['result'] = data['stats']
+
             if "config" in task['request'] and 'min_delay' in task['request']['config']:
                 try:
                     loop = asyncio.get_running_loop()

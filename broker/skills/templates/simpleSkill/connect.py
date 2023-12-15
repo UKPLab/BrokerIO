@@ -34,9 +34,8 @@ if __name__ == '__main__':
     def task(data):
         logging.info("Received new task: {}".format(data))
         try:
-            response, stats = skill.execute(data['data'])
-            # TODO split response
-            result = {'id': data['id'], 'data': response.choices[0].text}
+            output, stats = skill.execute(data['data'])
+            result = {'id': data['id'], 'data': output}
             if stats is not None:
                 result['stats'] = stats
             sio.emit('taskResults', result)
