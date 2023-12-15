@@ -76,13 +76,13 @@ class Tasks(Collection):
         else:
             return int(new_task['_key'])
 
-    def update(self, key, node, payload):
+    def update(self, key, node, data):
         """
         Update task by key
-
         :param key: key of task
         :param node: node the result came from
-        :param payload: results of task
+        :param data: results of task
+        :param error: error occurred
         """
         task = self.get(key)
         if task is None:
@@ -94,19 +94,27 @@ class Tasks(Collection):
             if isinstance(task['request']['config']['simulate'], int):
                 time.sleep(task['request']['config']['simulate'])
 
-        if ('status' in payload
-                and payload['status'] != 'finished'
-                and payload['status'] != ''):
+        if 'error' in data:
+            task['status'] = 'error'
+            task['error'] = data['error']
+            task['updated'] = datetime.now().isoformat()
+            self.collection.update(task)
+            self.socketio.emit("error", {'id': key, 'code': 112, 'error': data['error']}, room=task['rid'])
+            return
 
-            task['status'] = payload['status']
+        if ('status' in data
+                and data['status'] != 'finished'
+                and data['status'] != ''):
+
+            task['status'] = data['status']
             task['updated'] = datetime.now().isoformat()
             if 'updates' not in task:
                 task['updates'] = []
             task['updates'].append({
-                'status': payload['status'],
+                'status': data['status'],
                 'updated': task['updated'],
                 'notSent': True,
-                'data': payload['data'] if isinstance(payload, dict) and 'data' in payload.keys() else {}
+                'data': data['data'] if isinstance(data, dict) and 'data' in data.keys() else {}
             })
 
             # send status update to client
@@ -137,7 +145,7 @@ class Tasks(Collection):
         else:
             task['end_timer'] = time.perf_counter()
             task["duration"] = task['end_timer'] - task["start_timer"]
-            task["result"] = payload
+            task["result"] = data
             task['status'] = 'finished'
             task["fid"] = node  # finish id
             self.collection.update(task)
@@ -148,13 +156,16 @@ class Tasks(Collection):
             output = {
                 'id': task['request']['id'],
                 'clientId': task['request']['clientId'] if 'clientId' in task['request'] else None,
-                'data': payload['data'] if isinstance(payload, dict) and 'data' in payload.keys() else {}
+                'data': data['data'] if isinstance(data, dict) and 'data' in data.keys() else {}
             }
             if "config" in task['request'] and 'return_stats' in task['request']['config']:
                 output['stats'] = {
                     'duration': task["duration"],
                     'host': node,
                 }
+                if 'stats' in data:
+                    output['stats']['result'] = data['stats']
+
             if "config" in task['request'] and 'min_delay' in task['request']['config']:
                 try:
                     loop = asyncio.get_running_loop()

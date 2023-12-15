@@ -59,5 +59,6 @@ The broker is developed as part of the `CARE project <https://github.com/UKPLab/
    :caption: Models
 
    models/example
+   models/models
 
 

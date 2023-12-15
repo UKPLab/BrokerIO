@@ -55,8 +55,9 @@ class Auth(Socket):
                     self.socketio.emit("error", {"code": 401}, to=session["sid"])
             else:
                 self.request()
-        except:
+        except Exception as e:
             self.logger.error("Error in request {}: {}".format("authRegister", data))
+            self.logger.error(e)
             self.socketio.emit("error", {"code": 500}, to=session["sid"])
 
     def request(self, data=None):
@@ -75,8 +76,9 @@ class Auth(Socket):
             hash.update(secret_message.encode("utf8"))
             self.db.clients.register(request.sid, hash.hexdigest())
             self.socketio.emit("authChallenge", {"secret": hash.hexdigest()})
-        except:
+        except Exception as e:
             self.logger.error("Error in request {}".format("authRequest"))
+            self.logger.error(e)
             self.socketio.emit("error", {"code": 500}, to=session["sid"])
 
     def status(self):
@@ -97,6 +99,7 @@ class Auth(Socket):
                     self.socketio.emit("authInfo", {"role": "guest"}, to=session["sid"])
             else:
                 self.socketio.emit("authInfo", {"role": "guest"}, to=session["sid"])
-        except:
+        except Exception as e:
             self.logger.error("Error in request {}.".format("authStatus"))
+            self.logger.error(e)
             self.socketio.emit("error", {"code": 500}, to=session["sid"])

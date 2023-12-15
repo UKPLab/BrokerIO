@@ -76,4 +76,4 @@ To execute a skill just call:
 
 .. note::
 
-    For authentication see :doc:`Authentication <./authentication>`.
+    For authentication see :doc:`Authentication <../broker/authentication>`.

@@ -1,7 +1,7 @@
+import numpy as np
 from flask import session
 
 from broker.sockets import Socket
-import numpy as np
 
 
 class Request(Socket):
@@ -46,11 +46,13 @@ class Request(Socket):
                 task_id = self.db.tasks.create(session["sid"], node, data)
 
                 if task_id > 0:
-                    self.socketio.emit("taskRequest", {'id': task_id, 'name': data['name'], 'data': data['data']}, room=node['sid'])
+                    self.socketio.emit("taskRequest", {'id': task_id, 'name': data['name'], 'data': data['data']},
+                                       room=node['sid'])
 
                 self.db.clients.quotas[session["sid"]]["jobs"].update(reserve_quota, task_id)
-        except:
+        except Exception as e:
             self.logger.error("Error in request {}: {}".format("skillRequest", data))
+            self.logger.error(e)
             self.socketio.emit("error", {"code": 500}, to=session["sid"])
 
     def results(self, data):
@@ -63,10 +65,14 @@ class Request(Socket):
                 self.socketio.emit("error", {"code": 100}, to=session["sid"])
                 return
 
-            if type(data) is dict and "id" in data and "data" in data:
+            if type(data) is dict and "id" in data and ("error" in data or "data" in data):
                 self.db.tasks.update(data["id"], node, data)
-        except:
+            else:
+                self.socketio.emit("error", {"code": 111}, to=session["sid"])
+                return
+        except Exception as e:
             self.logger.error("Error in request {}: {}".format("taskResults", data))
+            self.logger.error(e)
             self.socketio.emit("error", {"code": 500}, to=session["sid"])
 
     def abort(self, data):
@@ -83,6 +89,7 @@ class Request(Socket):
             aborted = self.db.tasks.abort_by_user(data["id"], session["sid"])
             if not aborted:
                 self.socketio.emit("error", {"code": 106}, to=session["sid"])
-        except:
+        except Exception as e:
             self.logger.error("Error in request {}: {}".format("requestAbort", data))
+            self.logger.error(e)
             self.socketio.emit("error", {"code": 500}, to=session["sid"])
