@@ -23,8 +23,13 @@ def load_config():
         return yaml.load(f, Loader=yaml.FullLoader)
 
 
-def load_env():
-    if os.getenv("ENV", None) is not None:
-        load_dotenv(dotenv_path=".env.{}".format(os.getenv("ENV", None)))
+def load_env(env_file=None):
+    if env_file is None or env_file == "" or not os.path.exists(env_file):
+        if os.getenv("ENV", None) is not None:
+            load_dotenv(dotenv_path=".env.{}".format(os.getenv("ENV", None)))
+        else:
+            load_dotenv(dotenv_path=".env")
     else:
-        load_dotenv(dotenv_path=".env")
+        load_dotenv(dotenv_path=env_file)
+
+

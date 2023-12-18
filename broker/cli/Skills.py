@@ -56,6 +56,8 @@ class Skills(CLI):
             skill_parser.add_argument('--container_suffix',
                                       help="Add a suffix to container name to start different containers (Default = '')",
                                       default='')
+            skill_parser.add_argument('--network', help='Network name (Default: network_broker)', type=str,
+                                      default='network_broker')
             skill_parser.add_argument('--skill', help='Name of the skill', default='')
             self.skills[skill].set_parser(skill_parser)
 
