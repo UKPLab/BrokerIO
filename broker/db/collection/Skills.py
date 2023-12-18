@@ -45,7 +45,7 @@ class Skills(Collection):
         results(self.collection.insert(
             skill
         ))
-        self.send_update(skill, len(skills) + 1)
+        self.send_update(skill['config']['name'])
 
     def unregister(self, sid):
         """
@@ -56,30 +56,34 @@ class Skills(Collection):
         skills = results(self.collection.find({"sid": sid, "connected": True}))
         for skill in skills:
             # send update first
-            skills = self.get_skills(filter_name=skill['config']['name'], with_config=True)
-            self.send_update(skill, len(skills) - 1)
+            self.send_update(skill['config']['name'], config=skill['config'])
 
             skill["connected"] = False
             skill["last_contact"] = datetime.now().isoformat()
             results(self.collection.update(skill))
 
-    def send_update(self, skill, nodes, **kwargs):
+    def send_update(self, skill_name, config=None, **kwargs):
         """
         Send update to all connected clients
 
         If name is given, only send update for this skill
 
-        :param nodes: number of nodes available for this skill
-        :param skill: skill data entry from db
-        :param with_config: send with config
+        :param skill_name: name of the skill
+        :param config: config of the skill (for disconnect)
         :param kwargs: additional arguments for socketio.emit
         """
-        if 'roles' in skill['config'] and len(skill['config']['roles']) > 0:
-            for role in skill['config']['roles']:
-                self.socketio.emit("skillUpdate", [{"name": skill['config']['name'], "nodes": nodes}],
+        nodes = 0
+        skill = self.get_skills(filter_name=skill_name, with_config=True if config is None else False)
+        if len(skill) > 0:
+            nodes = skill[0]['nodes']
+            if 'config' in skill[0]:
+                config = skill[0]['config']
+        if config is not None and 'roles' in config and len(config['roles']) > 0:
+            for role in config['roles']:
+                self.socketio.emit("skillUpdate", [{"name": skill_name, "nodes": nodes}],
                                    to="role:{}".format(role), **kwargs)
         else:
-            self.socketio.emit("skillUpdate", [{"name": skill['config']['name'], "nodes": nodes}], **kwargs)
+            self.socketio.emit("skillUpdate", [{"name": skill_name, "nodes": nodes}], **kwargs)
 
     def send_all(self, role, with_config=False, **kwargs):
         """

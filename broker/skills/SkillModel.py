@@ -47,9 +47,9 @@ class SkillModel(CLI):
             print("Check network exists...")
             network = {}
             try:
-                net = client.networks.get("nlp_api_main_default")
+                net = client.networks.get(args.network)
                 if net:
-                    network = {'network': "nlp_api_main_default"}
+                    network = {'network': args.network}
             except docker.errors.NotFound:
                 print("Network not found.")
 
@@ -79,7 +79,11 @@ class SkillModel(CLI):
         :param args:
         :return:
         """
+        # TODO: stops only all containers, but we want to filter it by container suffix!
         containers = self.get_containers()
+        if args.container_suffix != "":
+            containers = [container for container in containers if
+                          container.name.removeprefix("{}_".format(self.tag)).startswith(args.container_suffix)]
         for container in containers:
             try:
                 container.stop(timeout=args.timeout if "timeout" in args else 10)

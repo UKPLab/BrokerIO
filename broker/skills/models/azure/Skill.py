@@ -21,8 +21,9 @@ class Skill(SkillSimple):
 
     def __init__(self, name):
         super().__init__(name)
-        self.description = "This is a skill for the OpenAI API"
+        self.description = "This is a skill for the OpenAI Azure API"
         self.client = None
+        self.model = os.environ.get('OPENAI_MODEL')
 
     def init(self):
         """
@@ -32,9 +33,8 @@ class Skill(SkillSimple):
         self.client = AzureOpenAI(
             api_key=os.environ.get("AZURE_OPENAI_KEY"),
             api_version=os.environ.get("API_VERSION"),
-            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
+            azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT")
         )
-        # OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
 
     def execute(self, data):
         """
@@ -42,20 +42,28 @@ class Skill(SkillSimple):
         :param data:
         :return:
         """
-        response = self.client.completions.create(model=os.environ.get('OPENAI_MODEL'), prompt=data['prompt'],
-                                                  max_tokens=data['max_tokens'] if 'max_tokens' in data else 10)
+        response = self.client.chat.completions.create(
+            model=self.model,  # model = "deployment_name".
+            messages=data['messages'],
+        )
+
         output = {
-            "response": [c.__dict__ for c in response.choices],
+            "choices": [{
+                "finish_reason": c.finish_reason,
+                "index": c.index,
+                "logprops": c.logprobs,
+                "message": c.message.__dict__
+            } for c in response.choices],
         }
+
         stats = {
             "id": response.id,
-            "created": response.created,
             "model": response.model,
             "object": response.object,
-            "filter": [c.content_filter_results for c in response.choices],
             "fingerprint": response.system_fingerprint,
             "usage": response.usage.__dict__,
         }
+        # return None, None
         return output, stats
 
     def get_input(self):
@@ -65,18 +73,26 @@ class Skill(SkillSimple):
         """
         return {
             'data': {
-                'prompt': {
-                    'type': 'string',
-                    'required': True
+                'messages': {
+                    'type': 'array',
+                    'items': {
+                        'type': "object",
+                        "properties": {
+                            "content": {
+                                "type": 'string',
+                            },
+                            'role': {
+                                "type": 'string',
+                            },
+                        }
+                    },
                 },
-                'max_tokens': {
-                    'type': 'integer',
-                    'required': False,
-                    'default': 10
+                'example': {
+                    "messages": [
+                        {"role": "system", "content": "You are a helpful assistant."},
+                        {"role": "user", "content": "Hello, who are you?"},
+                    ]
                 }
-            },
-            'example': {
-                'prompt': 'Once a while'
             }
         }
 
@@ -87,7 +103,7 @@ class Skill(SkillSimple):
         """
         return {
             'data': {
-                'response': {
+                'choices': {
                     'type': 'array',
                     'items': {
                         'type': "object",
@@ -101,16 +117,23 @@ class Skill(SkillSimple):
                             'logprops': {
                                 "type": 'object',
                             },
-                            'text': {
-                                "type": "string"
+                            'message': {
+                                "type": 'object',
+                                "properties": {
+                                    "message": {
+                                        "type": 'string',
+                                    },
+                                    'role': {
+                                        "type": 'string',
+                                    },
+                                    'function_call': {
+                                        "type": 'object',
+                                    },
+                                    'tool_calls': {
+                                        "type": 'object',
+                                    },
+                                }
                             },
-                            'filter': {
-                                "type": "array",
-                                "description": "Same size a responses with safety information (content filter)"
-                            },
-                            'fingerprint': {
-                                "type": "string"
-                            }
                         }
                     },
                 }
@@ -120,9 +143,6 @@ class Skill(SkillSimple):
                 'properties': {
                     'id': {
                         "type": "string"
-                    },
-                    'created': {
-                        "type": "integer"
                     },
                     'model': {
                         "type": "string"
@@ -147,6 +167,19 @@ class Skill(SkillSimple):
                 }
             },
             'example': {
-                "response": [{'finish_reason': 'length', 'index': 0, 'logprobs': None, 'text': ', quite long ago,'}]
+                'choices': [
+                    {'finish_reason': 'stop', 'index': 0, 'logprops': None, 'message': {
+                        'content': "Hello! I'm an AI digital assistant designed to help answer questions, "
+                                   "provide recommendations, and assist with various tasks. "
+                                   "How can I assist you today?",
+                        'role': 'assistant', 'function_call': None, 'tool_calls': None}}
+                ],
+                'stats': {
+                    'result': {'id': 'chatcmpl-<id>', 'model': self.model,
+                               'object': 'chat.completion',
+                               'fingerprint': None,
+                               'usage': {'completion_tokens': 30, 'prompt_tokens': 23, 'total_tokens': 53}
+                               }
+                }
             }
         }

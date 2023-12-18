@@ -1,11 +1,13 @@
 import logging
 import multiprocessing as mp
+import os
 import time
 
 import socketio
 
 from broker import init_logging, load_config
 from broker.db import connect_db
+from Crypto.PublicKey import RSA
 
 
 def simple_client(name, url, client_queue: mp.Queue, message_queue: mp.Queue, skill_queue: mp.Queue = None,
@@ -71,3 +73,24 @@ def init_job():
     logger.info("Connecting to db...")
     db = connect_db(config, None)
     db.users.reinit(private_key_path="./private_key.pem")
+
+
+def check_key(private_key_path="private_key.pem", length=1024, create=False):
+    """
+    Check if key file exists
+    :param private_key_path: path to key file
+    :param length: length of key
+    :param create: create key if not exists
+    :return:
+    """
+    if not os.path.exists(private_key_path):
+        if create:
+            key = RSA.generate(length)
+            with open(private_key_path, "wb") as f:
+                f.write(key.export_key("PEM"))
+                print("Key written to {}".format(private_key_path))
+        else:
+            print("Key file not found: {}".format(private_key_path))
+            exit(1)
+    else:
+        print("Key file found: {}".format(private_key_path))

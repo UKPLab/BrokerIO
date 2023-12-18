@@ -4,8 +4,19 @@ Client
 With the client it is possible to work with the broker during the command line.
 You can run it by simple execute ``python3 client.py --help``.
 
+For using the client you need to install the python environment. We recommend to use conda for this
+(see `Miniconda Install <https://docs.conda.io/projects/miniconda/en/latest/miniconda-install.html>`_).
+After installing conda, you can use the following command to set up the environment:
+
+.. code-block:: bash
+
+    conda env create -f environment.yml
+    conda env update --file environment.yaml --name nlp_api --prune     # for updating the environment
+    conda activate nlp_api
+
 .. tip::
 
+    # TODO add docker instructions
     If you run on docker use ``docker exec -it <container_name> python3 client.py --help``.
 
 The following parameters are available:

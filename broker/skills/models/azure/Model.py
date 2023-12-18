@@ -20,7 +20,7 @@ class Model(SkillModel):
                 'AZURE_OPENAI_KEY': args.api_key,
                 'AZURE_OPENAI_ENDPOINT': args.api_endpoint,
                 'OPENAI_MODEL': args.model,
-                'API_VERSION': "2023-10-01-preview",
+                'API_VERSION': "2023-05-15" if args.model == "gpt-4" else "2023-10-01-preview",
                 'OPENAI_API_TYPE': "azure",
                 'BROKER_URL': args.url,
                 'SKILL_NAME': self.name if args.skill == "" else args.skill,

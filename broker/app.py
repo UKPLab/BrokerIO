@@ -21,10 +21,28 @@ from broker.db import connect_db
 import random
 import string
 import redis
+import argparse
 
 __version__ = os.getenv("BROKER_VERSION")
 __author__ = "Dennis Zyska, Nils Dycke"
 __credits__ = ["Dennis Zyska", "Nils Dycke"]
+
+
+def parser():
+    """
+    Parser for the CLI
+    :return:
+    """
+    arg_parser = argparse.ArgumentParser(description='Broker Server')
+    arg_parser.add_argument('--env', help="Environment file to load (Default using ENV)", type=str, default="")
+    sub_parser = arg_parser.add_subparsers(dest='broker_command', help="Commands for broker")
+    sub_parser.add_parser('scrub', help="Only run scrub job")
+    sub_parser.add_parser('init', help="Init the broker")
+
+    a_parser = sub_parser.add_parser('assign', help="Assign a role to a user")
+    a_parser.add_argument('--role', help="Assign role to user (Default: admin)", type=str, default='admin')
+    a_parser.add_argument('--key', help="Public key of user for assigning a role", type=str, default=None)
+    return arg_parser, a_parser
 
 
 def init():
@@ -34,8 +52,6 @@ def init():
     """
     logger = init_logging("broker")
 
-    # check if dev mode
-    load_env()
     config = load_config()
 
     logger.info("Initializing server...")
@@ -99,4 +115,39 @@ def init():
 
 
 if __name__ == '__main__':
-    init()
+    logger = init_logging("main")
+
+    # argument parser
+    parser, assign_parser = parser()
+    args = parser.parse_args()
+
+    # load env
+    load_env(args.env)
+
+    if args.broker_command == 'scrub':
+        from broker.utils import scrub_job
+
+        scrub_job()
+    elif args.broker_command == 'init':
+        from broker.utils import init_job, check_key
+
+        check_key(create=True)
+        init_job()
+    elif args.broker_command == 'assign':
+        if args.key is None or args.role is None:
+            assign_parser.print_help()
+            exit()
+
+        config = load_config()
+        config['cleanDbOnStart'] = False
+        config['scrub']['enabled'] = False
+        config['taskKiller']['enabled'] = False
+        db = connect_db(config, None)
+
+        user = db.users.set_role(args.key, args.role)
+        if user:
+            logger.info("Role assigned to user, db entry: {}".format(user['_key']))
+        else:
+            logger.error("User not found in db, please check the public key")
+    else:
+        init()
