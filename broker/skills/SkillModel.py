@@ -79,7 +79,6 @@ class SkillModel(CLI):
         :param args:
         :return:
         """
-        # TODO: stops only all containers, but we want to filter it by container suffix!
         containers = self.get_containers()
         if args.container_suffix != "":
             containers = [container for container in containers if
