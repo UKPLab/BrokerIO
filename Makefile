@@ -48,6 +48,11 @@ dev:
 
 .PHONY: test
 test:
+	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 -u -m unittest test.test_broker.TestBroker
+
+
+.PHONY: test_all
+test_all:
 	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 -m unittest discover test
 
 .PHONY: stress
