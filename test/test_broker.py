@@ -206,11 +206,14 @@ class TestBroker(unittest.TestCase):
         self._logger.info("Start client ...")
         ctx = mp.get_context('spawn')
 
-        # TODO assert check if guard is really running
         guard = Guard(os.getenv("TEST_URL"))
         client = ctx.Process(target=guard.run,
                              args=())
         client.start()
+
+        # wait a second
+        time.sleep(1)
+        self.assertTrue(client.is_alive())
         client.terminate()
         client.join()
 

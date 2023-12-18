@@ -48,6 +48,11 @@ dev:
 
 .PHONY: test
 test:
+	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 -u -m unittest test.test_broker.TestBroker
+
+
+.PHONY: test_all
+test_all:
 	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 -m unittest discover test
 
 .PHONY: stress
@@ -56,11 +61,11 @@ stress:
 
 .PHONY: test-build
 test-build:
-	docker exec nlp_api_main-broker-1 python3 -u -m unittest discover test
+	docker exec nlp_api_main-broker-1 python3 -u -m unittest test.test_broker.TestBroker
 
 .PHONY: test-build-dev
 test-build-dev:
-	docker exec nlp_api_dev-broker-1 python3 -u -m unittest discover test
+	docker exec nlp_api_dev-broker-1 python3 -u -m unittest test.test_broker.TestBroker
 
 .PHONY: test-stress
 test-stress:

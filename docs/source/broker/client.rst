@@ -17,7 +17,7 @@ After installing conda, you can use the following command to set up the environm
 .. tip::
 
     # TODO add docker instructions
-    If you run on docker use ``docker exec -it <container_name> python3 client.py --help``.
+    If you run on docker use ``docker exec -it <container_name> python3 broker/app.py --help``.
 
 The following parameters are available:
 
@@ -28,12 +28,17 @@ The following parameters are available:
 Broker
 ------
 
-The broker submenu contains the following commands:
+This will be in the future the main interface for the broker.
+Currently is is possible to use it with ``python3 broker/app.py --help``.
 
 * ``-h`` or ``--help``: Show the help message.
 * ``scrub``: Start :doc:`scrub <db>` job for the database.
 * ``init``: Set the current system admins' public key.
 * ``assign``: Assign a role to a user (with the user's public key).
+
+.. warning::
+
+    The commands are currently only available with ``python3 broker/app.py --help``.
 
 
 Skills
@@ -49,4 +54,4 @@ With the skills submenu you can publish several integrated models to the broker 
 
 .. tip::
 
-    Always use ``-h`` to see all available parameters for the commands.
+    There are many extra parameter available, use ``-h`` to see all available parameters for each command.
