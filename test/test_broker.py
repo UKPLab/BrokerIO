@@ -213,7 +213,7 @@ class TestBroker(unittest.TestCase):
 
         # wait a second
         time.sleep(1)
-        self.assertTrue(client.is_running())
+        self.assertTrue(client.is_alive())
         client.terminate()
         client.join()
 
