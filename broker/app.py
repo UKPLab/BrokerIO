@@ -107,7 +107,7 @@ def init():
 
     app_config = {
         "debug": os.getenv("FLASK_DEBUG", False),
-        "host": os.getenv("BROKER_HOST", "127.0.0.1"),
+        "host": "0.0.0.0",
         "port": os.getenv("BROKER_PORT", 4852)
     }
     logger.info("App starting ...", app_config)

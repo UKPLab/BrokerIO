@@ -1,12 +1,20 @@
-import docker
+""" Skill for Llama.cpp Models
 
+This skill is a simple wrapper for the LLama.cpp python client
+
+https://llama-cpp-python.readthedocs.io/en/latest/
+
+Author: Dennis Zyska
+"""
+import docker
+import os
 from broker.skills.SkillModel import SkillModel
 
 
 class Model(SkillModel):
     def __init__(self):
-        super().__init__('openai_azure')
-        self.help = 'Open AI azure client'
+        super().__init__('llama.cpp')
+        self.help = 'Llama.cpp client'
         self.template = 'simpleSkill'
 
     def run(self, args, additional_parameter=None):
@@ -16,24 +24,26 @@ class Model(SkillModel):
         :param args:
         :return:
         """
+        model_path, model_file = os.path.split(args.model_path)
+
         super().run(args, {
             "environment": {
-                'AZURE_OPENAI_KEY': args.api_key,
-                'AZURE_OPENAI_ENDPOINT': args.api_endpoint,
-                'OPENAI_MODEL': args.model,
-                'API_VERSION': "2023-05-15" if args.model == "gpt-4" else "2023-10-01-preview",
-                'OPENAI_API_TYPE': "azure",
+                'MODEL_PATH': os.path.join("/model", model_file),
+                'N_THREADS': args.n_threads,
+                'NUM_CTX': args.n_ctx,
                 'BROKER_URL': args.url,
                 'SKILL_NAME': self.name if args.skill == "" else args.skill,
             },
+            "volumes": {
+                model_path: {'bind': '/model', 'mode': 'ro'},
+            }
         })
 
     def set_parser(self, parser):
         super().set_parser(parser)
-        self.parser.add_argument('--api_key', help='OpenAI API Key', required=True)
-        self.parser.add_argument('--api_endpoint', help='OpenAI API Endpoint', default='https://api.openai.com')
-        self.parser.add_argument('--model', help='OpenAI Model (Default: gpt-35-turbo-0301',
-                                 default='gpt-35-turbo-0301')
+        self.parser.add_argument('--model_path', help='Llama.cpp model', required=True)
+        self.parser.add_argument('--n_threads', help='Number of threads for llama.cpp', type=int, default=30)
+        self.parser.add_argument('--n_ctx', help='Contexts length for llama.cpp', type=int, default=512)
 
     def build(self, nocache=False):
         """
@@ -49,7 +59,7 @@ class Model(SkillModel):
         try:
             build_logs = client.api.build(
                 dockerfile="Dockerfile",
-                path="./broker/skills/models/azure",
+                path="./broker/skills/models/llama_cpp",
                 tag=self.tag,
                 decode=True, rm=True,
                 nocache=nocache,

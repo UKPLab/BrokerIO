@@ -1,3 +1,8 @@
+"""
+This is a simple skill template for building the container of a model.
+
+Author: Dennis Zyska
+"""
 import docker
 
 from broker.cli import CLI
@@ -29,8 +34,8 @@ class SkillModel(CLI):
     def run(self, args, additional_parameter=None):
         """
         Run the skill
-        :param args:
-        :param add_parameter: Additional parameters for the container
+        :param additional_parameter: Additional parameters for the container
+        :param args: CLI arguments
         :return:
         """
         # Check if the container is already built

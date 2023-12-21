@@ -3,7 +3,10 @@ Available models
 
 The broker also provides some basic models that can be published as a skill.
 The models can be published via the CLI client :doc:`CLI </broker/client>`.
-The following models are available:
+
+.. tip::
+
+    Always use the ``--help`` option to get an overview of the available options, as each model has different requirements.
 
 OpenAI Azure
 ~~~~~~~~~~~~
@@ -17,3 +20,13 @@ Example to run the skill:
     python3 client.py skills build openai_azure --nocache
     python3 client.py skills run openai_azure --url <broker_url> --api_key <openai_api_key> --api_endpoint <openai_endpoint> --skill <skill_name>
 
+Llama.cpp
+~~~~~~~~~
+
+This skill supports the Llama.cpp API through the llama-cpp-python wrapper.
+For more details follow `llama-cpp-python <https://llama-cpp-python.readthedocs.io/en/latest/>`_.
+
+.. code-block:: bash
+
+    python3 client.py skills build llama.cpp --nocache
+    python3 client.py skills run llama.cpp --url <broker_url> --skill <skill_name> --model_path <model_path>

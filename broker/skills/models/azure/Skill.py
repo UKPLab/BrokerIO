@@ -87,12 +87,12 @@ class Skill(SkillSimple):
                         }
                     },
                 },
-                'example': {
-                    "messages": [
-                        {"role": "system", "content": "You are a helpful assistant."},
-                        {"role": "user", "content": "Hello, who are you?"},
-                    ]
-                }
+            },
+            'example': {
+                "messages": [
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": "Hello, who are you?"},
+                ]
             }
         }
 
