@@ -1,12 +1,11 @@
 # Broker Changelog
 
-
-## v.0.3.0 - 2023-12-21
+## v.0.3.0 - 2023-12-22
 
 ### Added
 
 - Command line interface (User management and model deployment)
-- Model deployment per command line (openai azure api, llama.cpp, huggingface pipeline)
+- Model deployment per command line (openai azure api, llama.cpp, huggingface pipeline, vader)
 - Data consent (donation of data in task requests)
 - NoSQL database (ArangoDB) for caching and storing task requests
 - Role based access control (RBAC) for users

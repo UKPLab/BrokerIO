@@ -56,3 +56,12 @@ The following tasks are supported:
     python3 client.py skills build hf_pipeline --nocache
     python3 client.py skills run hf_pipeline --url <broker_url> --skill <skill_name> --model <model_name> --task <task>
 
+Vader Sentiment Analysis
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+This skill supports the Vader Sentiment Analysis. For more details follow `Vader Sentiment Analysis <https://www.nltk.org/_modules/nltk/sentiment/vader.html>`_.
+
+.. code-block:: bash
+
+    python3 client.py skills build vader --nocache
+    python3 client.py skills run vader --url <broker_url> --skill <skill_name>
