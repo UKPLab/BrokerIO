@@ -30,3 +30,29 @@ For more details follow `llama-cpp-python <https://llama-cpp-python.readthedocs.
 
     python3 client.py skills build llama.cpp --nocache
     python3 client.py skills run llama.cpp --url <broker_url> --skill <skill_name> --model_path <model_path>
+
+Huggingface Transformer Pipeline
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This skill supports the Huggingface Transformer Pipeline API.
+For more details follow `Pipeline tutorial <https://huggingface.co/docs/transformers/pipeline_tutorial>`_.
+
+The following tasks are supported:
+
+- ``fill-mask``
+- ``question-answering``
+- ``text-classification``
+- ``summarization``
+- ``translation_en_to_de``
+- ``text-generation``
+- ``text2text``
+
+.. tip::
+
+    See the folder ``./broker/skills/models/hf_pipeline/tasks`` for examples.
+
+.. code-block:: bash
+
+    python3 client.py skills build hf_pipeline --nocache
+    python3 client.py skills run hf_pipeline --url <broker_url> --skill <skill_name> --model <model_name> --task <task>
+
