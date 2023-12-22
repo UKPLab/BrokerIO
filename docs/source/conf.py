@@ -11,8 +11,8 @@ sys.path.insert(0, os.path.abspath('../..'))
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'NLP API'
-copyright = '2022, Dennis Zyska, Nils Dycke'
+project = 'Broker'
+copyright = '2022-2023, Dennis Zyska, Nils Dycke'
 author = 'Dennis Zyska, Nils Dycke'
 
 # -- General configuration ---------------------------------------------------

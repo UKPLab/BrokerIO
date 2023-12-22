@@ -2,6 +2,12 @@
 
 This repository contains the broker for [CARE](https://github.com/UKPLab/CARE), but could also be used standalone.
 The broker allows running multiple models in parallel and to distribute it via websockets.
+We currently support several skills out of the box:
+
+- [OpenAI Azure API](https://learn.microsoft.com/en-us/azure/ai-services/openai)
+- [Huggingface Pipeline](https://huggingface.co/docs/transformers/pipeline_tutorial)
+- [Llama.cpp](https://github.com/ggerganov/llama.cpp) through [Python bindings](https://llama-cpp-python.readthedocs.io/en/latest/)
+- [NLTK Vader Sentiment Analysis](https://www.nltk.org/_modules/nltk/sentiment/vader.html)
 
 ## Requirements
 
@@ -12,7 +18,7 @@ __Note:__ On Windows, you need to install [GnuWin32 Make](http://gnuwin32.source
 
 ## Documentation
 
-We provide a complete documentation of the broker that can be built locally.
+We provide a complete documentation of the broker that can be built locally or find the documentation of a prebuilt version [here](https://care.ukp.informatik.tu-darmstadt.de/doc_nlp_broker/index.html).
 
 ```shell
 make doc
