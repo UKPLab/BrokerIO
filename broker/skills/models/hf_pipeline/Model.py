@@ -1,21 +1,20 @@
-""" Skill for OpenAI Azure Client
+""" Skill for the Huggingface Pipeline
 
-This skill is a simple wrapper for the OpenAI Azure Client.
+This skill is a simple wrapper for the Huggingface Pipeline:
 
-Documentation Azure Client
-https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line%2Cpython-new&pivots=programming-language-python
+https://huggingface.co/docs/transformers/main_classes/pipelines
 
 Author: Dennis Zyska
 """
 import docker
-
+import os
 from broker.skills.SkillModel import SkillModel
 
 
 class Model(SkillModel):
     def __init__(self):
-        super().__init__('openai_azure')
-        self.help = 'Open AI azure client'
+        super().__init__('hf_pipeline')
+        self.help = 'Huggingface pipeline client'
         self.template = 'simpleSkill'
 
     def run(self, args, additional_parameter=None):
@@ -27,11 +26,9 @@ class Model(SkillModel):
         """
         super().run(args, {
             "environment": {
-                'AZURE_OPENAI_KEY': args.api_key,
-                'AZURE_OPENAI_ENDPOINT': args.api_endpoint,
-                'OPENAI_MODEL': args.model,
-                'API_VERSION': "2023-05-15" if args.model == "gpt-4" else "2023-10-01-preview",
-                'OPENAI_API_TYPE': "azure",
+                'TASK': args.task,
+                'MODEL': args.model,
+                'CUDA_DEVICE': args.cuda,
                 'BROKER_URL': args.url,
                 'SKILL_NAME': self.name if args.skill == "" else args.skill,
             },
@@ -39,10 +36,12 @@ class Model(SkillModel):
 
     def set_parser(self, parser):
         super().set_parser(parser)
-        self.parser.add_argument('--api_key', help='OpenAI API Key', required=True)
-        self.parser.add_argument('--api_endpoint', help='OpenAI API Endpoint', default='https://api.openai.com')
-        self.parser.add_argument('--model', help='OpenAI Model (Default: gpt-35-turbo-0301',
-                                 default='gpt-35-turbo-0301')
+        tasks_files = os.listdir('./broker/skills/models/hf_pipeline/tasks')
+        tasks = [os.path.splitext(file)[0] for file in tasks_files if file.endswith('.yaml')]
+
+        self.parser.add_argument('--task', help='Huggingface pipeline task', choices=tasks, required=True)
+        self.parser.add_argument('--model', help='Overwrite basic huggingface pipeline model', default="")
+        self.parser.add_argument('--cuda', help='CUDA device', default=-1, type=int)
 
     def build(self, nocache=False):
         """
@@ -58,7 +57,7 @@ class Model(SkillModel):
         try:
             build_logs = client.api.build(
                 dockerfile="Dockerfile",
-                path="./broker/skills/models/azure",
+                path="./broker/skills/models/hf_pipeline",
                 tag=self.tag,
                 decode=True, rm=True,
                 nocache=nocache,

@@ -1,10 +1,10 @@
 quota:
   guest:
-    jobs: 5
-    requests: 20
+    jobs: 25
+    requests: 50
     results: 100
   user:
-    jobs: 10
+    jobs: 50
     requests: 100
     results: 1000
   admin:

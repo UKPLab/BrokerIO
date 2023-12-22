@@ -26,7 +26,7 @@ To have a fully running development setup run each command in different terminal
 .. code-block:: shell
 
     make docker
-    make run
+    make broker
 
 .. note::
 

@@ -1,3 +1,7 @@
+""" Guard to connect to the broker to monitor public messages
+
+Author: Dennis Zyska
+"""
 import os
 
 from broker.utils.Guard import Guard

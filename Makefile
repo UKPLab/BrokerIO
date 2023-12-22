@@ -59,6 +59,10 @@ test_all:
 stress:
 	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 -u -m unittest test.test_broker.TestBroker.stressTest
 
+.PHONY: test-cli
+test-cli:
+	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 -u -m unittest test.test_cli.TestCLI
+
 .PHONY: test-build
 test-build:
 	docker exec nlp_api_main-broker-1 python3 -u -m unittest test.test_broker.TestBroker

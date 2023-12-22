@@ -46,13 +46,3 @@ exclude_patterns = []
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
-
-# Replacements
-
-rst_epilog = """
-.. |BROKER_WEBURL| replace:: {weburl}:{port}
-.. |BROKER_APIURL| replace:: {apiurl}
-.. |BROKER_VERSION| replace:: {version}
-""".format(weburl=os.environ.get('BROKER_WEBURL'), port=os.environ.get('BROKER_PORT'),
-           apiurl="{}/doc_nlp_api/index.html".format(os.environ.get('BROKER_WEBURL')),
-           version=os.environ.get('VERSION'))

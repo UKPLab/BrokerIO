@@ -29,10 +29,13 @@ Also make sure that you have GNU's ``make`` installed on your system.
     On Ubuntu, you need to install the docker compose plugin with ``sudo update && sudo apt-get install docker-compose-plugin``.
 
 
+For installing the requirements of the command line interface see section :doc:`CLI </broker/client>`.
+
 Build
 *****
 
-To build the NLP server, run the following command in the root directory of the project:
+To build the broker, change the .env.main file to your requirements and
+run the following command in the root directory of the project:
 
 .. code-block:: bash
 
@@ -44,3 +47,18 @@ This will build all docker image for the NLP server.
 
     The ``ENV`` variable must be set to ``main`` or ``dev``, otherwise connection to the DB is not possible!
     The ``dev`` environment is used for development purpose only.
+
+Development
+***********
+
+To start the broker in development mode, run the following command in the root directory of the project:
+
+.. code-block:: bash
+
+    make docker
+    make broker
+
+See section :doc:`Development </broker/development>` for more information.
+
+
+

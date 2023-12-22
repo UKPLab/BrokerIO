@@ -1,3 +1,7 @@
+""" Command line interface for the broker
+
+Author: Dennis Zyska
+"""
 import argparse
 import logging
 
