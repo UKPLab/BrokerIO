@@ -1,8 +1,8 @@
-Client
-======
+Command Line Interface
+======================
 
 With the client it is possible to work with the broker during the command line.
-You can run it by simple execute ``python3 client.py --help``.
+You can run it by simple execute ``python3 cli.py --help``.
 
 For using the client you need to install the python environment. We recommend to use conda for this
 (see `Miniconda Install <https://docs.conda.io/projects/miniconda/en/latest/miniconda-install.html>`_).

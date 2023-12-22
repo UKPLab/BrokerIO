@@ -1,8 +1,7 @@
 # CARE Broker
 
-This repository contains the broker for [CARE](https://github.com/UKPLab/CARE).
-The broker allows running multiple models in parallel and to distribute it to CARE.
-A model example for inference can be found [here](https://github.com/UKPLab/CARE_models).
+This repository contains the broker for [CARE](https://github.com/UKPLab/CARE), but could also be used standalone.
+The broker allows running multiple models in parallel and to distribute it via websockets.
 
 ## Requirements
 

@@ -17,8 +17,8 @@ Example to run the skill:
 
 .. code-block:: bash
 
-    python3 client.py skills build openai_azure --nocache
-    python3 client.py skills run openai_azure --url <broker_url> --api_key <openai_api_key> --api_endpoint <openai_endpoint> --skill <skill_name>
+    python3 cli.py skills build openai_azure --nocache
+    python3 cli.py skills run openai_azure --url <broker_url> --api_key <openai_api_key> --api_endpoint <openai_endpoint> --skill <skill_name>
 
 Llama.cpp
 ~~~~~~~~~
@@ -28,8 +28,8 @@ For more details follow `llama-cpp-python <https://llama-cpp-python.readthedocs.
 
 .. code-block:: bash
 
-    python3 client.py skills build llama.cpp --nocache
-    python3 client.py skills run llama.cpp --url <broker_url> --skill <skill_name> --model_path <model_path>
+    python3 cli.py skills build llama.cpp --nocache
+    python3 cli.py skills run llama.cpp --url <broker_url> --skill <skill_name> --model_path <model_path>
 
 Huggingface Transformer Pipeline
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -53,8 +53,8 @@ The following tasks are supported:
 
 .. code-block:: bash
 
-    python3 client.py skills build hf_pipeline --nocache
-    python3 client.py skills run hf_pipeline --url <broker_url> --skill <skill_name> --model <model_name> --task <task>
+    python3 cli.py skills build hf_pipeline --nocache
+    python3 cli.py skills run hf_pipeline --url <broker_url> --skill <skill_name> --model <model_name> --task <task>
 
 Vader Sentiment Analysis
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -63,5 +63,5 @@ This skill supports the Vader Sentiment Analysis. For more details follow `Vader
 
 .. code-block:: bash
 
-    python3 client.py skills build vader --nocache
-    python3 client.py skills run vader --url <broker_url> --skill <skill_name>
+    python3 cli.py skills build vader --nocache
+    python3 cli.py skills run vader --url <broker_url> --skill <skill_name>

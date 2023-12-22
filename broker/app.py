@@ -23,7 +23,6 @@ import string
 import redis
 import argparse
 
-__version__ = os.getenv("BROKER_VERSION")
 __author__ = "Dennis Zyska, Nils Dycke"
 __credits__ = ["Dennis Zyska", "Nils Dycke"]
 
