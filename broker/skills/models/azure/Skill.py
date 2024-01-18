@@ -45,6 +45,7 @@ class Skill(SkillSimple):
         response = self.client.chat.completions.create(
             model=self.model,  # model = "deployment_name".
             messages=data['messages'],
+            **data['params']
         )
 
         output = {
@@ -86,6 +87,11 @@ class Skill(SkillSimple):
                             },
                         }
                     },
+                },
+                'params': {
+                    'type': 'object',
+                    'description': 'Additional parameters for the openai completions api',
+                    'required': False
                 },
             },
             'example': {
