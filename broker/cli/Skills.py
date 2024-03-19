@@ -69,6 +69,9 @@ class Skills(CLI):
                                       type=int)
             skill_parser.add_argument('--only_stop', help='Only stop the container, do not remove it',
                                       action='store_true')
+            skill_parser.add_argument('--container_suffix',
+                                      help="Add a suffix to container name to start different containers (Default = '')",
+                                      default='')
 
     def list_skills(self):
         """

@@ -36,10 +36,11 @@ class SkillModel(CLI):
         Run the skill
         :param additional_parameter: Additional parameters for the container
         :param args: CLI arguments
-        :return:
+        :return: name of containers
         """
         # Check if the container is already built
         client = docker.from_env()
+        containers = []
         try:
             print("Running skill {}".format(self.name))
 
@@ -57,14 +58,29 @@ class SkillModel(CLI):
                     network = {'network': args.network}
             except docker.errors.NotFound:
                 print("Network not found.")
+            except docker.errors.APIError as e:
+                print("Error while getting network")
+                print(e)
+
+            if additional_parameter is None:
+                additional_parameter = {}
 
             # Run the container
             for i in range(1, args.num_containers + 1):
+                c_name = "{}_{}".format(self.tag, i) if args.container_suffix == "" else "{}_{}_{}".format(self.tag,
+                                                                                                           args.container_suffix,
+                                                                                                           i)
+                # add container name to environment
+                if "environment" in additional_parameter:
+                    additional_parameter["environment"]["CONTAINER_NAME"] = c_name
+                else:
+                    additional_parameter["environment"] = {
+                        'CONTAINER_NAME': c_name
+                    }
+
                 container = client.containers.run(
                     self.tag,
-                    name="{}_{}".format(self.tag, i)
-                    if args.container_suffix == "" else
-                    "{}_{}_{}".format(self.tag, args.container_suffix, i),
+                    name=c_name,
                     detach=True,
                     command='python3 /app/connect.py',
                     restart_policy={"Name": "always"},
@@ -73,6 +89,11 @@ class SkillModel(CLI):
                 )
                 print("Build container {}".format(container.short_id))
                 print(container.logs().decode('utf-8'))
+                containers.append({
+                    "name": container.name,
+                    "id": container.short_id
+                })
+                return containers
 
         except docker.errors.ImageNotFound:
             print("Image not found. Please build the container first.")
@@ -82,22 +103,31 @@ class SkillModel(CLI):
         """
         Stop the skill
         :param args:
-        :return:
+        :return: list of stopped containers
         """
+        stopped_containers = []
         containers = self.get_containers()
         if args.container_suffix != "":
             containers = [container for container in containers if
                           container.name.removeprefix("{}_".format(self.tag)).startswith(args.container_suffix)]
         for container in containers:
+            # check if running
+            if container.status != "running":
+                continue
             try:
                 container.stop(timeout=args.timeout if "timeout" in args else 10)
                 container.wait()
             except docker.errors.APIError:
                 container.kill()
             print("Stopped container {}".format(container.name))
-            if "only_stop" not in args:
+
+        if "only_stop" not in args or not args.only_stop:
+            for container in containers:
                 container.remove(force=True)
                 print("Removed container {}".format(container.name))
+                if container.name not in stopped_containers:
+                    stopped_containers.append(container.name)
+        return stopped_containers
 
     def get_containers(self):
         """
