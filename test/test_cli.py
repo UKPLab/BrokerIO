@@ -1,19 +1,12 @@
-import json
 import logging
-import multiprocessing as mp
 import os
-import time
-import unittest
 import subprocess
+import unittest
 
 from dotenv import load_dotenv
 
-from broker import init_logging, load_config
-from broker.app import init
-from broker.db import connect_db
-from broker.utils import scrub_job
-from broker.utils.Guard import Guard
-from broker.client import Client
+from broker import init_logging
+
 
 def run_command(command):
     try:
@@ -56,4 +49,3 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(return_code, 0)
 
     # TODO add some more tests for the CLI
-

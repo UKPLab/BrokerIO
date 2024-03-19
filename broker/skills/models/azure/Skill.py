@@ -9,6 +9,7 @@ Author: Dennis Zyska
 """
 
 import os
+import time
 
 from SkillSimple import SkillSimple
 from openai import AzureOpenAI
@@ -42,6 +43,7 @@ class Skill(SkillSimple):
         :param data:
         :return:
         """
+        start = time.perf_counter()
         response = self.client.chat.completions.create(
             model=self.model,  # model = "deployment_name".
             messages=data['messages'],
@@ -63,6 +65,7 @@ class Skill(SkillSimple):
             "object": response.object,
             "fingerprint": response.system_fingerprint,
             "usage": response.usage.__dict__,
+            "duration": time.perf_counter() - start,
         }
         # return None, None
         return output, stats
@@ -169,6 +172,10 @@ class Skill(SkillSimple):
                                 "type": "integer"
                             }
                         }
+                    },
+                    'duration': {
+                        "type": "number",
+                        "description": "Duration of executing azure api in seconds"
                     }
                 }
             },
