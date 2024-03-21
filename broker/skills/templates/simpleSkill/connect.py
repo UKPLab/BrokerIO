@@ -22,6 +22,7 @@ if __name__ == '__main__':
 
     logging.info("Init skill...")
     skill = Skill(os.environ.get('SKILL_NAME'))
+    skill.set_sio(sio)
     skill.init()
 
 
@@ -34,7 +35,7 @@ if __name__ == '__main__':
     def task(data):
         logging.info("Received new task: {}".format(data))
         try:
-            output, stats = skill.execute(data['data'])
+            output, stats = skill.execute(data['id'], data['data'])
             logging.info("Output: {}".format(output))
             logging.info("Stats: {}".format(stats))
 

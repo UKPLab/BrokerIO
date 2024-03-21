@@ -37,10 +37,11 @@ class Skill(SkillSimple):
             azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT")
         )
 
-    def execute(self, data):
+    def execute(self, task_id, data):
         """
         Execute a request to the OpenAI API
-        :param data:
+        :param task_id: task id of the current task
+        :param data: data object from the broker
         :return:
         """
         start = time.perf_counter()

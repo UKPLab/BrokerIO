@@ -41,10 +41,11 @@ class Skill(SkillSimple):
                              model=self.model,
                              device=int(os.environ.get('CUDA_DEVICE')))
 
-    def execute(self, data):
+    def execute(self, task_id, data):
         """
         Execute a request to the OpenAI API
-        :param data:
+        :param task_id: task id of the current task
+        :param data: data object from the broker
         :return:
         """
         response = self.pipe(**data)

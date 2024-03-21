@@ -8,15 +8,42 @@ https://pd3f.github.io/pd3f-core/export.html#pd3f.export.extract
 Author: Dennis Zyska
 """
 
-import os
-import time
-
-from pd3f import extract
-from SkillSimple import SkillSimple
-import logging
 import base64
+import logging
+import multiprocessing as mp
+import multiprocessing.queues as mpq
+import os
+import sys
+import time
+from multiprocessing import Process, Queue
+
+from SkillSimple import SkillSimple
+from pd3f import extract
 
 logging.basicConfig(level=logging.INFO)
+
+
+# This is a Queue that behaves like stdout
+class StdoutQueue(mpq.Queue):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs, ctx=mp.get_context())
+
+    def write(self, msg):
+        self.put(msg)
+
+    def flush(self):
+        sys.__stdout__.flush()
+
+
+def run_parsr(log_queue, output_queue, parsr_localtion, pdf_file, params):
+    # move std output to log queue
+    sys.stdout = log_queue
+
+    # run parsr
+    text, tables = extract(pdf_file, parsr_location=parsr_localtion, **params)
+
+    # put results into output queue
+    output_queue.put((text, tables))
 
 
 class Skill(SkillSimple):
@@ -28,6 +55,9 @@ class Skill(SkillSimple):
         super().__init__(name)
         self.description = "This is a pdf text extraction skill based on pd3f"
         self.tmp_file = "/app/pd3f.pdf"
+        self.parsr_location = "{}_{}:3001".format(os.environ.get("CONTAINER_NAME"), 'parsr')
+        self.p = None
+        self.features = ['status']
 
     def init(self):
         """
@@ -36,26 +66,45 @@ class Skill(SkillSimple):
         """
         pass
 
-    def execute(self, data):
+    def execute(self, task_id, data):
         """
         Execute a request to the OpenAI API
-        :param data:
+        :param task_id: task id of the current task
+        :param data: data object from the broker
         :return:
         """
+        logging.info("Executing request")
+        if self.p is not None and self.p.is_alive():
+            logging.error("Parsr is still running, killing it")
+            self.p.terminate()
+            self.p = None
+
+        if 'params' not in data:
+            data['params'] = {}
+
         start = time.perf_counter()
         # data['pdf'] is base64 encoded --> save to file
         content = base64.b64decode(data['pdf'])
         with open(self.tmp_file, 'wb') as f:
             f.write(content)
 
-        text, tables = extract(self.tmp_file,
-                               parsr_location="{}_{}:3001".format(os.environ.get("CONTAINER_NAME"), 'parsr'),
-                               **data['params'])
+        output_queue = Queue()
+        log_queue = StdoutQueue()
+        self.p = Process(target=run_parsr,
+                         args=(log_queue, output_queue, self.parsr_location, self.tmp_file, data['params']))
+        self.p.start()
+
+        while self.p.is_alive():
+            # read log output from queue and log it
+            while not log_queue.empty():
+                log = log_queue.get()
+                self.send_status(task_id, log)
 
         stats = {
             'duration': time.perf_counter() - start
         }
 
+        text, tables = output_queue.get()
         logging.info(text)
         logging.info(tables)
 
