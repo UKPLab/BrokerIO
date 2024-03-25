@@ -7,12 +7,12 @@ import unittest
 
 from dotenv import load_dotenv
 
-from broker import init_logging, load_config
-from broker.app import init
-from broker.db import connect_db
-from broker.utils import scrub_job
-from broker.utils.Guard import Guard
-from broker.client import Client
+from brokerio import init_logging, load_config
+from brokerio.app import init
+from brokerio.db import connect_db
+from brokerio.utils import scrub_job
+from brokerio.guard.Guard import Guard
+from brokerio.client import Client
 
 
 class TestBroker(unittest.TestCase):

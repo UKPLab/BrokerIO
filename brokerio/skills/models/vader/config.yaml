@@ -1,0 +1,6 @@
+name: vader
+desc: Vader Sentiment Analysis
+template: simpleSkill
+tag: broker_skill_vader
+author: Dennis Zyska
+year: 2024

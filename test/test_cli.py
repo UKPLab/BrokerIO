@@ -45,7 +45,7 @@ class TestCLI(unittest.TestCase):
         # running external command
         self._logger.info("Test help command")
 
-        return_code, output = run_command("python3 client.py -h")
+        return_code, output = run_command("python -m brokerio")
         self.assertEqual(return_code, 0)
 
     # TODO add some more tests for the CLI

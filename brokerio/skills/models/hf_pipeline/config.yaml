@@ -1,0 +1,6 @@
+name: hf_pipeline
+desc: Huggingface pipeline client
+template: simpleSkill
+tag: broker_skill_hf_pipeline
+author: Dennis Zyska
+year: 2024

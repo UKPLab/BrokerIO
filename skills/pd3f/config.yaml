@@ -1,0 +1,7 @@
+name: pd3f
+desc: PD3F PDF text extraction skill
+link: https://github.com/pd3f/pd3f
+template: simpleSkill
+tag: broker_skill_pd3f
+author: Dennis Zyska
+year: 2024

@@ -34,7 +34,7 @@ services:
       - redis
       - arangodb
       - broker_bash
-    command: python3 broker/app.py
+    command: brokerio broker start
     expose:
       - ${BROKER_PORT}
     ports:
