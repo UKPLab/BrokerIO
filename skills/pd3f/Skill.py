@@ -17,9 +17,10 @@ import sys
 import time
 from multiprocessing import Process, Queue
 
-from brokerio.skills.templates.simpleSkill.Skill import Skill as SkillSimple
 from pd3f import extract
-from LoggingJsonFormatter import LoggingJsonFormatter
+
+from brokerio.skills.templates.simpleSkill.LoggingJsonFormatter import LoggingJsonFormatter
+from brokerio.skills.templates.simpleSkill.Skill import Skill as SkillSimple
 
 logging.basicConfig(level=logging.INFO)
 
@@ -43,13 +44,13 @@ def run_parsr(log_queue, output_queue, parsr_localtion, pdf_file, params):
     logger = logging.getLogger('pd3f')
     queue_handler = logging.handlers.QueueHandler(log_queue)
     queue_handler.setFormatter(LoggingJsonFormatter({"level": "levelname",
-                                    "message": "message",
-                                    "loggerName": "name",
-                                    "processName": "processName",
-                                    "processID": "process",
-                                    "threadName": "threadName",
-                                    "threadID": "thread",
-                                    "timestamp": "asctime"}))
+                                                     "message": "message",
+                                                     "loggerName": "name",
+                                                     "processName": "processName",
+                                                     "processID": "process",
+                                                     "threadName": "threadName",
+                                                     "threadID": "thread",
+                                                     "timestamp": "asctime"}))
     logger.addHandler(queue_handler)
     logger.setLevel(logging.INFO)
 
@@ -65,8 +66,8 @@ class Skill(SkillSimple):
     Skill for OpenAI API
     """
 
-    def __init__(self, name):
-        super().__init__(name)
+    def __init__(self):
+        super().__init__()
         self.description = "This is a pdf text extraction skill based on pd3f"
         self.tmp_file = "/app/pd3f.pdf"
         self.parsr_location = "{}_{}:3001".format(os.environ.get("CONTAINER_NAME"), 'parsr')
@@ -112,6 +113,8 @@ class Skill(SkillSimple):
             # read log output from queue and log it
             while not log_queue.empty():
                 log = log_queue.get()
+                print(log)
+                logging.info(log)
                 self.send_status(task_id, log)
 
         stats = {

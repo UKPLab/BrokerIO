@@ -19,7 +19,7 @@ class Skill(SkillSimple):
     Skill for OpenAI API
     """
 
-    def __init__(self, name):
+    def __init__(self):
         self.task = os.environ.get('TASK')
         with open("/app/{}.yaml".format(self.task), "r") as f:
             self.yaml = yaml.load(f, Loader=yaml.FullLoader)

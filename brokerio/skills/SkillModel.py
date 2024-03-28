@@ -90,7 +90,7 @@ class SkillModel(CLI):
         if "environment" not in additional_parameter:
             additional_parameter["environment"] = {}
         if 'SKILL_NAME' not in additional_parameter["environment"]:
-            additional_parameter["environment"]['SKILL_NAME'] = self.config['name'] if args.skill == "" else args.skill,
+            additional_parameter["environment"]['SKILL_NAME'] = self.config['name'] if args.skill == "" else args.skill
         if 'BROKER_URL' not in additional_parameter["environment"]:
             additional_parameter["environment"]['BROKER_URL'] = args.url
 

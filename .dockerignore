@@ -2,4 +2,4 @@ Dockerfile
 examples
 build
 BrokerIO.egg-info
-skills
+skills/

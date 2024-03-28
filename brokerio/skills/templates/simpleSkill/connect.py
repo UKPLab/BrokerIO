@@ -21,7 +21,7 @@ if __name__ == '__main__':
     sio = socketio.Client()
 
     logging.info("Init skill...")
-    skill = Skill(os.environ.get('SKILL_NAME'))
+    skill = Skill()
     skill.set_sio(sio)
     skill.init()
 

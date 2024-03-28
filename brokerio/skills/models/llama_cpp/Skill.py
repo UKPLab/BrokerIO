@@ -18,8 +18,8 @@ class Skill(SkillSimple):
     Skill for Llama.cpp Models
     """
 
-    def __init__(self, name):
-        super().__init__(name)
+    def __init__(self):
+        super().__init__()
         self.description = "This is a skill for the Llama.cpp python client"
         self.client = None
 

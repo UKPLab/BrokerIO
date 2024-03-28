@@ -20,8 +20,8 @@ class Skill(simpleSkill):
     Skill for OpenAI API
     """
 
-    def __init__(self, name):
-        super().__init__(name)
+    def __init__(self):
+        super().__init__()
         self.description = "This is a skill for the OpenAI Azure API"
         self.client = None
         self.model = os.environ.get('OPENAI_MODEL')

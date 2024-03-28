@@ -1,6 +1,8 @@
+import os
+
+
 class Skill:
-    def __init__(self, name):
-        self.name = name
+    def __init__(self):
         self.description = "This is just a template for a simple skill"
         self.features = None
         self.sio = None
@@ -38,7 +40,7 @@ class Skill:
         :return: None
         """
         config = {
-            'name': self.name,
+            'name': os.environ.get('SKILL_NAME'),
             'description': self.description,
             'input': self.get_input(),
             'output': self.get_output()
