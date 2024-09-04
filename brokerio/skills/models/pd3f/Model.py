@@ -6,7 +6,6 @@ https://github.com/pd3f/pd3f
 
 Author: Dennis Zyska
 """
-import docker
 
 from brokerio.skills.SkillModel import SkillModel
 
@@ -33,6 +32,8 @@ class Model(SkillModel):
         print(args)
 
         print("Add PD3F containers")
+        import docker
+
         client = docker.from_env()
 
         new_containers = [c for c in containers]

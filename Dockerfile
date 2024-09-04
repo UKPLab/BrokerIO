@@ -5,14 +5,16 @@ ENV ENV=$ENV
 # echo build type
 RUN echo "ENV=$ENV"
 
-# COPY SERVER CODE
+# copy and install requirements
+WORKDIR /
+ADD requirements.txt requirements.txt
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+
+# copy code and install
 WORKDIR /
 ADD . /broker
 WORKDIR broker
-
-# INSTALL Requirements
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
 RUN pip install .
 
 # Generate private key if not exists
