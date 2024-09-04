@@ -5,6 +5,7 @@
 ### Added
 
 - All commands are available in the `brokerio` CLI 
+- Allow skills to use Socket.IO Acknowledgements for responses
 
 ### Changed
 

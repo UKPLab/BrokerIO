@@ -47,7 +47,7 @@ class Request(Socket):
 
                 if task_id > 0:
                     self.socketio.emit("taskRequest", {'id': task_id, 'name': data['name'], 'data': data['data']},
-                                       room=node['sid'])
+                                       room=node['sid'], callback=self.results)
 
                 self.db.clients.quotas[session["sid"]]["jobs"].update(reserve_quota, task_id)
         except Exception as e:

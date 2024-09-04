@@ -15,7 +15,8 @@ This guide will help you get started with the Broker.
 Sequence Diagram
 ----------------
 
-To give you a better understanding of the communication between the Broker, Skills and Clients, we provide a sequence diagram of the communication:
+To give you a better understanding of the communication between the **Broker**, **Skills** and **Clients**, we provide a sequence diagram of the communication.
+**Skills** are the models, features or tools that are provided by the **Broker** and that can be executed by the **Clients**.
 
 .. image:: ./sequence.drawio.svg
    :width: 80%
