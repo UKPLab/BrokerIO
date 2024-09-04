@@ -1,7 +1,7 @@
-# CARE Broker
+# BrokerIO
 
-This repository contains the broker for [CARE](https://github.com/UKPLab/CARE), but could also be used standalone.
-The broker allows running multiple models in parallel and to distribute it via websockets.
+This repository contains BrokerIO, originally built for [CARE](https://github.com/UKPLab/CARE), but more and more used standalone.
+BrokerIO allows running multiple models in parallel and to distribute skill requests via websockets.
 We currently support several skills out of the box:
 
 - [OpenAI Azure API](https://learn.microsoft.com/en-us/azure/ai-services/openai)
@@ -32,6 +32,9 @@ There is also a description of the asynchronous communication protocol that is u
 _Maintainers:_
 
 * Dennis Zyska (dennis.zyska@tu-darmstadt.de) 
+
+_Additional Contributors:_
+
 * Nils Dycke (nils.dycke@tu-darmstadt.de)
 
 Don't hesitate to send us an e-mail or report an issue, if something is broken (and it shouldn't be) or if you have further questions.

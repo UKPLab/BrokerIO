@@ -1,4 +1,4 @@
-name: nlp_api
+name: brokerio
 channels:
   - defaults
 dependencies:

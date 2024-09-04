@@ -30,10 +30,10 @@ build_test:
     - openssl genrsa -out private_key.pem 2048
     - make ENV=main build
     - sleep 2
-    - while [ "`docker inspect -f {{.State.Health.Status}} nlp_api_main-arangodb-1`" != "healthy" ]; do sleep 2; done
+    - while [ "`docker inspect -f {{.State.Health.Status}} brokerio-arangodb-1`" != "healthy" ]; do sleep 2; done
     - make ENV=main test-build
-    - docker wait nlp_api_main-docs_asyncapi-1
-    - docker wait nlp_api_main-docs_sphinx-1
+    - docker wait brokerio-docs_asyncapi-1
+    - docker wait brokerio-docs_sphinx-1
     - tar -czvf ${PWD}/doc_api.tar.gz ./docs/html
     - tar -czvf ${PWD}/doc_main.tar.gz ./docs/build
   artifacts:
@@ -78,9 +78,9 @@ deploy-main:
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make build-clean"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && openssl genrsa -out private_key.pem 2048"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make ENV=main build"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && docker wait nlp_api_main-docs_sphinx-1"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && docker wait brokerio-docs_sphinx-1"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && cp -r ./docs/html $DOCS_PATH_ASYNC_API"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && docker wait nlp_api_main-docs_sphinx-1"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && docker wait brokerio-docs_sphinx-1"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && cp -r ./docs/build/html $DOCS_PATH"
   only:
     - main

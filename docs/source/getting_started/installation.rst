@@ -1,7 +1,7 @@
 .. _installation:
 Installation
 ============
-This section describes how to install the Broker.
+This section describes how to install the BrokerIO.
 
 Prerequisites
 *************
@@ -41,7 +41,7 @@ run the following command in the root directory of the project:
 
     make ENV=main build
 
-This will build all docker image for the NLP server.
+This will build all relevant docker images to run BrokerIO (but without skills!).
 
 .. warning::::
 
@@ -55,8 +55,8 @@ To start the broker in development mode, run the following command in the root d
 
 .. code-block:: bash
 
-    make docker
-    make broker
+    docker compose -f docker-compose.yml -f docker-dev.yml up arangodb redis
+    python3 -m brokerio broker start
 
 See section :doc:`Development </broker/development>` for more information.
 

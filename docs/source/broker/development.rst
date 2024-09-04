@@ -18,15 +18,15 @@ The following commands will create a new conda environment and install all requi
 .. code-block:: shell
 
     conda env create -f environment.yaml
-    conda activate nlp_api
-    conda env update --file environment.yaml --name nlp_api --prune # update environment
+    conda activate brokerio
+    conda env update --file environment.yaml --name brokerio --prune # update environment
 
 To have a fully running development setup run each command in different terminal:
 
-.. code-block:: shell
+.. code-block:: bash
 
-    make docker
-    make broker
+    docker compose -f docker-compose.yml -f docker-dev.yml up arangodb redis
+    python3 -m brokerio broker start
 
 .. note::
 

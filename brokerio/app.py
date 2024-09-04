@@ -93,35 +93,54 @@ def init():
 
 
 def start(args):
-    logger = init_logging("main")
-
+    """
+    Start the broker from command line
+    :param args: command line arguments
+    :return:
+    """
     # load env
-    load_env(args.env)
+    init()
 
-    if args.broker_command == 'scrub':
-        from brokerio.utils import scrub_job
 
-        scrub_job()
-    elif args.broker_command == 'init':
-        from brokerio.utils import init_job, check_key
+def scrub(args):
+    """
+    Scrubjob for database
+    :param args: command line arguments
+    :return:
+    """
+    from brokerio.utils import scrub_job
 
-        check_key(create=True)
-        init_job()
-    elif args.broker_command == 'assign':
-        if args.key is None or args.role is None:
-            assign_parser.print_help()
-            exit()
+    scrub_job()
 
-        config = load_config()
-        config['cleanDbOnStart'] = False
-        config['scrub']['enabled'] = False
-        config['taskKiller']['enabled'] = False
-        db = connect_db(config, None)
 
-        user = db.users.set_role(args.key, args.role)
-        if user:
-            logger.info("Role assigned to user, db entry: {}".format(user['_key']))
-        else:
-            logger.error("User not found in db, please check the public key")
+def keys_init(args):
+    """
+    Initialize the keys for the broker
+    :param args: command line arguments
+    :return:
+    """
+    from brokerio.utils import init_job, check_key
+
+    check_key(create=True)
+    init_job()
+
+
+def assign(args):
+    """
+    Assign a role to a user
+    :param args:
+    :return:
+    """
+    logger = init_logging("broker_assign")
+
+    config = load_config()
+    config['cleanDbOnStart'] = False
+    config['scrub']['enabled'] = False
+    config['taskKiller']['enabled'] = False
+    db = connect_db(config, None)
+
+    user = db.users.set_role(args.key, args.role)
+    if user:
+        logger.info("Role assigned to user, db entry: {}".format(user['_key']))
     else:
-        init()
+        logger.error("User not found in db, please check the public key")

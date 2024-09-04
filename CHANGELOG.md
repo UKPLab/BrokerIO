@@ -1,5 +1,15 @@
 # Broker Changelog
 
+## v.0.3.1 
+
+### Added
+
+- All commands are available in the `brokerio` CLI 
+
+### Changed
+
+- Update descriptions and documentation 
+
 ## v.0.3.0 - 2023-12-22
 
 ### Added

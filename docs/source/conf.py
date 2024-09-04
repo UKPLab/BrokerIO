@@ -11,9 +11,9 @@ sys.path.insert(0, os.path.abspath('../..'))
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'Broker'
-copyright = '2022-2023, Dennis Zyska, Nils Dycke'
-author = 'Dennis Zyska, Nils Dycke'
+project = 'BrokerIO'
+copyright = '2022-2024, Dennis Zyska'
+author = 'Dennis Zyska'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

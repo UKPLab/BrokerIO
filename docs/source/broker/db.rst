@@ -20,4 +20,4 @@ Currently the following collections are scrubbed:
 
 .. tip::
 
-    You can also start the scrubbing manually by running the following command: ``make scrub``
+    You can start manually scrubbing by running `python3 -m brokerio broker scrub`.
