@@ -34,7 +34,7 @@ services:
       - redis
       - arangodb
       - broker_bash
-    command: brokerio broker start
+    command: brokerio broker start --port ${BROKER_PORT}
     expose:
       - ${BROKER_PORT}
     ports:
@@ -49,7 +49,7 @@ services:
       - broker
       - redis
       - broker_bash
-    command: python3 main.py
+    command: brokerio guard start --broker-url http://broker:${BROKER_PORT}
   redis:
     image: redis
     restart: unless-stopped
@@ -64,5 +64,5 @@ services:
       timeout: 10s
       retries: 5
     environment:
-      - ARANGO_ROOT_PASSWORD=${ARANGODB_ROOT_PASSWORD}
+      - ARANGO_ROOT_PASSWORD=secret
       - ARANGO_NO_AUTH=1

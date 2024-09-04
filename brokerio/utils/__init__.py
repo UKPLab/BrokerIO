@@ -45,7 +45,7 @@ def simple_client(name, url, client_queue: mp.Queue, message_queue: mp.Queue, sk
                 time.sleep(5)
 
 
-def scrub_job(overwrite_config=None):
+def scrub_job(args, overwrite_config=None):
     """
     Simple job to start a scrub process (e.g., by an cronjob)
     :return:
@@ -56,11 +56,11 @@ def scrub_job(overwrite_config=None):
     if overwrite_config:
         config.update(overwrite_config)
 
-    db = connect_db(config, None)
+    db = connect_db(args, config, None)
     db.tasks.scrub(run_forever=False)
 
 
-def init_job():
+def init_job(args):
     """
     Reinit the database with new keys for system user
     :return:
@@ -71,7 +71,7 @@ def init_job():
     config = load_config()
 
     logger.info("Connecting to db...")
-    db = connect_db(config, None)
+    db = connect_db(args, config, None)
     db.users.reinit(private_key_path="./private_key.pem")
 
 

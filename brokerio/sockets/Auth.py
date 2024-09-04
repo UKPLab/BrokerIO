@@ -71,7 +71,7 @@ class Auth(Socket):
                 self.socketio.emit("error", {"code": 100}, to=session["sid"])
                 return
             # create secret message to sign by client
-            secret_message = "{}{}".format(request.sid, os.getenv("SECRET", "astringency"))
+            secret_message = "{}{}".format(request.sid, "awesomesecret")
             hash = SHA256.new()
             hash.update(secret_message.encode("utf8"))
             self.db.clients.register(request.sid, hash.hexdigest())

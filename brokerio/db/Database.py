@@ -14,14 +14,11 @@ class Database:
     Holds the database connection
     """
 
-    def __init__(self, url=None, username="root", password=None, db_name="broker", config=None, socketio=None):
-        if url:
-            self.url = url
-        else:
-            url = "http://{}:{}".format(os.getenv("ARANGODB_HOST", "localhost"), os.getenv("ARANGODB_PORT", "8529"))
-        self._username = username
-        self._password = password if password else os.getenv("ARANGODB_ROOT_PASSWORD", "root")
-        self.db_name = db_name
+    def __init__(self, url=None, username=None, password=None, db_name=None, config=None, socketio=None):
+        self.url = url if url else "http://localhost:8529"
+        self._username = username if username else "root"
+        self._password = password if password else "root"
+        self.db_name = db_name if db_name else "broker"
 
         self.async_db, self.sync_db, self.sys_db = self._connect()
         self.async_db.clear_async_jobs()

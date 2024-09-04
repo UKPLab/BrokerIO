@@ -9,7 +9,6 @@ python-socketio[client]==5.11.1
 pyyaml>=6.0
 aiohttp>=3.8.3
 redis==4.6.0
-python-dotenv>=0.21.0
 python-arango>=7.9.1
 pycryptodome>=3.18.0
 urllib3[secure]==1.26.12

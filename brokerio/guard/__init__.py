@@ -5,10 +5,8 @@ Author: Dennis Zyska
 import os
 
 from .Guard import Guard
-from .. import load_env
 
 
-def start_guard():
-    load_env()
-    guard = Guard(os.getenv("BROKER_URL"))
+def start_guard(args):
+    guard = Guard(args.broker_url)
     guard.run()

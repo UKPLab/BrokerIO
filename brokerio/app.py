@@ -16,21 +16,22 @@ from .sockets.Skill import Skill
 
 from .sockets.Auth import Auth
 import os
-from . import init_logging, load_config, load_env
+from . import init_logging, load_config
 from .db import connect_db
 import random
 import string
 import redis
 
 
-def init():
+def init(args):
     """
     Initialize the flask app and check for the connection to the GROBID client.
     :return:
     """
     logger = init_logging("broker")
 
-    config = load_config()
+    # load config
+    config = load_config(args.config_file)
 
     logger.info("Initializing server...")
     # flask server
@@ -40,13 +41,13 @@ def init():
         "SESSION_TYPE": "redis",
         "SESSION_PERMANENT": False,
         "SESSION_USE_SIGNER": True,
-        "SESSION_REDIS": redis.from_url("redis://{}:{}".format(os.getenv("REDIS_HOST"), os.getenv("REDIS_PORT")), )
+        "SESSION_REDIS": redis.from_url(args.redis_url, )
     })
     socketio = SocketIO(app, cors_allowed_origins='*', logger=logger, engineio_logger=logger)
 
     # get db and collection
-    logger.info("Connecting to db...")
-    db = connect_db(config, socketio)
+    logger.info("Connecting to db {}...".format(args.db_url))
+    db = connect_db(args, config, socketio)
 
     # add socket routes
     logger.info("Initializing socket...")
@@ -84,9 +85,9 @@ def init():
         logger.debug(f"Socket connection teared down for sid: {request.sid}")
 
     app_config = {
-        "debug": os.getenv("FLASK_DEBUG", False),
+        "debug": args.flask_debug if args.flask_debug else False,
         "host": "0.0.0.0",
-        "port": os.getenv("BROKER_PORT", 4852)
+        "port": args.port
     }
     logger.info("App starting ...", app_config)
     socketio.run(app, **app_config, log_output=True)
@@ -99,7 +100,7 @@ def start(args):
     :return:
     """
     # load env
-    init()
+    init(args)
 
 
 def scrub(args):
@@ -110,7 +111,7 @@ def scrub(args):
     """
     from brokerio.utils import scrub_job
 
-    scrub_job()
+    scrub_job(args)
 
 
 def keys_init(args):
@@ -122,7 +123,7 @@ def keys_init(args):
     from brokerio.utils import init_job, check_key
 
     check_key(create=True)
-    init_job()
+    init_job(args)
 
 
 def assign(args):
