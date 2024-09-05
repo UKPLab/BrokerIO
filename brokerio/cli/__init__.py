@@ -5,13 +5,15 @@ Author: Dennis Zyska
 import argparse
 import logging
 import pkgutil
+import sys
+import importlib.util
 
 import brokerio.cli.interfaces
 from brokerio.cli.interfaces.BrokerCLI import BrokerCLI
 from .CLI import CLI
 from .CLI import register_client_module
 from .. import init_logging
-
+import os
 
 class Colors:
     HEADER = '\033[95m'
@@ -25,35 +27,44 @@ class Colors:
     UNDERLINE = '\033[4m'
 
 
-def main():
-    logger = init_logging("BrokerIO", logging.DEBUG)
-
-    # Argument parser
-    parser = argparse.ArgumentParser(description="BrokerIO command line", add_help=False)
-
-    parser.add_argument('--env', help="Environment file to load", type=str, default="")
-
+def parse_args(args):
+    parser = argparse.ArgumentParser(description="BrokerIO command line", add_help=True)
     subparser = parser.add_subparsers(title="BrokerIO Manager", dest='command')
 
     # Add cli modules
-    cliInterfaces = []
+    cli_interfaces = []
     package = brokerio.cli.interfaces
     for importer, modname, ispkg in pkgutil.iter_modules(package.__path__, prefix=''):
         if not ispkg:
-            cliInterfaces.append({
-                "module": getattr(importer.find_module(modname).load_module(modname), modname)
-            })
+            module_path = os.path.join(importer.path, modname)
+            spec = importlib.util.spec_from_file_location(modname, module_path + ".py")
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            model_class = getattr(module, modname)
 
-    for interf in cliInterfaces:
-        _parser = subparser.add_parser(interf["module"].name, help=interf["module"].help, add_help=False)
-        interf["module"].arg_parser(_parser)
-        interf["parser"] = _parser
+            if spec and spec.loader:
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
 
-    # parse arguments
-    args = parser.parse_args()
+                cli_interfaces.append({
+                    "module": model_class
+                })
+
+    for interface in cli_interfaces:
+        _parser = subparser.add_parser(interface["module"].name, help=interface["module"].help, add_help=False)
+        interface["module"].arg_parser(_parser)
+        interface["parser"] = _parser
+
+    return parser.parse_args(args), parser, cli_interfaces
+
+
+def main():
+    logger = init_logging("BrokerIO", logging.DEBUG)
+
+    args, parser, cli_interfaces = parse_args(sys.argv[1:])
     if args.command is None:
         parser.print_help()
     else:
-        for interf in cliInterfaces:
-            if interf["module"].name == args.command:
-                interf["module"](interf["parser"]).parse(args)
+        for interface in cli_interfaces:
+            if interface["module"].name == args.command:
+                interface["module"](interface["parser"]).parse(args)

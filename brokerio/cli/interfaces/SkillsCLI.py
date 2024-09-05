@@ -1,6 +1,6 @@
 import os
 import pkgutil
-
+import importlib.util
 import brokerio.skills.models
 from brokerio.cli import CLI, Colors
 from brokerio.skills import load_config
@@ -14,10 +14,18 @@ def load_skills(path_list):
     skills = {}
     for importer, modname, ispkg in pkgutil.iter_modules(path_list, prefix=''):
         if ispkg:
+
+            # get module
+            module_path = os.path.join(importer.path, modname)
+            spec = importlib.util.spec_from_file_location(modname, module_path + "/Model.py")
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            model_class = getattr(module, 'Model')
+
             skills[modname] = {
                 "importer": importer,
                 "modname": modname,
-                "module": getattr(importer.find_module(modname).load_module(modname), 'Model'),
+                "module": model_class,
                 "config": load_config(os.path.join(importer.path, modname))
             }
     return skills

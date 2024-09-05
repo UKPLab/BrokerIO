@@ -1,5 +1,6 @@
 
 build
+BrokerIO.egg-info
 
 brokerio/__pycache__
 brokerio/**/__pycache__
@@ -15,3 +16,4 @@ docs/html
 test/results.jsonl
 
 private_key.pem
+

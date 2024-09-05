@@ -19,8 +19,10 @@ class Tasks(Collection):
         super().__init__("tasks", db, adb, config, socketio)
         self.quotas = {}
 
-        self.index = results(self.collection.add_hash_index(fields=['sid'], name='sid_index', unique=False))
-        self.index = results(self.collection.add_hash_index(fields=['connected'], name='connected_index', unique=False))
+        self.sid_index = results(
+            self.collection.add_index({'fields': ['sid'], 'name': 'sid_index', 'unique': False, 'type': 'hash'}))
+        self.connected_index = results(self.collection.add_index(
+            {'fields': ['connected'], 'name': 'connected_index', 'unique': False, 'type': 'hash'}))
 
         # start scrub task
         scrub_thread = threading.Thread(target=self.cron)

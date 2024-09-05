@@ -197,7 +197,7 @@ class Client:
             "config": {} if config is None else config,
             "data": data}})
         results = self.wait_for_event("skillResults", timeout=timeout)
-        if results:
+        if results and 'data' in results:
             return results['data']
         else:
             raise ClientTimeoutException("Timeout while waiting for results")

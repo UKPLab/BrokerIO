@@ -39,8 +39,7 @@ build-dev:
 
 .PHONY: init
 init:
-	openssl genrsa -out private_key.pem 1024
-	python3 client.py broker init || echo "IGNORING ERROR"
+	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 -m brokerio broker init
 
 .PHONY: docker
 docker:

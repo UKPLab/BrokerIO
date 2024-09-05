@@ -1,3 +1,4 @@
+import argparse
 import json
 import logging
 import multiprocessing as mp
@@ -13,6 +14,7 @@ from brokerio.db import connect_db
 from brokerio.utils import scrub_job
 from brokerio.guard.Guard import Guard
 from brokerio.client import Client
+from brokerio.cli import parse_args
 
 
 class TestBroker(unittest.TestCase):
@@ -27,21 +29,34 @@ class TestBroker(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+
+        # For the tests we still use the .env files
         if os.getenv("TEST_URL", None) is None:
             if os.getenv("ENV", None) is not None:
                 load_dotenv(dotenv_path=".env.{}".format(os.getenv("ENV", None)))
             else:
                 load_dotenv(dotenv_path=".env")
 
+        args, parser, cli_interfaces = parse_args([
+            "broker", "start",
+            "--db_url", "http://{}:{}".format(os.getenv("ARANGODB_HOST", "localhost"),
+                                            os.getenv("ARANGODB_PORT", "8529")),
+            "--db_name", os.getenv("ARANGODB_DB", "broker"),
+            "--db_user", os.getenv("ARANGODB_USER", "root"),
+            "--db_pass", os.getenv("ARANGODB_PASSWORD", "secure"),
+            "--port", "4852"]
+        )
+        cls._args = args
+
         logger = init_logging(name="Unittest", level=logging.getLevelName(os.getenv("TEST_LOGGING_LEVEL", "INFO")))
         cls._logger = logger
 
         logger.info("Load config ...")
-        config = load_config()
+        config = load_config(args.config_file)
         cls._config = config
 
         logger.info("Connect to db...")
-        cls._db = connect_db(None, config, None)
+        cls._db = connect_db(args, config, None)
 
         logger.info("Starting broker ...")
         logger.info("Broker URL: {}".format(os.getenv("TEST_URL")))
@@ -52,7 +67,7 @@ class TestBroker(unittest.TestCase):
             logger.info("Skip creating broker.")
         else:
             ctx = mp.get_context('spawn')
-            broker = ctx.Process(target=init, args=())
+            broker = ctx.Process(target=init, args=(args,))
             broker.start()
             cls._broker = broker
 
@@ -431,7 +446,7 @@ class TestBroker(unittest.TestCase):
             },
             "cleanDbOnStart": False,
         }
-        scrub_job(overwrite_config=scrub_config)
+        scrub_job(self._args, overwrite_config=scrub_config)
 
         cursor = self._db.sync_db.aql.execute(aql_query, count=True)
         return self.assertEqual(cursor.count(), 1)

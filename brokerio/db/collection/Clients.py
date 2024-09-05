@@ -18,8 +18,11 @@ class Clients(Collection):
     def __init__(self, db, adb, config, socketio):
         super().__init__("clients", db, adb, config, socketio)
         self.quotas = {}
-        self.index = results(self.collection.add_hash_index(fields=['sid'], name='sid_index', unique=False))
-        self.index = results(self.collection.add_hash_index(fields=['connected'], name='connected_index', unique=False))
+
+        self.sid_index = results(
+            self.collection.add_index({'fields': ['sid'], 'name': 'sid_index', 'unique': False, 'type': 'hash'}))
+        self.connected_index = results(self.collection.add_index(
+            {'fields': ['connected'], 'name': 'connected_index', 'unique': False, 'type': 'hash'}))
 
     def connect(self, sid, ip, data, default_role="guest"):
         """

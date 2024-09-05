@@ -22,7 +22,7 @@ def client_process(name, url, in_queue: mp.Queue, out_queue: mp.Queue):
     @sio.on('taskRequest')
     def task_request(data):
         out_queue.put({"event": "taskRequest", "data": data})
-        if isinstance(data['data'], dict) and 'sleep' in data['data']:
+        if "data" in data and isinstance(data['data'], dict) and 'sleep' in data['data']:
             time.sleep(data['data']['sleep'])
         sio.emit('taskResults', {"id": data["id"], "data": data['data']})
 
