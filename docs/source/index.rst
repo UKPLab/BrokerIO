@@ -1,16 +1,27 @@
 Welcome to the BrokerIO's documentation!
 ========================================
 
-The Broker should provide a simple interface to a variety of tools and models.
-It is designed to be used by the BrokerIO API based on websockets to keep the inference times as low as possible.
+BrokerIO provide a simple interface to a variety of tools and models, so called **Skills**.
+It is designed to be used by the BrokerIO API.
+The API is based on websockets that reduces inference time when routing requests to the Skills.
 
-The goal is to give as many clients as possible access to models at the same time.
-The models should therefore connect to the Broker independently when available and be available from that point on.
+With many additional features, the BrokerIO API is designed to be used by multiple clients at the same time,
+distribute requests to the available Skills and provide easy access to the results.
+A command line interface (CLI) easily allow to interact with the BrokerIO and to manage the available Skills.
+
+The following features are supported:
+
+- **Quota System**: Limit the number of requests a client can make
+- **NoSQL Database**: Store the results of the Skills in a NoSQL database (inclusive donation feature)
+- **Authentication**: Secure the access to the BrokerIO API via Role based access control (RBAC)
+- **CLI**: Manage the BrokerIO and the available Skills via the command line
+- **Logging**: Log all requests and responses to the BrokerIO API
+- **Build-in Skills**: Provide a set of build-in Skills to get started
+- **Docker Environment**: Run the BrokerIO in a Docker container
 
 .. note::
 
-   It cannot be guaranteed that all models will be available at all times.
-   BrokerIO does not start any models and if the models crash it is the responsibility of the models container
+   BrokerIO does not start any **Skills** by itself and if the models crash it is the responsibility of the models container
    to restart the model and reconnect to the Broker on their own.
    We also implemented a quota system to prevent a single client from using all available resources (see ::doc:`Config </broker/config>`).
 

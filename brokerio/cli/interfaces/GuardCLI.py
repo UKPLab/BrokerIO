@@ -12,4 +12,8 @@ class GuardCLI(CLI):
         _parser.add_argument('--broker_url', help="Broker URL", type=str, default="http://localhost:4852")
 
     def parse(self, args):
-        start_guard(args)
+
+        if args.help:
+            self.parser.print_help()
+        else:
+            start_guard(args)

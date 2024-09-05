@@ -4,17 +4,12 @@ Command Line Interface
 With the client it is possible to work with the broker during the command line.
 Manually install it with `pip install .` in the root directory of the project.
 You can run it by simple execute ``brokerio --help``.
-It is also possible to use the command line interface with the python module directly ``python3 -m brokerio --help``.
 
-For using the client you need to install the python environment. We recommend to use conda for this
-(see `Miniconda Install <https://docs.conda.io/projects/miniconda/en/latest/miniconda-install.html>`_).
-After installing conda, you can use the following command to set up the environment:
+.. tip::
 
-.. code-block:: bash
+    For development, you can also use the command line interface with the python module directly ``python3 -m brokerio --help``.
+    Therefore, you need to install the conda environment, see :doc:`Development </broker/development>`
 
-    conda env create -f environment.yml
-    conda env update --file environment.yaml --name brokerio --prune     # for updating the environment
-    conda activate brokerio
 
 .. tip::
 

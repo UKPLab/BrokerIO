@@ -11,15 +11,18 @@ default: help
 .PHONY: help
 help:
 	@echo "make clean             	Delete development files"
-	@echo "make build      			Build all docker images - complete environment"
-	@echo "make docker			    Start docker containers for db"
-	@echo "make init              	Generate private key"
+	@echo "make docker      		Build all docker images - complete environment"
+	@echo "make db			    	Start docker containers for db"
+	@echo "make key	            	Generate private key"
 	@echo "make test				Run tests"
 	@echo "make stress            	Run stress test"
 	@echo "make doc 			 	Generate documentation"
 	@echo "make env_create			Create a virtual environment"
-	@echo "make env_activate		Activate the virtual environment"
 	@echo "make env_update			Update the virtual environment"
+
+.PHONY:key
+key:
+	openssl genrsa -out private_key.pem 2048
 
 .PHONY: clean
 clean:
@@ -29,20 +32,16 @@ clean:
 	docker compose rm -f -s -v
 	docker network rm brokerio_default || echo "IGNORING ERROR"
 
-.PHONY: build
-build:
+.PHONY: docker
+docker:
 	docker compose -f docker-compose.yml -p "brokerio" up --build -d
 
-.PHONY: build-dev
+.PHONY: docker-dev
 build-dev:
 	docker compose -f docker-compose.yml -p "brokerio_dev" up --build -d
 
-.PHONY: init
-init:
-	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 -m brokerio broker init
-
-.PHONY: docker
-docker:
+.PHONY: db
+db:
 	docker compose -f docker-compose.yml -f docker-dev.yml up arangodb redis
 
 .PHONY: test
@@ -92,10 +91,6 @@ build-clean: clean
 .PHONY: env_create
 env_create:
 	conda env create -f environment.yaml
-
-.PHONY: env_activate
-env_activate:
-	conda activate brokerio
 
 .PHONY: env_update
 env_update:

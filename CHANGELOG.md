@@ -6,15 +6,15 @@
 
 - nlp_broker is brokerIO now! Allows better integration as python package
 - Python package integration (brokerio) and better support for command line interface
-- Update integration of skills allows better integration of new skills 
+- Updated skills integration for easier usage
 - Improved documentation and examples 
-- All commands are available in the `brokerio` CLI 
+- All commands are available in the `brokerio` CLI now
 - Allow skills to use Socket.IO Acknowledgements for responses
-- Removing of .env files and added to command line interface
 
 ### Changed
 
 - Update descriptions and documentation 
+- Deleted unused environment variables (moved to command line interface)
 
 ## v.0.3.0 - 2023-12-22
 

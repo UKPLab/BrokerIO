@@ -41,7 +41,7 @@ class Users(Collection):
         super()._init()
 
         basic_client = results(self.collection.find({"system": True}))
-        if reinit or basic_client.count() == 0:
+        if reinit:
 
             # load keys
             keys = Keys(private_key_path=private_key_path)

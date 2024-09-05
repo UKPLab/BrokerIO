@@ -9,7 +9,7 @@ import unittest
 from dotenv import load_dotenv
 
 from brokerio import init_logging, load_config
-from brokerio.app import init
+from brokerio.app import init, keys_init
 from brokerio.db import connect_db
 from brokerio.utils import scrub_job
 from brokerio.guard.Guard import Guard
@@ -54,6 +54,9 @@ class TestBroker(unittest.TestCase):
         logger.info("Load config ...")
         config = load_config(args.config_file)
         cls._config = config
+
+        logger.info("Make sure the private key exists ...")
+        keys_init(args)
 
         logger.info("Connect to db...")
         cls._db = connect_db(args, config, None)

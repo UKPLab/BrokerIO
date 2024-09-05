@@ -6,7 +6,7 @@ This section describes how to install the BrokerIO.
 Prerequisites
 *************
 
-Docker is required to build the containers.
+Docker is required to build the Containers and Skills.
 Please install them according to the official documentation:
 
 * `Docker <https://docs.docker.com/engine/installation/>`_
@@ -31,22 +31,18 @@ Also make sure that you have GNU's ``make`` installed on your system.
 
 For installing the requirements of the command line interface see section :doc:`CLI </broker/client>`.
 
-Build
-*****
+As a service
+************
 
-To build the broker, change the .env.main file to your requirements and
+To build BrokerIO as a service, change the .env file to your requirements and
 run the following command in the root directory of the project:
 
 .. code-block:: bash
 
-    make ENV=main build
+    make docker
 
-This will build all relevant docker images to run BrokerIO (but without skills!).
+This will build all relevant docker images to run BrokerIO (but without any Skills!).
 
-.. warning::::
-
-    The ``ENV`` variable must be set to ``main`` or ``dev``, otherwise connection to the DB is not possible!
-    The ``dev`` environment is used for development purpose only.
 
 Development
 ***********
@@ -55,7 +51,7 @@ To start the broker in development mode, run the following command in the root d
 
 .. code-block:: bash
 
-    docker compose -f docker-compose.yml -f docker-dev.yml up arangodb redis
+    make db
     python3 -m brokerio broker start
 
 See section :doc:`Development </broker/development>` for more information.

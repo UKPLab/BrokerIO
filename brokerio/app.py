@@ -4,23 +4,18 @@ Broker entry point for bootstrapping the server
 This is the file used to start the flask (and socketio) server.
 """
 
-from eventlet import monkey_patch  # mandatory! leave at the very top
+import random
+import string
 
-monkey_patch()
-
+import redis
 from flask import Flask, session, request
 from flask_socketio import SocketIO
 
+from . import init_logging, load_config
+from .utils import connect_db
+from .sockets.Auth import Auth
 from .sockets.Request import Request
 from .sockets.Skill import Skill
-
-from .sockets.Auth import Auth
-import os
-from . import init_logging, load_config
-from .db import connect_db
-import random
-import string
-import redis
 
 
 def init(args):
@@ -48,6 +43,13 @@ def init(args):
     # get db and collection
     logger.info("Connecting to db {}...".format(args.db_url))
     db = connect_db(args, config, socketio)
+
+    if db.first_run:
+        logger.info("First run detected, initializing db...")
+        from brokerio.utils import check_key
+
+        check_key(private_key_path=args.private_key_path, create=True)
+        db.users.reinit(private_key_path=args.private_key_path)
 
     # add socket routes
     logger.info("Initializing socket...")
@@ -122,7 +124,7 @@ def keys_init(args):
     """
     from brokerio.utils import init_job, check_key
 
-    check_key(create=True)
+    check_key(private_key_path=args.private_key_path, create=True)
     init_job(args)
 
 

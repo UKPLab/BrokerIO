@@ -37,11 +37,13 @@ class BrokerCLI(CLI):
         start_parser.add_argument('--redis_url', help="Redis Connection URL", type=str,
                                   default="redis://localhost:6379")
         start_parser.add_argument('--flask_debug', help="Flask Debug", action='store_true')
+        start_parser.add_argument('--private_key_path', help="Path to private key", type=str, default="./private_key.pem")
 
         scrub_parser = sub_parser.add_parser('scrub', help="Only run scrub job")
         BrokerCLI.arg_parser_db(scrub_parser)
 
         init_parser = sub_parser.add_parser('init', help="Init the broker")
+        init_parser.add_argument('--private_key_path', help="Path to private key", type=str, default="./private_key.pem")
         BrokerCLI.arg_parser_db(init_parser)
 
         a_parser = sub_parser.add_parser('assign', help="Assign a role to a user")

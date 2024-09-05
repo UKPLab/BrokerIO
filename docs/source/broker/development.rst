@@ -10,8 +10,8 @@ In addition to the packages listed in :doc:`installation <./installation>`, you 
 
 * `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_
 
-Run
-***
+Environment
+***********
 
 The following commands will create a new conda environment and install all required packages:
 
@@ -28,10 +28,6 @@ To have a fully running development setup run each command in different terminal
     docker compose -f docker-compose.yml -f docker-dev.yml up arangodb redis
     python3 -m brokerio broker start
 
-.. note::
-
-    You can also build the environment locally, but the connection to redis might be broken.
-    Use `make ENV=dev build` to get a running local environment.
 
 Test
 ****

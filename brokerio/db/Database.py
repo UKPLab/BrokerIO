@@ -20,6 +20,7 @@ class Database:
         self._password = password if password else "root"
         self.db_name = db_name if db_name else "broker"
 
+        self.first_run = False
         self.async_db, self.sync_db, self.sys_db = self._connect()
         self.async_db.clear_async_jobs()
         self.db = self.async_db  # make async_db the default db
@@ -40,6 +41,7 @@ class Database:
         sys_db = db_client.db('_system', username=self._username, password=self._password)
         if not sys_db.has_database(self.db_name):
             sys_db.create_database(self.db_name)
+            self.first_run = True
         sync_db = db_client.db(self.db_name, username='root', password=self._password)
         async_db = sync_db.begin_async_execution(return_result=True)
         return async_db, sync_db, sys_db

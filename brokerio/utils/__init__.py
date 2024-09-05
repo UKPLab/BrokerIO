@@ -7,7 +7,7 @@ import socketio
 from Crypto.PublicKey import RSA
 
 from .. import init_logging, load_config
-from ..db import connect_db
+from brokerio.db import connect_db
 
 
 def simple_client(name, url, client_queue: mp.Queue, message_queue: mp.Queue, skill_queue: mp.Queue = None,
@@ -72,7 +72,7 @@ def init_job(args):
 
     logger.info("Connecting to db...")
     db = connect_db(args, config, None)
-    db.users.reinit(private_key_path="./private_key.pem")
+    db.users.reinit(private_key_path=args.private_key_path)
 
 
 def check_key(private_key_path="private_key.pem", length=1024, create=False):
