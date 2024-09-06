@@ -8,6 +8,8 @@ dependencies:
   - matplotlib>=3.9.2
   - pandas>=2.2.2
   - jupyter>=1.0.0
+
   - pip:
     - docker>=7.1.0
+    - build>=1.2.1
     - -r ./requirements.txt

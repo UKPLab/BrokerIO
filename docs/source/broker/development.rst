@@ -3,6 +3,11 @@ Development
 
 If you want to contribute to the development of the project, please follow the steps below.
 
+.. :tip:
+
+    You can install BrokerIO in development mode by running ``pip install -e .``, allowing in-place editing of the source code.
+
+
 Prerequisites
 *************
 

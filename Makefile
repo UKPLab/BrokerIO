@@ -12,7 +12,12 @@ default: help
 help:
 	@echo "make clean             	Delete development files"
 	@echo "make docker      		Build all docker images - complete environment"
+	@echo "make build 		   	    Build the python package"
+	@echo "make build-wheel			Build the python package as a wheel"
+	@echo "make build-sdist			Build the python package as a source distribution"
 	@echo "make db			    	Start docker containers for db"
+	@echo "make check				Run a twine check on the package"
+	@echo "make upload				Upload the package to pypi"
 	@echo "make key	            	Generate private key"
 	@echo "make test				Run tests"
 	@echo "make stress            	Run stress test"
@@ -23,6 +28,26 @@ help:
 .PHONY:key
 key:
 	openssl genrsa -out private_key.pem 2048
+
+.PHONY: build
+build:
+	python3 -m build
+
+.PHONY: build-sdist
+build-sdist:
+	python3 -m build --sdist
+
+.PHONY: build-wheel
+build-wheel:
+	python3 -m build --wheel
+
+.PHONY: check
+check:
+	twine check dist/*
+
+.PHONY: upload
+upload:
+	twine upload dist/*
 
 .PHONY: clean
 clean:

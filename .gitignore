@@ -1,6 +1,7 @@
 
 build
 BrokerIO.egg-info
+dist
 
 brokerio/__pycache__
 brokerio/**/__pycache__
