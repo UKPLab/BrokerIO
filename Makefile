@@ -37,7 +37,7 @@ docker:
 	docker compose -f docker-compose.yml -p "brokerio" up --build -d
 
 .PHONY: docker-dev
-build-dev:
+docker-dev:
 	docker compose -f docker-compose.yml -p "brokerio_dev" up --build -d
 
 .PHONY: db
