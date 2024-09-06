@@ -3,6 +3,11 @@ Development
 
 If you want to contribute to the development of the project, please follow the steps below.
 
+.. :tip:
+
+    You can install BrokerIO in development mode by running ``pip install -e .``, allowing in-place editing of the source code.
+
+
 Prerequisites
 *************
 
@@ -10,28 +15,24 @@ In addition to the packages listed in :doc:`installation <./installation>`, you 
 
 * `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_
 
-Run
-***
+Environment
+***********
 
 The following commands will create a new conda environment and install all required packages:
 
 .. code-block:: shell
 
     conda env create -f environment.yaml
-    conda activate nlp_api
-    conda env update --file environment.yaml --name nlp_api --prune # update environment
+    conda activate brokerio
+    conda env update --file environment.yaml --name brokerio --prune # update environment
 
 To have a fully running development setup run each command in different terminal:
 
-.. code-block:: shell
+.. code-block:: bash
 
-    make docker
-    make broker
+    docker compose -f docker-compose.yml -f docker-dev.yml up arangodb redis
+    python3 -m brokerio broker start
 
-.. note::
-
-    You can also build the environment locally, but the connection to redis might be broken.
-    Use `make ENV=dev build` to get a running local environment.
 
 Test
 ****

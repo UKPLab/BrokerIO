@@ -28,12 +28,12 @@ build_test:
     - docker version
   script:
     - openssl genrsa -out private_key.pem 2048
-    - make ENV=main build
+    - make docker
     - sleep 2
-    - while [ "`docker inspect -f {{.State.Health.Status}} nlp_api_main-arangodb-1`" != "healthy" ]; do sleep 2; done
+    - while [ "`docker inspect -f {{.State.Health.Status}} brokerio-arangodb-1`" != "healthy" ]; do sleep 2; done
     - make ENV=main test-build
-    - docker wait nlp_api_main-docs_asyncapi-1
-    - docker wait nlp_api_main-docs_sphinx-1
+    - docker wait brokerio-docs_asyncapi-1
+    - docker wait brokerio-docs_sphinx-1
     - tar -czvf ${PWD}/doc_api.tar.gz ./docs/html
     - tar -czvf ${PWD}/doc_main.tar.gz ./docs/build
   artifacts:
@@ -56,12 +56,12 @@ deploy-dev:
   script:
     - chmod og= $PEER_RSAKEY
     - *setup-ssh
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git fetch"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git checkout $CI_COMMIT_SHORT_SHA"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git submodule update --init"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make build-dev-clean"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && openssl genrsa -out private_key.pem 2048"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=dev build-dev"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && git fetch"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && git checkout $CI_COMMIT_SHORT_SHA"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && git submodule update --init"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make build-dev-clean"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make key"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && docker compose --env-file .env.dev -f docker-compose.yml -p "brokerio_dev" up --build -d"
   only:
     - dev
 
@@ -72,16 +72,16 @@ deploy-main:
   script:
     - chmod og= $PEER_RSAKEY
     - *setup-ssh
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git fetch"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git checkout $CI_COMMIT_SHORT_SHA"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && git submodule update --init"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make build-clean"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && openssl genrsa -out private_key.pem 2048"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=main build"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && docker wait nlp_api_main-docs_sphinx-1"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && cp -r ./docs/html $DOCS_PATH_ASYNC_API"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && docker wait nlp_api_main-docs_sphinx-1"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && cp -r ./docs/build/html $DOCS_PATH"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && git fetch"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && git checkout $CI_COMMIT_SHORT_SHA"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && git submodule update --init"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make build-clean"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make key"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make docker"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && docker wait brokerio-docs_sphinx-1"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && cp -r ./docs/html $DOCS_PATH_ASYNC_API"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && docker wait brokerio-docs_sphinx-1"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && cp -r ./docs/build/html $DOCS_PATH"
   only:
     - main
 
@@ -92,29 +92,11 @@ stressTest_dev:
   script:
     - chmod og= $PEER_RSAKEY
     - *setup-ssh
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=dev test-stress-dev"
-    - scp -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP:~/nlp_api/test/stress_results.csv stress_results.csv
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && rm test/stress_results.csv"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make test-stress-dev"
+    - scp -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP:~/broker/test/stress_results.csv stress_results.csv
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && rm test/stress_results.csv"
   only:
     - dev
-  artifacts:
-    name: "TestResults"
-    paths:
-      - "stress_results.csv"
-
-stressTest_main:
-  stage: stressTest
-  image: alpine:3.16
-  needs: [ "deploy-main" ]
-  script:
-    - chmod og= $PEER_RSAKEY
-    - *setup-ssh
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && make ENV=main test-stress"
-    - scp -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP:~/nlp_api/test/stress_results.csv stress_results.csv
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd nlp_api && rm test/stress_results.csv"
-
-  only:
-    - main
   artifacts:
     name: "TestResults"
     paths:

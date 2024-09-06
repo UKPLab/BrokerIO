@@ -1,18 +1,16 @@
-FROM python:3.10.8-slim-bullseye
-ARG ENV
-ENV ENV=$ENV
+FROM python:3.12.3-slim-bullseye
 
-# echo build type
-RUN echo "ENV=$ENV"
+# copy and install requirements
+WORKDIR /
+ADD requirements.txt requirements.txt
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
 
-# COPY SERVER CODE
+# copy code and install
 WORKDIR /
 ADD . /broker
 WORKDIR broker
-
-# INSTALL Requirements
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip install .
 
 # Generate private key if not exists
 RUN if [ ! -f /broker/private_key.pem ]; then \
@@ -21,4 +19,4 @@ RUN if [ ! -f /broker/private_key.pem ]; then \
 # Add current dir to python path
 ENV PYTHONPATH="${PYTHONPATH}:/broker"
 
-CMD ["python3", "broker/app.py"]
+CMD ["brokerio", "broker", "start"]

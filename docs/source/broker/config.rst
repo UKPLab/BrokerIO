@@ -1,7 +1,7 @@
 Configuration
 =============
 
-To adapt the broker's behavior to your needs, you can also adapt the ``config.yaml`` file in the broker's root directory.
+To adapt the broker's behavior to your needs, you can also adapt the ``config.yaml`` file in the root directory of the BrokerIO package.
 
 The following options are available:
 

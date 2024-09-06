@@ -1,5 +1,21 @@
 # Broker Changelog
 
+## v.0.4.0
+
+### Added
+
+- nlp_broker is brokerIO now! Allows better integration as python package
+- Python package integration (brokerio) and better support for command line interface
+- Updated skills integration for easier usage
+- Improved documentation and examples 
+- All commands are available in the `brokerio` CLI now
+- Changed Socket.IO Server to AsyncServer (aiohttp) for asynchronous behavior
+
+### Changed
+
+- Update descriptions and documentation 
+- Deleted unused environment variables (moved to command line interface)
+
 ## v.0.3.0 - 2023-12-22
 
 ### Added

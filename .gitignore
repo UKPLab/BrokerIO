@@ -1,9 +1,11 @@
 
 build
+BrokerIO.egg-info
+dist
 
-# nlp
-broker/__pycache__
-broker/**/__pycache__
+brokerio/__pycache__
+brokerio/**/__pycache__
+brokerio/brokerio.egg-info
 
 examples/private_key.pem
 
@@ -15,3 +17,4 @@ docs/html
 test/results.jsonl
 
 private_key.pem
+

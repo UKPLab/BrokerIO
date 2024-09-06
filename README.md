@@ -1,40 +1,63 @@
-# CARE Broker
+# BrokerIO
 
-This repository contains the broker for [CARE](https://github.com/UKPLab/CARE), but could also be used standalone.
-The broker allows running multiple models in parallel and to distribute it via websockets.
+This package contains BrokerIO, originally built for [CARE](https://github.com/UKPLab/CARE), but more and more used
+standalone.
+BrokerIO allows running multiple models in parallel and to distribute skill requests via websockets.
 We currently support several skills out of the box:
 
 - [OpenAI Azure API](https://learn.microsoft.com/en-us/azure/ai-services/openai)
 - [Huggingface Pipeline](https://huggingface.co/docs/transformers/pipeline_tutorial)
-- [Llama.cpp](https://github.com/ggerganov/llama.cpp) through [Python bindings](https://llama-cpp-python.readthedocs.io/en/latest/)
+- [Llama.cpp](https://github.com/ggerganov/llama.cpp)
+  through [Python bindings](https://llama-cpp-python.readthedocs.io/en/latest/)
 - [NLTK Vader Sentiment Analysis](https://www.nltk.org/_modules/nltk/sentiment/vader.html)
+
+The original repository can be found [here](https://github.com/UKPLab/BrokerIO).
+We provide a documentation of BrokerIO [here](https://care.ukp.informatik.tu-darmstadt.de/brokerIO/index.html).
 
 ## Requirements
 
+* [ArangoDB](https://www.arangodb.com/download-major/)
+* [Redis](https://redis.io/download)
 * [Docker](https://docs.docker.com/get-docker/)
-* [GNU Make](https://www.gnu.org/software/make/)
 
-__Note:__ On Windows, you need to install [GnuWin32 Make](http://gnuwin32.sourceforge.net/packages/make.htm) or just run `winget install GnuWin32.Make` and make it executable with `set PATH=%PATH%;C:/Program Files (x86)/GnuWin32/bin`.
+## Quickstart
 
-## Documentation
+Simple run ``pip install brokerio`` to install the package and find out more about it with ``brokerio --help``.
 
-We provide a complete documentation of the broker. It can be built locally or found [here](https://care.ukp.informatik.tu-darmstadt.de/doc_nlp_broker/index.html) of a prebuilt version.
-
-```shell
-make doc
+```bash
+brokerio broker start --db_url "http://localhost:8529" --redis_url "redis://localhost:6379" --port 4852
 ```
 
-After the documentation has been built, it can be found under `docs/build/html/index.html`.
-There is also a description of the asynchronous communication protocol that is used by the broker under `docs/html/index.html`.
+or directly build brokerIO as a service with docker compose (all required databases included):
 
-## Contact 
+```bash
+docker compose -f docker-compose.yml -p "brokerio" up --build -d
+```
+
+## Features
+
+BrokerIO provides a set of features to manage and distribute requests to multiple Skills:
+
+- **Quota System**: Limit the number of requests a client can make
+- **NoSQL Database**: Store the results of the Skills in a NoSQL database (inclusive donation feature)
+- **Authentication**: Secure the access to the BrokerIO API via Role based access control (RBAC)
+- **CLI**: Manage the BrokerIO and the available Skills via the command line
+- **Logging**: Log all requests and responses to the BrokerIO API
+- **Build-in Skills**: Provide a set of build-in Skills to get started
+- **Docker Environment**: Run the BrokerIO in a Docker container
+
+## Contact
 
 _Maintainers:_
 
-* Dennis Zyska (dennis.zyska@tu-darmstadt.de) 
+* Dennis Zyska (dennis.zyska@tu-darmstadt.de)
+
+_Contributors:_
+
 * Nils Dycke (nils.dycke@tu-darmstadt.de)
 
-Don't hesitate to send us an e-mail or report an issue, if something is broken (and it shouldn't be) or if you have further questions.
+Don't hesitate to send us an e-mail or report an issue, if something is broken (and it shouldn't be) or if you have
+further questions.
 
 https://www.ukp.tu-darmstadt.de \
 https://www.tu-darmstadt.de
@@ -65,5 +88,6 @@ If you use this software, please cite the following paper:
 
 ### Disclaimer
 
-This repository contains experimental software and is published for the sole purpose of giving additional background details on the respective publication.\
+This repository contains experimental software and is published for the sole purpose of giving additional background
+details on the respective publication.\
 The software is only tested on unix systems and is not guaranteed to work on other operating systems.

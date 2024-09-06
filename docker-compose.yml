@@ -4,8 +4,6 @@ services:
     build:
       context: .
       dockerfile: docs/Dockerfile
-      args:
-        ENV: ${ENV}
     image: broker_docs_sphinx
     volumes:
       - ./docs:/docs
@@ -22,8 +20,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        ENV: ${ENV}
     command: bash
   broker:
     image: broker_image
@@ -34,9 +30,7 @@ services:
       - redis
       - arangodb
       - broker_bash
-    command: python3 broker/app.py
-    expose:
-      - ${BROKER_PORT}
+    command: brokerio broker start --db_url "http://arangodb:8529" --db_name "broker" --db_user root --db_pass secret --port ${BROKER_PORT} --redis_url "redis://redis:6379"
     ports:
       - ${BROKER_PORT}:${BROKER_PORT}
     restart: unless-stopped
@@ -49,7 +43,7 @@ services:
       - broker
       - redis
       - broker_bash
-    command: python3 main.py
+    command: brokerio guard --broker_url http://broker:${BROKER_PORT}
   redis:
     image: redis
     restart: unless-stopped
@@ -64,5 +58,5 @@ services:
       timeout: 10s
       retries: 5
     environment:
-      - ARANGO_ROOT_PASSWORD=${ARANGODB_ROOT_PASSWORD}
+      - ARANGO_ROOT_PASSWORD=secret
       - ARANGO_NO_AUTH=1

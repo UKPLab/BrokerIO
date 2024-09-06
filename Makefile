@@ -11,45 +11,67 @@ default: help
 .PHONY: help
 help:
 	@echo "make clean             	Delete development files"
-	@echo "make guard             	Start guard"
-	@echo "make scrub             	Scrub database"
-	@echo "make init              	Initialize keys"
-	@echo "make stress            	Run stress test"
-	@echo "make broker              Start broker"
-	@echo "make dev               	Start broker in development environment"
-	@echo "make docker		  	    Start docker images for local development"
+	@echo "make docker      		Build all docker images - complete environment"
+	@echo "make build 		   	    Build the python package"
+	@echo "make build-wheel			Build the python package as a wheel"
+	@echo "make build-sdist			Build the python package as a source distribution"
+	@echo "make db			    	Start docker containers for db"
+	@echo "make check				Run a twine check on the package"
+	@echo "make upload				Upload the package to pypi"
+	@echo "make key	            	Generate private key"
 	@echo "make test				Run tests"
+	@echo "make stress            	Run stress test"
 	@echo "make doc 			 	Generate documentation"
-	@echo "make build      			Build all docker images - complete environment"
 	@echo "make env_create			Create a virtual environment"
-	@echo "make env_activate		Activate the virtual environment"
 	@echo "make env_update			Update the virtual environment"
 
-.PHONY: init
-init:
-	openssl genrsa -out private_key.pem 1024
-	python3 client.py broker init || echo "IGNORING ERROR"
+.PHONY:key
+key:
+	openssl genrsa -out private_key.pem 2048
 
-.PHONY: scrub
-scrub:
-	python3 client.py broker scrub
+.PHONY: build
+build:
+	python3 -m build
 
-.PHONY: guard
-guard:
-	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 ./main.py
+.PHONY: build-sdist
+build-sdist:
+	python3 -m build --sdist
+
+.PHONY: build-wheel
+build-wheel:
+	python3 -m build --wheel
+
+.PHONY: check
+check:
+	twine check dist/*
+
+.PHONY: upload
+upload:
+	twine upload dist/*
+
+.PHONY: clean
+clean:
+	rm -f private_key.pem
+	rm -rf BrokerIO.egg-info
+	rm -rf build
+	docker compose rm -f -s -v
+	docker network rm brokerio_default || echo "IGNORING ERROR"
 
 .PHONY: docker
 docker:
-	docker compose -f docker-compose.yml -f docker-dev.yml up arangodb
+	docker compose -f docker-compose.yml -p "brokerio" up --build -d
 
-.PHONY: dev
-dev:
-	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 ./broker/app.py --dev
+.PHONY: docker-dev
+docker-dev:
+	docker compose --env-file .env.dev -f docker-compose.yml -p "brokerio_dev" up --build -d
+
+.PHONY: db
+db:
+	docker compose -f docker-compose.yml -f docker-dev.yml up arangodb redis
 
 .PHONY: test
 test:
 	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 -u -m unittest test.test_broker.TestBroker
-
 
 .PHONY: test_all
 test_all:
@@ -65,60 +87,39 @@ test-cli:
 
 .PHONY: test-build
 test-build:
-	docker exec nlp_api_main-broker-1 python3 -u -m unittest test.test_broker.TestBroker
+	docker exec --env-file .env.main brokerio-broker-1 python3 -u -m unittest test.test_broker.TestBroker
 
 .PHONY: test-build-dev
 test-build-dev:
-	docker exec nlp_api_dev-broker-1 python3 -u -m unittest test.test_broker.TestBroker
+	docker exec --env-file .env.dev brokerio_dev-broker-1 python3 -u -m unittest test.test_broker.TestBroker
 
 .PHONY: test-stress
 test-stress:
-	docker exec nlp_api_main-broker-1 python3 -u -m unittest test.test_broker.TestBroker.stressTest
-	docker cp nlp_api_main-broker-1:/tmp/stress_results.csv ./test/stress_results.csv
+	docker exec --env-file .env.main brokerio-broker-1 python3 -u -m unittest test.test_broker.TestBroker.stressTest
+	docker cp brokerio-broker-1:/tmp/stress_results.csv ./test/stress_results.csv
 
 .PHONY: test-stress-dev
 test-stress-dev:
-	docker exec nlp_api_dev-broker-1 python3 -u -m unittest test.test_broker.TestBroker.stressTest
-	docker cp nlp_api_dev-broker-1:/tmp/stress_results.csv ./test/stress_results.csv
-
-.PHONY: broker
-broker:
-	export PYTHONPATH="${PYTHONPATH}:${CURDIR}" && python3 ./broker/app.py
-
-.PHONY: build
-build:
-	docker compose -f docker-compose.yml -p "nlp_api_main" up --build -d
-
-.PHONY: build-dev
-build-dev:
-	docker compose -f docker-compose.yml -p "nlp_api_dev" up --build -d
+	docker exec --env-file .env.dev brokerio_dev-broker-1 python3 -u -m unittest test.test_broker.TestBroker.stressTest
+	docker cp brokerio_dev-broker-1:/tmp/stress_results.csv ./test/stress_results.csv
 
 .PHONY: build-dev-clean
 build-dev-clean:
-	docker compose -p "nlp_api_dev" rm -f -s -v
-	docker network rm nlp_api_dev_default || echo "IGNORING ERROR"
+	docker compose -p "brokerio_dev" rm -f -s -v
+	docker network rm brokerio_dev_default || echo "IGNORING ERROR"
 
 .PHONY: build-clean
 build-clean: clean
-	docker compose -p "nlp_api_main" rm -f -s -v
-	docker network rm nlp_api_main_default || echo "IGNORING ERROR"
-
-.PHONY: clean
-clean:
-	docker compose rm -f -s -v
-	docker network rm nlp_api_default || echo "IGNORING ERROR"
+	docker compose -p "brokerio" rm -f -s -v
+	docker network rm brokerio_default || echo "IGNORING ERROR"
 
 .PHONY: env_create
 env_create:
 	conda env create -f environment.yaml
 
-.PHONY: env_activate
-env_activate:
-	conda activate nlp_api
-
 .PHONY: env_update
 env_update:
-	conda env update --file environment.yaml --name nlp_api --prune
+	conda env update --file environment.yaml --name brokerio --prune
 
 .PHONY: doc
 doc: doc_asyncapi doc_sphinx

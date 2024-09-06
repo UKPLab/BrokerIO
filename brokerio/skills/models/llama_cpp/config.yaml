@@ -1,0 +1,6 @@
+name: llama_cpp
+desc: Llama.cpp client
+template: simpleSkill
+tag: broker_skill_llama_cpp
+author: Dennis Zyska
+year: 2024

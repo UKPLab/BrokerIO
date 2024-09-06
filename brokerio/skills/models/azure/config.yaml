@@ -1,0 +1,6 @@
+name: azure
+desc: Open AI azure client
+template: simpleSkill
+tag: broker_skill_azure_openai
+author: Dennis Zyska
+year: 2024

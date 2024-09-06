@@ -3,19 +3,33 @@ Quickstart Guide
 
 This guide will help you get started with the Broker.
 
-| You can either install the Broker on your local machine or use the Broker as a service.
+| You can either install the BrokerIO on your local machine via a pip or use the Broker as a service in Docker.
 | For a complete installation, please follow the instructions in :doc:`Installation <./installation>`.
 
-.. note::
+Quick and dirty
+---------------
 
-    Please be aware that the Broker is a websocket API based on `Socket.IO <https://socket.io/>`_ and therefore requires a websocket client to connect to it.
-    The API is not accessible through a RESTful interface!
+To install the BrokerIO on your local machine, you can use the following command in the root directory of the repository:
 
+.. code-block:: bash
+
+    pip install .
+    brokerio broker init
+    brokerio broker start
+
+for a Docker installation, you can use the following command:
+
+.. code-block:: bash
+
+    make docker
+
+BrokerIO is available under `http://localhost:4852` now.
 
 Sequence Diagram
 ----------------
 
-To give you a better understanding of the communication between the Broker, Skills and Clients, we provide a sequence diagram of the communication:
+To give you a better understanding of the communication between the **Broker**, **Skills** and **Clients**, we provide a sequence diagram of the communication.
+**Skills** are the models, features or tools that are provided by the **Broker** and that can be executed by the **Clients**.
 
 .. image:: ./sequence.drawio.svg
    :width: 80%

@@ -1,3 +1,4 @@
+import argparse
 import json
 import logging
 import multiprocessing as mp
@@ -5,14 +6,13 @@ import os
 import time
 import unittest
 
-from dotenv import load_dotenv
-
-from broker import init_logging, load_config
-from broker.app import init
-from broker.db import connect_db
-from broker.utils import scrub_job
-from broker.utils.Guard import Guard
-from broker.client import Client
+from brokerio import init_logging, load_config
+from brokerio.app import init, keys_init
+from brokerio.db import connect_db
+from brokerio.utils import scrub_job
+from brokerio.guard.Guard import Guard
+from brokerio.client import Client
+from brokerio.cli import parse_args
 
 
 class TestBroker(unittest.TestCase):
@@ -27,38 +27,48 @@ class TestBroker(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        if os.getenv("TEST_URL", None) is None:
-            if os.getenv("ENV", None) is not None:
-                load_dotenv(dotenv_path=".env.{}".format(os.getenv("ENV", None)))
-            else:
-                load_dotenv(dotenv_path=".env")
+
+        args, parser, cli_interfaces = parse_args([
+            "broker", "start",
+            "--db_url", "http://{}:{}".format(os.getenv("ARANGODB_HOST", "localhost"),
+                                            os.getenv("ARANGODB_PORT", "8529")),
+            "--db_name", os.getenv("ARANGODB_DB", "broker"),
+            "--db_user", os.getenv("ARANGODB_USER", "root"),
+            "--db_pass", os.getenv("ARANGODB_PASSWORD", "secure"),
+            "--port", "4852"]
+        )
+        cls._args = args
 
         logger = init_logging(name="Unittest", level=logging.getLevelName(os.getenv("TEST_LOGGING_LEVEL", "INFO")))
         cls._logger = logger
 
+        logger.info("Arguments: {}".format(args))
+
         logger.info("Load config ...")
-        config = load_config()
+        config = load_config(args.config_file)
         cls._config = config
 
+        logger.info("Make sure the private key exists ...")
+        keys_init(args)
+
         logger.info("Connect to db...")
-        logger.info("http://{}:{}".format(os.getenv("ARANGODB_HOST", "localhost"), os.getenv("ARANGODB_PORT", "8529")))
-        cls._db = connect_db(config, None)
+        cls._db = connect_db(args, config, None)
 
         logger.info("Starting broker ...")
-        logger.info("Broker URL: {}".format(os.getenv("TEST_URL")))
-        logger.info("Broker Token: {}".format(os.getenv("TEST_TOKEN")))
+        cls.test_url = os.getenv("TEST_URL", "http://127.0.0.1:4852")
+        logger.info("Broker URL: {}".format(cls.test_url))
         logger.info("Broker Skill: {}".format("test_skill"))
-        logger.info("Start Broker? {}".format(os.getenv("TEST_START_BROKER")))
-        if int(os.getenv("TEST_START_BROKER")) == 0:
+        logger.info("Start Broker? {}".format(os.getenv("TEST_START_BROKER", 1)))
+        if int(os.getenv("TEST_START_BROKER", 1)) == 0:
             logger.info("Skip creating broker.")
         else:
             ctx = mp.get_context('spawn')
-            broker = ctx.Process(target=init, args=())
+            broker = ctx.Process(target=init, args=(args,))
             broker.start()
             cls._broker = broker
 
         logger.info("Starting response container ...")
-        container = Client(logger=logger, url=os.getenv("TEST_URL"))
+        container = Client(logger=logger, url=cls.test_url)
         ready = container.start()
         if not ready:
             logger.error("Container not ready by time. Exiting ...")
@@ -71,7 +81,7 @@ class TestBroker(unittest.TestCase):
         cls._container = container
 
         logger.info("Starting client for testing that the environment is working ...")
-        client = Client(logger=logger, url=os.getenv("TEST_URL"))
+        client = Client(logger=logger, url=cls.test_url)
         ready = client.start()
         if not ready:
             logger.error("Environment not ready by time. Exiting ...")
@@ -89,15 +99,16 @@ class TestBroker(unittest.TestCase):
         cls._container.stop()
 
         cls._logger.info("Stopping broker ...")
-        if int(os.getenv("TEST_START_BROKER")) == 0:
+        if int(os.getenv("TEST_START_BROKER", 1)) == 0:
             cls._logger.info("Skip stopping broker.")
         else:
             cls._broker.terminate()
             cls._broker.join()
 
+
     def setUp(self) -> None:
         self._logger.info("Start new client ...")
-        self.client = Client(os.getenv("TEST_URL"), logger=self._logger)
+        self.client = Client(self.test_url, logger=self._logger)
         unittest.skipIf(not self.client.start(), "Environment not ready by time. Skipping ...")
         time.sleep(0.5)
         self.client.clear()
@@ -203,19 +214,22 @@ class TestBroker(unittest.TestCase):
         :return:
         """
         self._logger.info("Start test guard ...")
-        self._logger.info("Start client ...")
-        ctx = mp.get_context('spawn')
 
-        guard = Guard(os.getenv("TEST_URL"))
-        client = ctx.Process(target=guard.run,
-                             args=())
-        client.start()
+        guard = Guard(self.test_url)
+        guard.run(print_all=False)
 
-        # wait a second
-        time.sleep(1)
-        self.assertTrue(client.is_alive())
-        client.terminate()
-        client.join()
+        # wait until is running, with timeout
+        sleep = 0
+        while not guard.client.is_alive() and sleep < 5:
+            time.sleep(1)
+            sleep += 1
+
+        self.assertTrue(guard.client.is_alive())
+
+        self._logger.info("Stop test guard ...")
+        guard.client.terminate()
+        guard.client.join()
+        self.assertFalse(guard.client.is_alive())
 
     def stressTest(self):
         """
@@ -281,7 +295,7 @@ class TestBroker(unittest.TestCase):
                     # start container
                     while len(containers) < container_i:
                         self._logger.info("Start container {} ...".format(len(containers) + 1))
-                        container = Client(os.getenv("TEST_URL"), logger=self._logger,
+                        container = Client(self.test_url, logger=self._logger,
                                            name="Container_{}".format(len(containers) + 1))
                         container.put({"event": "skillRegister", "data": {
                             "name": "skill_test"
@@ -292,7 +306,7 @@ class TestBroker(unittest.TestCase):
                     # start client
                     while len(clients) < client_i:
                         self._logger.info("Start client {} ...".format(len(clients) + 1))
-                        client = Client(os.getenv("TEST_URL"), logger=self._logger,
+                        client = Client(self.test_url, logger=self._logger,
                                         name="Client_{}".format(len(clients) + 1))
                         client.start()
                         auth = client.auth()
@@ -342,7 +356,7 @@ class TestBroker(unittest.TestCase):
             total_requests += 1
             self.client.put({'event': "authRequest", 'data': "test"})
 
-        timeout = time.perf_counter() + 2
+        timeout = time.perf_counter() + 5
         messages = 0
 
         while time.perf_counter() < timeout:
@@ -365,7 +379,7 @@ class TestBroker(unittest.TestCase):
                                                            'data': time.perf_counter()}})
 
         self._logger.info("Sending request in between ...")
-        time.sleep(0.01)
+        time.sleep(0.05)
         self.client.put({"event": 'skillRequest', "data": {'id': "between", 'name': "test_skill",
                                                            'config': {"return_stats": True},
                                                            'data': time.perf_counter()}})
@@ -432,7 +446,7 @@ class TestBroker(unittest.TestCase):
             },
             "cleanDbOnStart": False,
         }
-        scrub_job(overwrite_config=scrub_config)
+        scrub_job(self._args, overwrite_config=scrub_config)
 
         cursor = self._db.sync_db.aql.execute(aql_query, count=True)
         return self.assertEqual(cursor.count(), 1)
@@ -445,7 +459,7 @@ class TestBroker(unittest.TestCase):
         self._logger.info("Start test auth ...")
 
         self._logger.info("Start container for auth")
-        client = Client(logger=self._logger, url=os.getenv("TEST_URL"))
+        client = Client(logger=self._logger, url=self.test_url)
         client.start()
         auth = client.auth()
         client.stop()
@@ -462,7 +476,7 @@ class TestBroker(unittest.TestCase):
         self._logger.info("Start test roles ...")
 
         self._logger.info("Start container with user role")
-        container = Client(os.getenv("TEST_URL"), logger=self._logger,
+        container = Client(self.test_url, logger=self._logger,
                            name="Container_Roles")
         container.put({"event": "skillRegister", "data": {
             "name": "skill_role_test", "roles": ["user"]
@@ -470,7 +484,7 @@ class TestBroker(unittest.TestCase):
         container.start()
 
         # get skills
-        client = Client(logger=self._logger, url=os.getenv("TEST_URL"))
+        client = Client(logger=self._logger, url=self.test_url)
         client.start()
 
         client.wait_for_event("skillUpdate")
@@ -587,7 +601,7 @@ class TestBroker(unittest.TestCase):
         containers = []
         for i in range(1, 3, 1):
             self._logger.info("Start container {} ...".format(len(containers) + 1))
-            container = Client(os.getenv("TEST_URL"), logger=self._logger,
+            container = Client(self.test_url, logger=self._logger,
                                name="Container_{}".format(len(containers) + 1))
             container.start()
             container.put({"event": "skillRegister", "data": {
@@ -602,7 +616,7 @@ class TestBroker(unittest.TestCase):
         self.assertEqual(next(skill for skill in self.client.skills if skill['name'] == "multiple_skill_test")['nodes'],
                          2)
 
-        container = Client(os.getenv("TEST_URL"), logger=self._logger, name="Container_{}".format(len(containers) + 1))
+        container = Client(self.test_url, logger=self._logger, name="Container_{}".format(len(containers) + 1))
         container.put({"event": "skillRegister", "data": {
             "name": "multiple_skill_test", "anotherConfig": "fail"
         }})

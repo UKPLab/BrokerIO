@@ -2,49 +2,45 @@ Command Line Interface
 ======================
 
 With the client it is possible to work with the broker during the command line.
-You can run it by simple execute ``python3 cli.py --help``.
+Manually install it with `pip install .` in the root directory of the project.
+You can run it by simple execute ``brokerio --help``.
 
-For using the client you need to install the python environment. We recommend to use conda for this
-(see `Miniconda Install <https://docs.conda.io/projects/miniconda/en/latest/miniconda-install.html>`_).
-After installing conda, you can use the following command to set up the environment:
-
-.. code-block:: bash
-
-    conda env create -f environment.yml
-    conda env update --file environment.yaml --name nlp_api --prune     # for updating the environment
-    conda activate nlp_api
+If you want to also use the skills CLI, you need to install the broker with the skills option ``pip install .[skills]``.
 
 .. tip::
 
-    # TODO add docker instructions
-    If you run on docker use ``docker exec -it <container_name> python3 broker/app.py --help``.
+    For development, you can also use the command line interface with the python module directly ``python3 -m brokerio --help``.
+    Therefore, you need to install the conda environment, see :doc:`Development </broker/development>`
+
+
+.. tip::
+
+    If you run Socket.IO as a service, you can use the CLI inside docker with ``docker exec -it <container_name> python3 -m brokerio --help``.
 
 The following parameters are available:
 
 * ``-h`` or ``--help``: Show the help message.
 * ``broker``: Submenu for broker commands.
+* ``guard``: Submenu for guard commands.
 * ``skills``: Submenu for skill commands.
 
-Broker
-------
+Broker CLI
+----------
 
 This will be in the future the main interface for the broker.
-Currently is is possible to use it with ``python3 broker/app.py --help``.
+Currently is is possible to use it with ``python3 -m brokerio broker --help``.
 
 * ``-h`` or ``--help``: Show the help message.
 * ``scrub``: Start :doc:`scrub <db>` job for the database.
 * ``init``: Set the current system admins' public key.
 * ``assign``: Assign a role to a user (with the user's public key).
 
-.. warning::
 
-    The commands are currently only available with ``python3 broker/app.py --help``.
+Skills CLI
+----------
 
-
-Skills
-------
-
-With the skills submenu you can publish several integrated models to the broker (see :doc:`available models </models/models>` for a list). The following commands are available:
+With the skills submenu you can publish several integrated models to the broker (see :doc:`available models </models/models>` for a list).
+The following commands are available:
 
 * ``-h`` or ``--help``: Show the help message.
 * ``list``: List all available skills.
