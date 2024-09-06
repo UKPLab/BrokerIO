@@ -28,7 +28,7 @@ build_test:
     - docker version
   script:
     - openssl genrsa -out private_key.pem 2048
-    - make build
+    - make docker
     - sleep 2
     - while [ "`docker inspect -f {{.State.Health.Status}} brokerio-arangodb-1`" != "healthy" ]; do sleep 2; done
     - make ENV=main test-build
@@ -61,7 +61,7 @@ deploy-dev:
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && git submodule update --init"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make build-dev-clean"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make key"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make ENV=dev build-dev"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make ENV=dev docker-dev"
   only:
     - dev
 
@@ -77,7 +77,7 @@ deploy-main:
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && git submodule update --init"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make build-clean"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make key"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make build"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make docker"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && docker wait brokerio-docs_sphinx-1"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && cp -r ./docs/html $DOCS_PATH_ASYNC_API"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && docker wait brokerio-docs_sphinx-1"
