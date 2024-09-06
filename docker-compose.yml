@@ -4,8 +4,6 @@ services:
     build:
       context: .
       dockerfile: docs/Dockerfile
-      args:
-        ENV: ${ENV}
     image: broker_docs_sphinx
     volumes:
       - ./docs:/docs
@@ -22,8 +20,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        ENV: ${ENV}
     command: bash
   broker:
     image: broker_image

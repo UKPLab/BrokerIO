@@ -1,9 +1,9 @@
 aiohttp>=3.10.5
-redis>=4.6.0
-python-socketio>=5.11.1
-pyyaml>=6.0
+redis>=5.0.8
+python-socketio>=5.11.4
+pyyaml>=6.0.2
 python-arango>=8.1.0
-pycryptodome>=3.18.0
-urllib3[secure]>=1.26.12
-numpy>=1.26.4
-psutil>=5.8.0
+pycryptodome>=3.20.0
+urllib3>=2.2.2
+numpy>=2.1.1
+psutil>=6.0.0

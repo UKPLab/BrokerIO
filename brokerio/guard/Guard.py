@@ -21,10 +21,11 @@ class Guard:
     def run(self):
         self.logger.info("Start guard ...")
         ctx = mp.get_context('spawn')
-        self.client_queue = mp.Manager().Queue(12)
+        client_queue = mp.Manager().Queue(12)
         message_queue = mp.Manager().Queue(12)
         self.client = ctx.Process(target=simple_client, args=("Guard",
-                                                              self.url, self.client_queue, message_queue))
+                                                              self.url, client_queue, message_queue))
+        self.client_queue = client_queue
         self.client.start()
 
     def join(self):

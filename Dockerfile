@@ -1,9 +1,4 @@
 FROM python:3.12.3-slim-bullseye
-ARG ENV
-ENV ENV=$ENV
-
-# echo build type
-RUN echo "ENV=$ENV"
 
 # copy and install requirements
 WORKDIR /

@@ -6,8 +6,6 @@ import os
 import time
 import unittest
 
-from dotenv import load_dotenv
-
 from brokerio import init_logging, load_config
 from brokerio.app import init, keys_init
 from brokerio.db import connect_db
@@ -30,13 +28,6 @@ class TestBroker(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        # For the tests we still use the .env files
-        if os.getenv("TEST_URL", None) is None:
-            if os.getenv("ENV", None) is not None:
-                load_dotenv(dotenv_path=".env.{}".format(os.getenv("ENV", None)))
-            else:
-                load_dotenv(dotenv_path=".env")
-
         args, parser, cli_interfaces = parse_args([
             "broker", "start",
             "--db_url", "http://{}:{}".format(os.getenv("ARANGODB_HOST", "localhost"),
@@ -50,6 +41,8 @@ class TestBroker(unittest.TestCase):
 
         logger = init_logging(name="Unittest", level=logging.getLevelName(os.getenv("TEST_LOGGING_LEVEL", "INFO")))
         cls._logger = logger
+
+        logger.info("Arguments: {}".format(args))
 
         logger.info("Load config ...")
         config = load_config(args.config_file)

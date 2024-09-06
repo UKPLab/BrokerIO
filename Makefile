@@ -62,20 +62,20 @@ test-cli:
 
 .PHONY: test-build
 test-build:
-	docker exec brokerio-broker-1 python3 -u -m unittest test.test_broker.TestBroker
+	docker exec --env-file .env.main brokerio-broker-1 python3 -u -m unittest test.test_broker.TestBroker
 
 .PHONY: test-build-dev
 test-build-dev:
-	docker exec brokerio_dev-broker-1 python3 -u -m unittest test.test_broker.TestBroker
+	docker exec --env-file .env.dev brokerio_dev-broker-1 python3 -u -m unittest test.test_broker.TestBroker
 
 .PHONY: test-stress
 test-stress:
-	docker exec brokerio-broker-1 python3 -u -m unittest test.test_broker.TestBroker.stressTest
+	docker exec --env-file .env.main brokerio-broker-1 python3 -u -m unittest test.test_broker.TestBroker.stressTest
 	docker cp brokerio-broker-1:/tmp/stress_results.csv ./test/stress_results.csv
 
 .PHONY: test-stress-dev
 test-stress-dev:
-	docker exec brokerio_dev-broker-1 python3 -u -m unittest test.test_broker.TestBroker.stressTest
+	docker exec --env-file .env.dev brokerio_dev-broker-1 python3 -u -m unittest test.test_broker.TestBroker.stressTest
 	docker cp brokerio_dev-broker-1:/tmp/stress_results.csv ./test/stress_results.csv
 
 .PHONY: build-dev-clean
