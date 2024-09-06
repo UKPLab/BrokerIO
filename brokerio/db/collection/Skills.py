@@ -96,9 +96,7 @@ class Skills(Collection):
         :return:
         """
         all_skills = self.get_skills(filter_role=role, with_config=with_config)
-
-        if all_skills:
-            await self.socketio.emit("skillUpdate", all_skills, **kwargs)
+        await self.socketio.emit("skillUpdate", all_skills, **kwargs)
 
     def get_node(self, sid, name):
         """

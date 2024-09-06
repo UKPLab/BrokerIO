@@ -18,17 +18,17 @@ class Guard:
         self.client = None
         self.client_queue = None
 
-    def run(self):
+    def run(self, print_all=True):
         self.logger.info("Start guard ...")
         ctx = mp.get_context('spawn')
-        client_queue = mp.Manager().Queue(12)
-        message_queue = mp.Manager().Queue(12)
+        client_queue = mp.Manager().Queue(200)
+        message_queue = mp.Manager().Queue(200)
         self.client = ctx.Process(target=simple_client, args=("Guard",
                                                               self.url, client_queue, message_queue))
         self.client_queue = client_queue
         self.client.start()
 
-    def join(self):
-        while True:
-            message = self.client_queue.get()
-            self.logger.info("Guard received message: {}".format(message))
+        if print_all:
+            while True:
+                message = self.client_queue.get()
+                self.logger.info("Guard received message: {}".format(message))

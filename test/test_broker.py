@@ -216,7 +216,7 @@ class TestBroker(unittest.TestCase):
         self._logger.info("Start test guard ...")
 
         guard = Guard(self.test_url)
-        guard.run()
+        guard.run(print_all=False)
 
         # wait until is running, with timeout
         sleep = 0

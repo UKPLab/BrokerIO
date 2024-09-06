@@ -50,7 +50,7 @@ def init(args):
 
     # socketio
     @sio.on("connect")
-    async def connect(sid, wsgi):
+    async def connect(sid, wsgi, data=None):
         """
         Example connection event. Upon connection on "/" the sid is loaded, stored in the session object
         and the connection is added to the room of that SID to enable an e2e connection.

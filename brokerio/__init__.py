@@ -4,7 +4,7 @@ import os
 import yaml
 
 
-def init_logging(name=None, level=logging.INFO):
+def init_logging(name=None, level=logging.DEBUG):
     if name is None:
         logger = logging.getLogger()
     else:
