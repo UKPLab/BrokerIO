@@ -12,7 +12,7 @@ We currently support several skills out of the box:
 - [NLTK Vader Sentiment Analysis](https://www.nltk.org/_modules/nltk/sentiment/vader.html)
 
 The original repository can be found [here](https://github.com/UKPLab/BrokerIO).
-We provide a documentation of BrokerIO [here](https://care.ukp.informatik.tu-darmstadt.de/doc_nlp_broker/index.html).
+We provide a documentation of BrokerIO [here](https://care.ukp.informatik.tu-darmstadt.de/brokerIO/index.html).
 
 ## Requirements
 
