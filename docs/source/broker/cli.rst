@@ -5,6 +5,8 @@ With the client it is possible to work with the broker during the command line.
 Manually install it with `pip install .` in the root directory of the project.
 You can run it by simple execute ``brokerio --help``.
 
+If you want to also use the skills CLI, you need to install the broker with the skills option ``pip install .[skills]``.
+
 .. tip::
 
     For development, you can also use the command line interface with the python module directly ``python3 -m brokerio --help``.
@@ -13,8 +15,7 @@ You can run it by simple execute ``brokerio --help``.
 
 .. tip::
 
-    # TODO add docker instructions
-    If you run on docker use ``docker exec -it <container_name> python3 -m brokerio --help``.
+    If you run Socket.IO as a service, you can use the CLI inside docker with ``docker exec -it <container_name> python3 -m brokerio --help``.
 
 The following parameters are available:
 

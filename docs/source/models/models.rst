@@ -2,7 +2,9 @@ Available models
 ================
 
 The broker also provides some basic models that can be published as a skill.
-The models can be published via the CLI client :doc:`CLI </broker/client>`.
+The models can be published via the CLI client :doc:`CLI </broker/cli>`.
+
+If you want to run models over the CLI, you need to install the broker with the skills option ``pip install .[skills]``.
 
 .. tip::
 

@@ -3,17 +3,18 @@
 Author: Dennis Zyska
 """
 import argparse
+import importlib.util
 import logging
+import os
 import pkgutil
 import sys
-import importlib.util
 
 import brokerio.cli.interfaces
 from brokerio.cli.interfaces.BrokerCLI import BrokerCLI
 from .CLI import CLI
 from .CLI import register_client_module
 from .. import init_logging
-import os
+
 
 class Colors:
     HEADER = '\033[95m'
@@ -52,6 +53,11 @@ def parse_args(args):
 
     for interface in cli_interfaces:
         _parser = subparser.add_parser(interface["module"].name, help=interface["module"].help, add_help=False)
+        if interface["module"].name == 'skills':
+            # check first if pip docker is available
+            if 'docker' not in sys.modules and (spec := importlib.util.find_spec('docker')) is None:
+                continue
+
         interface["module"].arg_parser(_parser)
         interface["parser"] = _parser
 

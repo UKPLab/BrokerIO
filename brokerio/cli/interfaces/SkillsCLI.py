@@ -1,6 +1,7 @@
+import importlib.util
 import os
 import pkgutil
-import importlib.util
+
 import brokerio.skills.models
 from brokerio.cli import CLI, Colors
 from brokerio.skills import load_config
@@ -14,7 +15,6 @@ def load_skills(path_list):
     skills = {}
     for importer, modname, ispkg in pkgutil.iter_modules(path_list, prefix=''):
         if ispkg:
-
             # get module
             module_path = os.path.join(importer.path, modname)
             spec = importlib.util.spec_from_file_location(modname, module_path + "/Model.py")
@@ -56,17 +56,18 @@ class SkillsCLI(CLI):
 
     @staticmethod
     def arg_parser(_parser):
-        #_parser.add_argument('--skill_dir', help="Define an additional path for BrokerIO skill packages", type=str,
+
+        # _parser.add_argument('--skill_dir', help="Define an additional path for BrokerIO skill packages", type=str,
         #                     default="")
         _parser.add_argument('--help', help="Show help", action='store_true')
 
-        #skill_dir = _parser.parse_known_args()[0].skill_dir
+        # skill_dir = _parser.parse_known_args()[0].skill_dir
 
         model_parser = _parser.add_subparsers(dest='skill_command', help="Commands for managing skills")
         parser_model_list = model_parser.add_parser('list', help="List available skills")
 
         skill_paths = [brokerio.skills.models.__path__[0]]
-        #if skill_dir != "":
+        # if skill_dir != "":
         #    skill_paths.append(skill_dir)
         skills = load_skills(skill_paths)
 
@@ -106,7 +107,7 @@ class SkillsCLI(CLI):
     def parse(self, args):
 
         skill_paths = [brokerio.skills.models.__path__[0]]
-        #if args.skill_dir != "":
+        # if args.skill_dir != "":
         #    skill_paths.append(args.skill_dir)
         skills = load_skills(skill_paths)
 
