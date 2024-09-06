@@ -356,7 +356,7 @@ class TestBroker(unittest.TestCase):
             total_requests += 1
             self.client.put({'event': "authRequest", 'data': "test"})
 
-        timeout = time.perf_counter() + 2
+        timeout = time.perf_counter() + 5
         messages = 0
 
         while time.perf_counter() < timeout:

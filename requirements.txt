@@ -1,6 +1,7 @@
 aiohttp>=3.10.5
 redis>=5.0.8
 python-socketio>=5.11.4
+python-socketio[client]>=5.11.4
 pyyaml>=6.0.2
 python-arango>=8.1.0
 pycryptodome>=3.20.0
