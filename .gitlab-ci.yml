@@ -61,7 +61,7 @@ deploy-dev:
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && git submodule update --init"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make build-dev-clean"
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make key"
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make docker-dev"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && docker compose --env-file .env.dev -f docker-compose.yml -p "brokerio_dev" up --build -d"
   only:
     - dev
 
@@ -92,7 +92,7 @@ stressTest_dev:
   script:
     - chmod og= $PEER_RSAKEY
     - *setup-ssh
-    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make ENV=dev test-stress-dev"
+    - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && make test-stress-dev"
     - scp -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP:~/broker/test/stress_results.csv stress_results.csv
     - ssh -i $PEER_RSAKEY $PEER_SERVER_USER@$PEER_SERVER_IP "cd broker && rm test/stress_results.csv"
   only:
