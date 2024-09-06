@@ -32,14 +32,12 @@ class Request(Socket):
             # get a node that provides this skill
             node = self.db.skills.get_node(sid, data["name"])
             if node is None:
-                await self.socketio.emit("error", {"id": data['id'] if 'id' in data else None, "code": 200},
-                                   to=sid)
+                await self.socketio.emit("error", {"id": data['id'] if 'id' in data else None, "code": 200}, to=sid)
             else:
                 # check if the client has enough quota to run this job
                 reserve_quota = np.random.randint(1000000, 2 ** 31 - 1)
                 if self.db.clients.quota(sid, append=reserve_quota, is_job=True):
-                    await self.socketio.emit("error", {"id": data['id'] if 'id' in data else None, "code": 101},
-                                       to=sid)
+                    await self.socketio.emit("error", {"id": data['id'] if 'id' in data else None, "code": 101}, to=sid)
                     return
 
                 task_id = await self.db.tasks.create(sid, node, data)
