@@ -15,7 +15,7 @@ RUN pip install -r requirements.txt
 WORKDIR /
 ADD . /broker
 WORKDIR broker
-RUN pip install .
+RUN pip install .[test]
 
 # Generate private key if not exists
 RUN if [ ! -f /broker/private_key.pem ]; then \
