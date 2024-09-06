@@ -55,11 +55,11 @@ class TestBroker(unittest.TestCase):
         cls._db = connect_db(args, config, None)
 
         logger.info("Starting broker ...")
-        logger.info("Broker URL: {}".format(os.getenv("TEST_URL")))
-        logger.info("Broker Token: {}".format(os.getenv("TEST_TOKEN")))
+        cls.test_url = os.getenv("TEST_URL", "http://127.0.0.1:4852")
+        logger.info("Broker URL: {}".format(cls.test_url))
         logger.info("Broker Skill: {}".format("test_skill"))
-        logger.info("Start Broker? {}".format(os.getenv("TEST_START_BROKER")))
-        if int(os.getenv("TEST_START_BROKER")) == 0:
+        logger.info("Start Broker? {}".format(os.getenv("TEST_START_BROKER", 1)))
+        if int(os.getenv("TEST_START_BROKER", 1)) == 0:
             logger.info("Skip creating broker.")
         else:
             ctx = mp.get_context('spawn')
@@ -68,7 +68,7 @@ class TestBroker(unittest.TestCase):
             cls._broker = broker
 
         logger.info("Starting response container ...")
-        container = Client(logger=logger, url=os.getenv("TEST_URL"))
+        container = Client(logger=logger, url=cls.test_url)
         ready = container.start()
         if not ready:
             logger.error("Container not ready by time. Exiting ...")
@@ -81,7 +81,7 @@ class TestBroker(unittest.TestCase):
         cls._container = container
 
         logger.info("Starting client for testing that the environment is working ...")
-        client = Client(logger=logger, url=os.getenv("TEST_URL"))
+        client = Client(logger=logger, url=cls.test_url)
         ready = client.start()
         if not ready:
             logger.error("Environment not ready by time. Exiting ...")
@@ -99,7 +99,7 @@ class TestBroker(unittest.TestCase):
         cls._container.stop()
 
         cls._logger.info("Stopping broker ...")
-        if int(os.getenv("TEST_START_BROKER")) == 0:
+        if int(os.getenv("TEST_START_BROKER", 1)) == 0:
             cls._logger.info("Skip stopping broker.")
         else:
             cls._broker.terminate()
@@ -108,7 +108,7 @@ class TestBroker(unittest.TestCase):
 
     def setUp(self) -> None:
         self._logger.info("Start new client ...")
-        self.client = Client(os.getenv("TEST_URL"), logger=self._logger)
+        self.client = Client(self.test_url, logger=self._logger)
         unittest.skipIf(not self.client.start(), "Environment not ready by time. Skipping ...")
         time.sleep(0.5)
         self.client.clear()
@@ -215,7 +215,7 @@ class TestBroker(unittest.TestCase):
         """
         self._logger.info("Start test guard ...")
 
-        guard = Guard(os.getenv("TEST_URL"))
+        guard = Guard(self.test_url)
         guard.run()
 
         # wait until is running, with timeout
@@ -295,7 +295,7 @@ class TestBroker(unittest.TestCase):
                     # start container
                     while len(containers) < container_i:
                         self._logger.info("Start container {} ...".format(len(containers) + 1))
-                        container = Client(os.getenv("TEST_URL"), logger=self._logger,
+                        container = Client(self.test_url, logger=self._logger,
                                            name="Container_{}".format(len(containers) + 1))
                         container.put({"event": "skillRegister", "data": {
                             "name": "skill_test"
@@ -306,7 +306,7 @@ class TestBroker(unittest.TestCase):
                     # start client
                     while len(clients) < client_i:
                         self._logger.info("Start client {} ...".format(len(clients) + 1))
-                        client = Client(os.getenv("TEST_URL"), logger=self._logger,
+                        client = Client(self.test_url, logger=self._logger,
                                         name="Client_{}".format(len(clients) + 1))
                         client.start()
                         auth = client.auth()
@@ -459,7 +459,7 @@ class TestBroker(unittest.TestCase):
         self._logger.info("Start test auth ...")
 
         self._logger.info("Start container for auth")
-        client = Client(logger=self._logger, url=os.getenv("TEST_URL"))
+        client = Client(logger=self._logger, url=self.test_url)
         client.start()
         auth = client.auth()
         client.stop()
@@ -476,7 +476,7 @@ class TestBroker(unittest.TestCase):
         self._logger.info("Start test roles ...")
 
         self._logger.info("Start container with user role")
-        container = Client(os.getenv("TEST_URL"), logger=self._logger,
+        container = Client(self.test_url, logger=self._logger,
                            name="Container_Roles")
         container.put({"event": "skillRegister", "data": {
             "name": "skill_role_test", "roles": ["user"]
@@ -484,7 +484,7 @@ class TestBroker(unittest.TestCase):
         container.start()
 
         # get skills
-        client = Client(logger=self._logger, url=os.getenv("TEST_URL"))
+        client = Client(logger=self._logger, url=self.test_url)
         client.start()
 
         client.wait_for_event("skillUpdate")
@@ -601,7 +601,7 @@ class TestBroker(unittest.TestCase):
         containers = []
         for i in range(1, 3, 1):
             self._logger.info("Start container {} ...".format(len(containers) + 1))
-            container = Client(os.getenv("TEST_URL"), logger=self._logger,
+            container = Client(self.test_url, logger=self._logger,
                                name="Container_{}".format(len(containers) + 1))
             container.start()
             container.put({"event": "skillRegister", "data": {
@@ -616,7 +616,7 @@ class TestBroker(unittest.TestCase):
         self.assertEqual(next(skill for skill in self.client.skills if skill['name'] == "multiple_skill_test")['nodes'],
                          2)
 
-        container = Client(os.getenv("TEST_URL"), logger=self._logger, name="Container_{}".format(len(containers) + 1))
+        container = Client(self.test_url, logger=self._logger, name="Container_{}".format(len(containers) + 1))
         container.put({"event": "skillRegister", "data": {
             "name": "multiple_skill_test", "anotherConfig": "fail"
         }})
