@@ -19,6 +19,7 @@ def simple_client(name, url, client_queue: mp.Queue, message_queue: mp.Queue, sk
     @sio.on('skillUpdate')
     def skill_update(data):
         logger.debug("skillUpdate: {}".format(data))
+        time.sleep(2)
         if skill_queue:
             skill_queue.put(data)
         if len(data) > 0:
@@ -39,7 +40,7 @@ def simple_client(name, url, client_queue: mp.Queue, message_queue: mp.Queue, sk
             logger.debug("Send message: {}".format(message))
         else:
             try:
-                sio.connect(url)
+                sio.connect(url, wait_timeout=5)
             except socketio.exceptions.ConnectionError:
                 logger.error("Connection to broker failed. Trying again in 5 seconds ...")
                 time.sleep(5)

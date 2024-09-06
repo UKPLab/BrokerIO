@@ -2,6 +2,7 @@ import subprocess
 
 from brokerio.app import start, scrub, keys_init, assign
 from brokerio.cli.CLI import CLI
+import psutil
 
 
 class BrokerCLI(CLI):
@@ -36,8 +37,8 @@ class BrokerCLI(CLI):
         start_parser.add_argument('--port', help="Port for broker", type=int, default=4852)
         start_parser.add_argument('--redis_url', help="Redis Connection URL", type=str,
                                   default="redis://localhost:6379")
-        start_parser.add_argument('--flask_debug', help="Flask Debug", action='store_true')
         start_parser.add_argument('--private_key_path', help="Path to private key", type=str, default="./private_key.pem")
+        start_parser.add_argument('--workers', help="Number of workers", type=int, default=psutil.cpu_count(logical=True))
 
         scrub_parser = sub_parser.add_parser('scrub', help="Only run scrub job")
         BrokerCLI.arg_parser_db(scrub_parser)

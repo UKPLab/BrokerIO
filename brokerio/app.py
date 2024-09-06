@@ -3,14 +3,8 @@ Broker entry point for bootstrapping the server
 
 This is the file used to start the flask (and socketio) server.
 """
-
-import random
-import string
-
-import redis
-from flask import Flask, session, request
-from flask_socketio import SocketIO
-
+from aiohttp import web
+import socketio
 from . import init_logging, load_config
 from .utils import connect_db
 from .sockets.Auth import Auth
@@ -29,20 +23,15 @@ def init(args):
     config = load_config(args.config_file)
 
     logger.info("Initializing server...")
-    # flask server
-    app = Flask("broker")
-    app.config.update({
-        "SECRET_KEY": ''.join(random.choice(string.printable) for i in range(8)),
-        "SESSION_TYPE": "redis",
-        "SESSION_PERMANENT": False,
-        "SESSION_USE_SIGNER": True,
-        "SESSION_REDIS": redis.from_url(args.redis_url, )
-    })
-    socketio = SocketIO(app, cors_allowed_origins='*', logger=logger, engineio_logger=logger)
+
+    mgr = socketio.RedisManager(args.redis_url)
+    sio = socketio.AsyncServer(mgr=mgr, cors_allowed_origins=[], async_mode='aiohttp', async_handlers=True)
+    app = web.Application()
+    sio.attach(app)
 
     # get db and collection
     logger.info("Connecting to db {}...".format(args.db_url))
-    db = connect_db(args, config, socketio)
+    db = connect_db(args, config, sio)
 
     if db.first_run:
         logger.info("First run detected, initializing db...")
@@ -54,45 +43,38 @@ def init(args):
     # add socket routes
     logger.info("Initializing socket...")
     sockets = {
-        "request": Request(db=db, socketio=socketio),
-        "auth": Auth(db=db, socketio=socketio),
-        "skill": Skill(db=db, socketio=socketio)
+        "request": Request(db=db, socketio=sio),
+        "auth": Auth(db=db, socketio=sio),
+        "skill": Skill(db=db, socketio=sio)
     }
 
     # socketio
-    @socketio.on("connect")
-    def connect(data):
+    @sio.on("connect")
+    async def connect(sid, wsgi):
         """
         Example connection event. Upon connection on "/" the sid is loaded, stored in the session object
         and the connection is added to the room of that SID to enable an e2e connection.
 
         :return: the sid of the connection
         """
-        db.clients.connect(sid=request.sid, ip=request.remote_addr, data=data)
-        session["sid"] = request.sid
+        await db.clients.connect(sid=sid, ip=wsgi['REMOTE_ADDR'])
 
-        logger.debug(f"New socket connection established with sid: {request.sid} and ip: {request.remote_addr}")
+        logger.debug(f"New socket connection established with sid: {sid} and ip: {wsgi['REMOTE_ADDR']}")
 
-        return request.sid
+        #return request.sid
 
-    @socketio.on("disconnect")
-    def disconnect():
+    @sio.on("disconnect")
+    async def disconnect(sid):
         """
         Disconnection event
 
         :return: void
         """
-        db.clients.disconnect(sid=request.sid)
+        await db.clients.disconnect(sid=sid)
 
-        logger.debug(f"Socket connection teared down for sid: {request.sid}")
+        logger.debug(f"Socket connection teared down for sid: {sid}")
 
-    app_config = {
-        "debug": args.flask_debug if args.flask_debug else False,
-        "host": "0.0.0.0",
-        "port": args.port
-    }
-    logger.info("App starting ...", app_config)
-    socketio.run(app, **app_config, log_output=True)
+    web.run_app(app, host='0.0.0.0', port=args.port)
 
 
 def start(args):
@@ -101,7 +83,6 @@ def start(args):
     :param args: command line arguments
     :return:
     """
-    # load env
     init(args)
 
 

@@ -34,9 +34,6 @@ Since neural models are mostly trained with Python, this sample also use Python 
         def task(data):
             sio.emit('taskResults', {'id': data['id'], 'data': pipe(data['data'])})
 
-            # Tip: you can also use acknowledgements here and just return the data
-            return {'id': data['id'], 'data': pipe(data['data'])}
-
         # connect to Broker
         while True:
             try:

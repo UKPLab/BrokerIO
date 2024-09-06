@@ -1,8 +1,4 @@
-import os
-
 from Crypto.Hash import SHA256
-from flask import request, session
-from flask_socketio import join_room, leave_room
 
 from . import Socket
 from ..utils.Keys import verify
@@ -19,87 +15,87 @@ class Auth(Socket):
         super().__init__("skill", db, socketio)
 
     def _init(self):
-        self.socketio.on_event("authRequest", self.request)
-        self.socketio.on_event("authResponse", self.response)
-        self.socketio.on_event("authStatus", self.status)
+        self.socketio.on("authRequest", self.request)
+        self.socketio.on("authResponse", self.response)
+        self.socketio.on("authStatus", self.status)
 
-    def response(self, data):
+    async def response(self, sid, data):
         """
         Register as a client, receive public key and associate with user
         :param data: object with public key and signature {pub:...,sig:...}
         :return:
         """
         try:
-            if self.db.clients.quota(session["sid"], append=True):
-                self.socketio.emit("error", {"code": 100}, to=session["sid"])
+            if self.db.clients.quota(sid, append=True):
+                await self.socketio.emit("error", {"code": 100}, to=sid)
                 return
-            client = self.db.clients.get(session["sid"])
+            client = self.db.clients.get(sid)
             if "secret" in client:
                 if verify(client['secret'], data['sig'], data['pub']):
-                    user = self.db.users.auth(session["sid"], data['pub'])
+                    user = self.db.users.auth(sid, data['pub'])
                     user = self.db.users.get(user['_key'])
                     client['user'] = user['_key']
 
                     # updating client role
                     client['role'] = user['role']
-                    leave_room("role:guests")
-                    join_room("role:{}".format(user['role']))
+                    await self.socketio.leave_room(sid, "role:guests")
+                    await self.socketio.enter_room(sid, "role:{}".format(user['role']))
 
                     # send skill updates as role changed
-                    self.db.skills.send_all(role=user['role'], to=session["sid"])
+                    await self.db.skills.send_all(role=user['role'], to=sid)
 
                     self.db.clients.save(client)
-                    self.status()
+                    await self.status(sid)
                 else:
-                    self.logger.error("Error in verify {}: {}".format(session["sid"], data))
-                    self.socketio.emit("error", {"code": 401}, to=session["sid"])
+                    self.logger.error("Error in verify {}: {}".format(sid, data))
+                    await self.socketio.emit("error", {"code": 401}, to=sid)
             else:
                 self.request()
         except Exception as e:
             self.logger.error("Error in request {}: {}".format("authRegister", data))
             self.logger.error(e)
-            self.socketio.emit("error", {"code": 500}, to=session["sid"])
+            await self.socketio.emit("error", {"code": 500}, to=sid)
 
-    def request(self, data=None):
+    async def request(self, sid, data=None):
         """
         Authenticate a user, assign client to user
         :param data: object with public and signature
         :return:
         """
         try:
-            if self.db.clients.quota(session["sid"], append=True):
-                self.socketio.emit("error", {"code": 100}, to=session["sid"])
+            if self.db.clients.quota(sid, append=True):
+                await self.socketio.emit("error", {"code": 100}, to=sid)
                 return
             # create secret message to sign by client
-            secret_message = "{}{}".format(request.sid, "awesomesecret")
+            secret_message = "{}{}".format(sid, "awesomesecret")
             hash = SHA256.new()
             hash.update(secret_message.encode("utf8"))
-            self.db.clients.register(request.sid, hash.hexdigest())
-            self.socketio.emit("authChallenge", {"secret": hash.hexdigest()})
+            self.db.clients.register(sid, hash.hexdigest())
+            await self.socketio.emit("authChallenge", {"secret": hash.hexdigest()})
         except Exception as e:
             self.logger.error("Error in request {}".format("authRequest"))
             self.logger.error(e)
-            self.socketio.emit("error", {"code": 500}, to=session["sid"])
+            await self.socketio.emit("error", {"code": 500}, to=sid)
 
-    def status(self):
+    async def status(self, sid, data=None):
         """
         Send current authentication status
         :return:
         """
         try:
-            if self.db.clients.quota(session["sid"], append=True):
-                self.socketio.emit("error", {"code": 100}, to=session["sid"])
+            if self.db.clients.quota(sid, append=True):
+                await self.socketio.emit("error", {"code": 100}, to=sid)
                 return
-            client = self.db.clients.get(session["sid"])
+            client = self.db.clients.get(sid)
             if "user" in client:
                 user = self.db.users.get(client['user'])
                 if user:
-                    self.socketio.emit("authInfo", {"role": user['role']}, to=session["sid"])
+                    await self.socketio.emit("authInfo", {"role": user['role']}, to=sid)
                 else:
-                    self.socketio.emit("authInfo", {"role": "guest"}, to=session["sid"])
+                    await self.socketio.emit("authInfo", {"role": "guest"}, to=sid)
             else:
-                self.socketio.emit("authInfo", {"role": "guest"}, to=session["sid"])
+                await self.socketio.emit("authInfo", {"role": "guest"}, to=sid)
         except Exception as e:
             self.logger.error("Error in request {}.".format("authStatus"))
             self.logger.error(e)
-            self.socketio.emit("error", {"code": 500}, to=session["sid"])
+            await self.socketio.emit("error", {"code": 500}, to=sid)

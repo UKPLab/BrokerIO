@@ -9,7 +9,7 @@
 - Updated skills integration for easier usage
 - Improved documentation and examples 
 - All commands are available in the `brokerio` CLI now
-- Allow skills to use Socket.IO Acknowledgements for responses
+- Changed Socket.IO Server to AsyncServer (aiohttp) for asynchronous behavior
 
 ### Changed
 

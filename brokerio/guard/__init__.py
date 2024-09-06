@@ -10,3 +10,4 @@ from .Guard import Guard
 def start_guard(args):
     guard = Guard(args.broker_url)
     guard.run()
+    guard.join()

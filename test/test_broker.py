@@ -112,6 +112,7 @@ class TestBroker(unittest.TestCase):
             cls._broker.terminate()
             cls._broker.join()
 
+
     def setUp(self) -> None:
         self._logger.info("Start new client ...")
         self.client = Client(os.getenv("TEST_URL"), logger=self._logger)
@@ -220,19 +221,22 @@ class TestBroker(unittest.TestCase):
         :return:
         """
         self._logger.info("Start test guard ...")
-        self._logger.info("Start client ...")
-        ctx = mp.get_context('spawn')
 
         guard = Guard(os.getenv("TEST_URL"))
-        client = ctx.Process(target=guard.run,
-                             args=())
-        client.start()
+        guard.run()
 
-        # wait a second
-        time.sleep(1)
-        self.assertTrue(client.is_alive())
-        client.terminate()
-        client.join()
+        # wait until is running, with timeout
+        sleep = 0
+        while not guard.client.is_alive() and sleep < 5:
+            time.sleep(1)
+            sleep += 1
+
+        self.assertTrue(guard.client.is_alive())
+
+        self._logger.info("Stop test guard ...")
+        guard.client.terminate()
+        guard.client.join()
+        self.assertFalse(guard.client.is_alive())
 
     def stressTest(self):
         """
@@ -382,7 +386,7 @@ class TestBroker(unittest.TestCase):
                                                            'data': time.perf_counter()}})
 
         self._logger.info("Sending request in between ...")
-        time.sleep(0.01)
+        time.sleep(0.05)
         self.client.put({"event": 'skillRequest', "data": {'id': "between", 'name': "test_skill",
                                                            'config': {"return_stats": True},
                                                            'data': time.perf_counter()}})

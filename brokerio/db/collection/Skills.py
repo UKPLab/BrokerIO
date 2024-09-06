@@ -20,7 +20,7 @@ class Skills(Collection):
         self.connected_index = results(self.collection.add_index(
             {'fields': ['connected'], 'name': 'connected_index', 'unique': False, 'type': 'hash'}))
 
-    def register(self, sid, data):
+    async def register(self, sid, data):
         """
         Register a new skill
 
@@ -31,7 +31,7 @@ class Skills(Collection):
         if len(skills) > 0:
             print(skills)
             if not skills[0]['config'] == data:
-                self.socketio.emit("error", {"code": 201}, to=sid)
+                await self.socketio.emit("error", {"code": 201}, to=sid)
                 return
 
         skill = {
@@ -47,9 +47,9 @@ class Skills(Collection):
         results(self.collection.insert(
             skill
         ))
-        self.send_update(skill['config']['name'])
+        await self.send_update(skill['config']['name'])
 
-    def unregister(self, sid):
+    async def unregister(self, sid):
         """
         Unregister all skills from a node
 
@@ -58,13 +58,13 @@ class Skills(Collection):
         skills = results(self.collection.find({"sid": sid, "connected": True}))
         for skill in skills:
             # send update first
-            self.send_update(skill['config']['name'], config=skill['config'])
+            await self.send_update(skill['config']['name'], config=skill['config'])
 
             skill["connected"] = False
             skill["last_contact"] = datetime.now().isoformat()
             results(self.collection.update(skill))
 
-    def send_update(self, skill_name, config=None, **kwargs):
+    async def send_update(self, skill_name, config=None, **kwargs):
         """
         Send update to all connected clients
 
@@ -82,12 +82,12 @@ class Skills(Collection):
                 config = skill[0]['config']
         if config is not None and 'roles' in config and len(config['roles']) > 0:
             for role in config['roles']:
-                self.socketio.emit("skillUpdate", [{"name": skill_name, "nodes": nodes}],
+                await self.socketio.emit("skillUpdate", [{"name": skill_name, "nodes": nodes}],
                                    to="role:{}".format(role), **kwargs)
         else:
-            self.socketio.emit("skillUpdate", [{"name": skill_name, "nodes": nodes}], **kwargs)
+            await self.socketio.emit("skillUpdate", [{"name": skill_name, "nodes": nodes}], **kwargs)
 
-    def send_all(self, role, with_config=False, **kwargs):
+    async def send_all(self, role, with_config=False, **kwargs):
         """
         Send update to all connected clients
         :param with_config:
@@ -98,7 +98,7 @@ class Skills(Collection):
         all_skills = self.get_skills(filter_role=role, with_config=with_config)
 
         if all_skills:
-            self.socketio.emit("skillUpdate", all_skills, **kwargs)
+            await self.socketio.emit("skillUpdate", all_skills, **kwargs)
 
     def get_node(self, sid, name):
         """
@@ -109,21 +109,24 @@ class Skills(Collection):
         :return: random node id (session id)
         """
         user = self.db.clients.get(sid)
-        aql_query = """
-                FOR doc IN @@collection
-                FILTER doc.connected 
-                FILTER (!HAS("roles", doc.config) or @role IN doc.config.roles)
-                FILTER doc.config.name == @name
-                SORT RAND()
-                LIMIT 1
-                RETURN doc
-            """
-        cursor = results(
-            self._sysdb.aql.execute(aql_query, bind_vars={"@collection": self.name, "role": user["role"], "name": name},
-                                    count=True))
+        if user is not None:
+            aql_query = """
+                    FOR doc IN @@collection
+                    FILTER doc.connected 
+                    FILTER (!HAS("roles", doc.config) or @role IN doc.config.roles)
+                    FILTER doc.config.name == @name
+                    SORT RAND()
+                    LIMIT 1
+                    RETURN doc
+                """
+            cursor = results(
+                self._sysdb.aql.execute(aql_query, bind_vars={"@collection": self.name, "role": user["role"], "name": name},
+                                        count=True))
 
-        if cursor.count() > 0:
-            return cursor.next()
+            if cursor.count() > 0:
+                return cursor.next()
+        else:
+            return None
 
     def check_feature(self, key, feature, check_all=False):
         """

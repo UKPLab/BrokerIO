@@ -29,7 +29,7 @@ class Tasks(Collection):
         scrub_thread.daemon = True
         scrub_thread.start()
 
-    def create(self, sid, node, payload, parent=None):
+    async def create(self, sid, node, payload, parent=None):
         """
         Create a new task
 
@@ -73,12 +73,12 @@ class Tasks(Collection):
                 result = node['config']['output']['example']
             else:
                 result = {}
-            self.update(new_task['_key'], 0, result)
+            await self.update(new_task['_key'], 0, result)
             return 0
         else:
             return int(new_task['_key'])
 
-    def update(self, key, node, data):
+    async def update(self, key, node, data):
         """
         Update task by key
         :param key: key of task
@@ -88,7 +88,7 @@ class Tasks(Collection):
         """
         task = self.get(key)
         if task is None:
-            self.socketio.emit("error", {'id': key, 'code': 108}, room=node)
+            await self.socketio.emit("error", {'id': key, 'code': 108}, room=node)
             return
 
         # if simulate task has set an integer value, wait for this time
@@ -101,7 +101,7 @@ class Tasks(Collection):
             task['error'] = data['error']
             task['updated'] = datetime.now().isoformat()
             self.collection.update(task)
-            self.socketio.emit("error", {'id': key, 'code': 112, 'error': data['error']}, room=task['rid'])
+            await self.socketio.emit("error", {'id': key, 'code': 112, 'error': data['error']}, room=task['rid'])
             return
 
         if ('status' in data
@@ -140,7 +140,7 @@ class Tasks(Collection):
                         'data': updates
                     }
                     # sending status update to client
-                    self.socketio.emit("skillStatus", output, room=task['rid'])
+                    await self.socketio.emit("skillStatus", output, room=task['rid'])
 
             self.collection.update(task)
 
@@ -169,25 +169,29 @@ class Tasks(Collection):
                     output['stats']['result'] = data['stats']
 
             if "config" in task['request'] and 'min_delay' in task['request']['config']:
+                """
                 try:
                     loop = asyncio.get_running_loop()
                 except RuntimeError:  # 'RuntimeError: There is no current event loop...'
-                    loop = None
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
 
-                if loop and loop.is_running():
-                    # https://docs.python.org/3/library/asyncio-task.html#task-object
-                    tsk = loop.create_task(
-                        asyncio.sleep(
-                            task['request']['config']['min_delay'] - (time.perf_counter() - task["start_timer"])))
-                    tsk.add_done_callback(
-                        lambda t: self.send_results(task['rid'], output))
-                else:
-                    asyncio.run(
-                        asyncio.sleep(
-                            task['request']['config']['min_delay'] - (time.perf_counter() - task["start_timer"])))
-                    self.send_results(task['rid'], output)
+                delay = task['request']['config']['min_delay'] - (time.perf_counter() - task["start_timer"])
+                if delay < 0:
+                    delay = 0
+
+                loop.call_later(delay, lambda: self.send_results(task['rid'], output))
+
+                if not loop.is_running():
+                    asyncio.ensure_future(loop.run_in_executor(None, loop.run_forever))
+                """
+                delay = task['request']['config']['min_delay'] - (time.perf_counter() - task["start_timer"])
+                if delay < 0:
+                    delay = 0
+                await asyncio.sleep(delay)
+                await self.send_results(task['rid'], output)
             else:
-                self.send_results(task['rid'], output)
+                await self.send_results(task['rid'], output)
 
             return {
                 "rid": task["rid"],
@@ -214,9 +218,9 @@ class Tasks(Collection):
                 self.abort(task)
             time.sleep(self.config['taskKiller']['interval'])
 
-    def terminate_by_disconnect(self, sid):
+    async def terminate_by_disconnect(self, sid):
         """
-        Abort all tasks because one client is disconnected
+        Abort all tasks because client is disconnected
         :param sid: session id of user
         :return:
         """
@@ -236,18 +240,18 @@ class Tasks(Collection):
                 # node disconnected, is there another node?
                 node = self.db.skills.get_node(task['rid'], task['request']["name"])
                 if node is None:
-                    self.abort(task, reason="node disconnected", kill=False, error=103)
+                    await self.abort(task, reason="node disconnected", kill=False, error=103)
                 else:
                     # start task on other node
                     task = self.db.tasks.create(task["rid"], node, task['request'], parent=task['_key'])
-                    self.socketio.emit("taskRequest", {'id': task['_key'], 'data': task['request']['data']}, room=node)
-                    self.abort(task, reason="node disconnected", kill=False, error=104)
+                    await self.socketio.emit("taskRequest", {'id': task['_key'], 'data': task['request']['data']}, room=node)
+                    await self.abort(task, reason="node disconnected", kill=False, error=104)
             else:
                 # client disconnected
                 if self.db.skills.check_feature(task['skill'], feature=['kill', 'abort'], check_all=False):
-                    self.abort(task, reason="client disconnected", kill=True, error=False)
+                    await self.abort(task, reason="client disconnected", kill=True, error=False)
 
-    def abort_by_user(self, id, sid):
+    async def abort_by_user(self, id, sid):
         """
         Abort task by user
         :param id: task id
@@ -269,16 +273,16 @@ class Tasks(Collection):
             task = cursor.next()
             if self.db.skills.check_feature(task['skill'], feature=['kill', 'abort'], check_all=False):
                 if task['status'] == "finished" or task['status'] == "aborted":
-                    self.socketio.emit("error", {"code": 105}, room=sid)
+                    await self.socketio.emit("error", {"code": 105}, room=sid)
                 else:
-                    self.abort(task, error=109)
+                    await self.abort(task, error=109)
                 return True
             else:
-                self.socketio.emit("error", {"code": 107}, room=sid)
+                await self.socketio.emit("error", {"code": 107}, room=sid)
             return True
         return False
 
-    def abort(self, task, reason="", kill=True, error=110):
+    async def abort(self, task, reason="", kill=True, error=110):
         """
         Abort task by key
         :param task: task to abort
@@ -288,10 +292,11 @@ class Tasks(Collection):
         :return:
         """
         if kill:
-            self.socketio.emit("taskKill", {"id": task['_key']}, room=task['nid'])
+            await self.socketio.emit("taskKill", {"id": task['_key']}, room=task['nid'])
 
         # update job quota
-        self.db.clients.quotas[task['rid']]['jobs'].remove(task['_key'])
+        if task['rid'] in self.db.clients.quotas:
+            self.db.clients.quotas[task['rid']]['jobs'].remove(task['_key'])
 
         # update task
         task['status'] = "aborted"
@@ -301,16 +306,16 @@ class Tasks(Collection):
 
         # send results to client
         if error:
-            self.socketio.emit("error", {"code": error}, room=task['rid'])
+            await self.socketio.emit("error", {"code": error}, room=task['rid'])
 
-    def send_results(self, rid, payload):
+    async def send_results(self, rid, payload):
         """
         Send results to request client
         :param rid: session id of request client
         :param payload: data to send
         :return:
         """
-        self.socketio.emit("skillResults", payload, room=rid)
+        await self.socketio.emit("skillResults", payload, room=rid)
 
     def clean(self):
         """

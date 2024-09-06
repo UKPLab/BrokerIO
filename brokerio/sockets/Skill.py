@@ -1,7 +1,5 @@
 import json
 
-from flask import session
-
 from . import Socket
 
 
@@ -16,33 +14,33 @@ class Skill(Socket):
         super().__init__("skill", db, socketio)
 
     def _init(self):
-        self.socketio.on_event("skillRegister", self.register)
-        self.socketio.on_event("skillGetAll", self.get_all)
-        self.socketio.on_event("skillGetConfig", self.get_config)
+        self.socketio.on("skillRegister", self.register)
+        self.socketio.on("skillGetAll", self.get_all)
+        self.socketio.on("skillGetConfig", self.get_config)
 
-    def get_config(self, data):
+    async def get_config(self, sid, data):
         """
         Get configuration from a skill by name
         """
         try:
-            if self.db.clients.quota(session["sid"], append=True):
-                self.socketio.emit("error", {"code": 100}, to=session["sid"])
+            if self.db.clients.quota(sid, append=True):
+                await self.socketio.emit("error", {"code": 100}, to=sid)
                 return
 
-            client = self.db.clients.get(session["sid"])
+            client = self.db.clients.get(sid)
             skills = self.db.skills.get_skills(filter_role=client["role"], filter_name=data["name"], with_config=True)
 
             if len(skills) == 0:
-                self.socketio.emit("error", {"code": 203}, to=session["sid"])
+                await self.socketio.emit("error", {"code": 203}, to=sid)
                 return
 
-            self.socketio.emit("skillConfig", skills[0]['config'], to=session["sid"])
+            await self.socketio.emit("skillConfig", skills[0]['config'], to=sid)
         except Exception as e:
             self.logger.error("Error in request {}: {}".format("skillGetConfig", data))
             self.logger.error(e)
-            self.socketio.emit("error", {"code": 500}, to=session["sid"])
+            await self.socketio.emit("error", {"code": 500}, to=sid)
 
-    def get_all(self):
+    async def get_all(self, sid):
         """
         Informs the client about all skills currently registered on the broker.
 
@@ -50,19 +48,19 @@ class Skill(Socket):
         "skillRegister" event.
         """
         try:
-            if self.db.clients.quota(session["sid"], append=True):
-                self.socketio.emit("error", {"code": 100}, to=session["sid"])
+            if self.db.clients.quota(sid, append=True):
+                await self.socketio.emit("error", {"code": 100}, to=sid)
                 return
 
-            client = self.db.clients.get(session["sid"])
+            client = self.db.clients.get(sid)
 
-            self.db.skills.send_all(role=client['role'], to=session["sid"])
+            await self.db.skills.send_all(role=client['role'], to=sid)
         except Exception as e:
             self.logger.error("Error in request {}".format("skillGetAll"))
             self.logger.error(e)
-            self.socketio.emit("error", {"code": 500}, to=session["sid"])
+            await self.socketio.emit("error", {"code": 500}, to=sid)
 
-    def register(self, data):
+    async def register(self, sid, data):
         """
         Registers a skill on the broker.
 
@@ -72,14 +70,14 @@ class Skill(Socket):
             if isinstance(data, str):  # needed for c++ socket.io client
                 data = json.loads(data)
 
-            if self.db.clients.quota(session["sid"], append=True):
+            if self.db.clients.quota(sid, append=True):
                 return
 
             if 'name' in data:
-                self.db.skills.register(session["sid"], data)
+                await self.db.skills.register(sid, data)
             else:
-                self.socketio.emit("error", {"code": 202}, to=session["sid"])
+                await self.socketio.emit("error", {"code": 202}, to=sid)
         except Exception as e:
             self.logger.error("Error in request {}: {}".format("skillRegister", data))
             self.logger.error(e)
-            self.socketio.emit("error", {"code": 500}, to=session["sid"])
+            await self.socketio.emit("error", {"code": 500}, to=sid)

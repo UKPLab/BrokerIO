@@ -1,7 +1,5 @@
 from datetime import datetime
 
-from flask_socketio import join_room
-
 from ..collection import Collection
 from ..utils import results
 from ...utils.JobQuota import JobQuota
@@ -24,12 +22,11 @@ class Clients(Collection):
         self.connected_index = results(self.collection.add_index(
             {'fields': ['connected'], 'name': 'connected_index', 'unique': False, 'type': 'hash'}))
 
-    def connect(self, sid, ip, data, default_role="guest"):
+    async def connect(self, sid, ip, default_role="guest"):
         """
         Connect a client
         :param sid: session id
         :param ip: ip address
-        :param data: payload
         :param default_role: basic role
         :return:
         """
@@ -38,25 +35,23 @@ class Clients(Collection):
             {
                 "sid": sid,
                 "ip": ip,
-                "data": data,
                 "role": role['name'],
                 "connected": True,
                 "first_contact": datetime.now().isoformat(),
                 "last_contact": datetime.now().isoformat(),
             }
         ))
-        join_room(sid)
-        join_room(role['room'])
+        await self.socketio.enter_room(sid, role['room'])
 
         # add quota for sid
         self._apply_quota(sid, role['name'])
 
         # send skills
-        self.db.skills.send_all(role['name'], to=sid)
+        await self.db.skills.send_all(role['name'], to=sid)
 
         return user
 
-    def disconnect(self, sid):
+    async def disconnect(self, sid):
         self.collection.update_match({"sid": sid, "connected": True},
                                      {'last_contact': datetime.now().isoformat(), 'connected': False})
 
@@ -64,13 +59,13 @@ class Clients(Collection):
         del self.quotas[sid]
 
         # close room
-        self.socketio.close_room(sid)
+        await self.socketio.close_room(sid)
 
         # cancel jobs
-        self.db.tasks.terminate_by_disconnect(sid=sid)
+        await self.db.tasks.terminate_by_disconnect(sid=sid)
 
         # remove skills by sid if exists
-        self.db.skills.unregister(sid=sid)
+        await self.db.skills.unregister(sid=sid)
 
     def _apply_quota(self, sid, role):
         """

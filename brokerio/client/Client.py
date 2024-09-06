@@ -53,7 +53,7 @@ class Client:
         # wait for auth challenge
         challenge = self.wait_for_event("authChallenge")
         if self.logger is not None:
-            self.logger.error(challenge)
+            self.logger.error("Challenge: {}".format(challenge))
         if challenge:
             sig = keys.sign(challenge['data']['secret'])
             self.put({"event": "authResponse", "data": {'pub': keys.get_public(), 'sig': sig}})

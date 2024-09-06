@@ -34,9 +34,9 @@ services:
       - redis
       - arangodb
       - broker_bash
-    command: brokerio broker start --db_url "http://arangodb:8529" --db_name "broker" --db_user root --db_pass secret --port 8888 --redis_url "redis://redis:6379"
+    command: brokerio broker start --db_url "http://arangodb:8529" --db_name "broker" --db_user root --db_pass secret --port ${BROKER_PORT} --redis_url "redis://redis:6379"
     ports:
-      - ${BROKER_PORT}:8888
+      - ${BROKER_PORT}:${BROKER_PORT}
     restart: unless-stopped
   guard:
     image: broker_image
@@ -47,7 +47,7 @@ services:
       - broker
       - redis
       - broker_bash
-    command: brokerio guard --broker_url http://broker:8888
+    command: brokerio guard --broker_url http://broker:${BROKER_PORT}
   redis:
     image: redis
     restart: unless-stopped
