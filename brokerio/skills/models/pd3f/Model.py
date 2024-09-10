@@ -21,15 +21,13 @@ class Model(SkillModel):
         """
         pass
 
-    def run(self, args, additional_parameter=None):
+    def run(self, additional_parameter=None):
         """
         Run the skill
         :param additional_parameter:
-        :param args:
         :return:
         """
-        containers = super().run(args)
-        print(args)
+        containers = super().run()
 
         print("Add PD3F containers")
         import docker
@@ -64,13 +62,12 @@ class Model(SkillModel):
 
         return containers
 
-    def stop(self, args):
+    def stop(self):
         """
         Stop the skill
-        :param args:
         :return:
         """
-        container = super().stop(args)
+        container = super().stop()
 
         print("Remove parsr networks")
         client = docker.from_env()
