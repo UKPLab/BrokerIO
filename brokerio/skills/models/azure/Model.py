@@ -13,19 +13,18 @@ from brokerio.skills.SkillModel import SkillModel
 
 class Model(SkillModel):
 
-    def run(self, args, additional_parameter=None):
+    def run(self, additional_parameter=None):
         """
         Run the skill
         :param additional_parameter:
-        :param args:
         :return:
         """
-        super().run(args, {
+        super().run({
             "environment": {
-                'AZURE_OPENAI_KEY': args.api_key,
-                'AZURE_OPENAI_ENDPOINT': args.api_endpoint,
-                'OPENAI_MODEL': args.model,
-                'API_VERSION': "2023-05-15" if args.model == "gpt-4" else "2023-10-01-preview",
+                'AZURE_OPENAI_KEY': self.args.api_key,
+                'AZURE_OPENAI_ENDPOINT': self.args.api_endpoint,
+                'OPENAI_MODEL': self.args.model,
+                'API_VERSION': "2023-05-15" if self.args.model == "gpt-4" else "2023-10-01-preview",
                 'OPENAI_API_TYPE': "azure",
             },
         })

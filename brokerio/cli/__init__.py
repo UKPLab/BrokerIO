@@ -56,6 +56,7 @@ def parse_args(args):
         if interface["module"].name == 'skills':
             # check first if pip docker is available
             if 'docker' not in sys.modules and (spec := importlib.util.find_spec('docker')) is None:
+                print(Colors.FAIL + "Please install docker package with 'pip install docker'." + Colors.ENDC)
                 continue
 
         interface["module"].arg_parser(_parser)

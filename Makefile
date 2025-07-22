@@ -59,7 +59,7 @@ clean:
 
 .PHONY: docker
 docker:
-	docker compose -f docker-compose.yml -p "brokerio" up --build -d
+	docker compose -f docker-compose.yml -p ${PROJECT_NAME} up --build -d
 
 .PHONY: docker-dev
 docker-dev:
