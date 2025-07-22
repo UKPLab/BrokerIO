@@ -25,7 +25,8 @@ def init(args):
     logger.info("Initializing server...")
 
     mgr = socketio.RedisManager(args.redis_url)
-    sio = socketio.AsyncServer(mgr=mgr, cors_allowed_origins=[], async_mode='aiohttp', async_handlers=True)
+    max_buffer_size = config.get('max_http_buffer_size', 5242880)
+    sio = socketio.AsyncServer(mgr=mgr, cors_allowed_origins=[], async_mode='aiohttp', async_handlers=True, max_http_buffer_size=max_buffer_size)
     app = web.Application()
     sio.attach(app)
 

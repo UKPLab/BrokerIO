@@ -21,4 +21,4 @@ taskKiller:
   interval: 1
   maxDuration: 600
 cleanDbOnStart: true
-
+max_http_buffer_size: 5242880

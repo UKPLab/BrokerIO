@@ -73,3 +73,7 @@ The following options are available:
 .. option:: cleanDbOnStart
 
     Clean the database on start. This means that not closed connection (e.g., skills, clients) are set to disconnected.
+
+.. option:: max_http_buffer_size
+
+    The maximum size of the http buffer in bytes. Default is ``5242880`` bytes.
