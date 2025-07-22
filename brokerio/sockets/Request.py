@@ -24,6 +24,9 @@ class Request(Socket):
         Request a specific skill by name
         """
         try:
+            if "id" not in data or "name" not in data:
+                await self.socketio.emit("error", {"id": data['id'] if 'id' in data else None, "code": 113}, to=sid)
+                return
             if self.db.clients.quota(sid, append=True):
                 await self.socketio.emit("error", {"id": data['id'] if 'id' in data else None, "code": 100},
                                    to=sid)

@@ -14,18 +14,17 @@ from brokerio.skills.SkillModel import SkillModel
 
 
 class Model(SkillModel):
-    def run(self, args, additional_parameter=None):
+    def run(self, additional_parameter=None):
         """
         Run the skill
         :param additional_parameter:
-        :param args:
         :return:
         """
-        super().run(args, {
+        super().run({
             "environment": {
-                'TASK': args.task,
-                'MODEL': args.model,
-                'CUDA_DEVICE': args.cuda,
+                'TASK': self.args.task,
+                'MODEL': self.args.model,
+                'CUDA_DEVICE': self.args.cuda,
             },
         })
 

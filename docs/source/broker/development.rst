@@ -68,6 +68,7 @@ Sometimes the broker will return an error code, here is a list of all possible e
 - 110 - Job cancelled successfully - other reason
 - 111 - Task update failed - no data or error key provided
 - 112 - Job failed - Node send task failed error
+- 113 - Request Error - id or skill name not provided
 - 200 - Skill not available
 - 201 - Skill config is not the same as in the database currently registered
 - 202 - Skill could not be registered - no skill name provided

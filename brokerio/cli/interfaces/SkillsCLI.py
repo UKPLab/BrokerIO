@@ -1,19 +1,20 @@
 import importlib.util
 import os
 import pkgutil
+import pathlib
 
 import brokerio.skills.models
 from brokerio.cli import CLI, Colors
 from brokerio.skills import load_config
 
 
-def load_skills(path_list):
+def load_skills(path):
     """
     Load all available skills
     :return:
     """
     skills = {}
-    for importer, modname, ispkg in pkgutil.iter_modules(path_list, prefix=''):
+    for importer, modname, ispkg in pkgutil.iter_modules(path, prefix=''):
         if ispkg:
             # get module
             module_path = os.path.join(importer.path, modname)
@@ -57,19 +58,19 @@ class SkillsCLI(CLI):
     @staticmethod
     def arg_parser(_parser):
 
-        # _parser.add_argument('--skill_dir', help="Define an additional path for BrokerIO skill packages", type=str,
-        #                     default="")
+        _parser.add_argument('--skill_dir', help="Define the directory where the skills are located", type=str,
+                             default=brokerio.skills.models.__path__[0])
         _parser.add_argument('--help', help="Show help", action='store_true')
 
-        # skill_dir = _parser.parse_known_args()[0].skill_dir
+        skill_dir = _parser.parse_known_args()[0].skill_dir
 
         model_parser = _parser.add_subparsers(dest='skill_command', help="Commands for managing skills")
         parser_model_list = model_parser.add_parser('list', help="List available skills")
 
-        skill_paths = [brokerio.skills.models.__path__[0]]
-        # if skill_dir != "":
-        #    skill_paths.append(skill_dir)
-        skills = load_skills(skill_paths)
+        skills = load_skills([skill_dir])
+        if len(skills) == 0:
+            print(Colors.FAIL + "No skills found in path {} ... end without building...".format(skill_dir) + Colors.ENDC)
+            exit()
 
         parser_build = model_parser.add_parser('build', help="Build a skill")
         subparser = parser_build.add_subparsers(dest='skill_name', help="Skill name to build")
@@ -106,10 +107,7 @@ class SkillsCLI(CLI):
 
     def parse(self, args):
 
-        skill_paths = [brokerio.skills.models.__path__[0]]
-        # if args.skill_dir != "":
-        #    skill_paths.append(args.skill_dir)
-        skills = load_skills(skill_paths)
+        skills = load_skills([args.skill_dir])
 
         if args.skill_command == 'build':
             if args.skill_name is None or args.skill_name not in skills:
@@ -118,7 +116,8 @@ class SkillsCLI(CLI):
                 skill = skills[args.skill_name]
                 print(Colors.BOLD + "Start building process for skill {}...".format(
                     skill['config']['name']) + Colors.ENDC)
-                skill['module'](self.parser).build(args)
+                print(skill)
+                skill['module'](self.parser, args).build()
         elif args.skill_command == 'list':
             list_skills(args)
         elif args.skill_command == 'run':
@@ -128,7 +127,7 @@ class SkillsCLI(CLI):
                 skill = skills[args.skill_name]
                 print(Colors.BOLD + "Start run process for skill {}...".format(
                     skill['config']['name']) + Colors.ENDC)
-                skill['module'](self.parser).run(args)
+                skill['module'](self.parser, args).run()
         elif args.skill_command == 'stop':
             if args.skill_name is None or args.skill_name not in skills:
                 self.parser.parse_args([args.skill_command, '--help'])
@@ -136,7 +135,7 @@ class SkillsCLI(CLI):
                 skill = skills[args.skill_name]
                 print(Colors.BOLD + "Stop containers for skill {}...".format(
                     skill['config']['name']) + Colors.ENDC)
-                skill['module'](self.parser).stop(args)
+                skill['module'](self.parser, args).stop()
         else:
             self.parser.print_help()
             return

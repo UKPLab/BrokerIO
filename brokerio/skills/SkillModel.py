@@ -4,6 +4,7 @@ This is a simple skill template for building the container of a model.
 Author: Dennis Zyska
 """
 import inspect
+import os
 import pathlib
 
 from brokerio.cli import CLI, Colors
@@ -12,8 +13,10 @@ from .templates.simpleSkill import create_docker as build_simple_skill
 
 
 class SkillModel(CLI):
-    def __init__(self, parser):
+    def __init__(self, parser, args):
         super().__init__(parser)
+        self.parser = parser
+        self.args = args
         self.config = self.get_config()
 
     def get_config(self):
@@ -21,7 +24,7 @@ class SkillModel(CLI):
         Get current config of this skill
         :return:
         """
-        return load_config(pathlib.Path(inspect.getfile(self.__class__)).resolve().parent)
+        return load_config(os.path.join(self.args.skill_dir, self.args.skill_name))
 
     @staticmethod
     def arg_parser(parser):
@@ -32,10 +35,9 @@ class SkillModel(CLI):
         """
         pass
 
-    def build(self, args, build_skill=True):
+    def build(self, build_skill=True):
         """
         Build the docker container
-        :param args: CLI arguments
         :param build_skill: Build the skill docker template
         :return:
         """
@@ -43,11 +45,12 @@ class SkillModel(CLI):
         if 'template' not in self.config or self.config['template'] is None:
             print(Colors.FAIL + "No template defined in config ... end without building..." + Colors.ENDC)
         elif self.config['template'] == "simpleSkill":
+            print("path to broker")
             print(pathlib.Path(inspect.getfile(inspect.currentframe())).resolve().parent.parent.parent)
             path_to_broker = str(pathlib.Path(inspect.getfile(inspect.currentframe())).resolve().parent.parent.parent)
 
             # build basic template
-            if not build_simple_skill(path_to_broker, nocache=args.nocache):
+            if not build_simple_skill(path_to_broker, nocache=self.args.nocache):
                 print(Colors.FAIL + "Failed to build Docker image ... end without building..." + Colors.ENDC)
                 return
 
@@ -58,10 +61,10 @@ class SkillModel(CLI):
                 try:
                     build_logs = client.api.build(
                         dockerfile="Dockerfile",
-                        path=str(pathlib.Path(inspect.getfile(self.__class__)).resolve().parent),
+                        path=str(os.path.join(self.args.skill_dir, self.args.skill_name)),
                         tag=self.config['tag'],
                         decode=True, rm=True,
-                        nocache=args.nocache,
+                        nocache=self.args.nocache,
                     )
                     # Print build output in real-time
                     for chunk in build_logs:
@@ -76,11 +79,10 @@ class SkillModel(CLI):
             print(Colors.FAIL + "Unknown template {} ... end without building...".format(
                 self.config['template']) + Colors.ENDC)
 
-    def run(self, args, additional_parameter=None):
+    def run(self, additional_parameter=None):
         """
         Run the skill
         :param additional_parameter: Additional parameters for the container
-        :param args: CLI arguments
         :return: name of containers
         """
         import docker
@@ -90,9 +92,10 @@ class SkillModel(CLI):
         if "environment" not in additional_parameter:
             additional_parameter["environment"] = {}
         if 'SKILL_NAME' not in additional_parameter["environment"]:
-            additional_parameter["environment"]['SKILL_NAME'] = self.config['name'] if args.skill == "" else args.skill
+            additional_parameter["environment"]['SKILL_NAME'] = self.config[
+                'name'] if self.args.skill == "" else self.args.skill
         if 'BROKER_URL' not in additional_parameter["environment"]:
-            additional_parameter["environment"]['BROKER_URL'] = args.url
+            additional_parameter["environment"]['BROKER_URL'] = self.args.url
 
         # Check if the container is already built
         client = docker.from_env()
@@ -104,14 +107,14 @@ class SkillModel(CLI):
             print("Found image {}".format(image.short_id))
 
             print("Stop currently running containers...")
-            self.stop(args)
+            self.stop()
 
             print("Check network exists...")
             network = {}
             try:
-                net = client.networks.get(args.network)
+                net = client.networks.get(self.args.network)
                 if net:
-                    network = {'network': args.network}
+                    network = {'network': self.args.network}
             except docker.errors.NotFound:
                 print("Network not found.")
             except docker.errors.APIError as e:
@@ -119,10 +122,11 @@ class SkillModel(CLI):
                 print(e)
 
             # Run the container
-            for i in range(1, args.num_containers + 1):
-                c_name = "{}_{}".format(self.config['tag'], i) if args.container_suffix == "" else "{}_{}_{}".format(
+            for i in range(1, self.args.num_containers + 1):
+                c_name = "{}_{}".format(self.config['tag'],
+                                        i) if self.args.container_suffix == "" else "{}_{}_{}".format(
                     self.tag,
-                    args.container_suffix,
+                    self.args.container_suffix,
                     i)
                 # add container name to environment
                 if "environment" in additional_parameter:
@@ -153,30 +157,29 @@ class SkillModel(CLI):
             print("Image not found. Please build the container first.")
             exit()
 
-    def stop(self, args):
+    def stop(self):
         """
         Stop the skill
-        :param args:
         :return: list of stopped containers
         """
         import docker
         stopped_containers = []
         containers = self.get_containers()
-        if args.container_suffix != "":
+        if self.args.container_suffix != "":
             containers = [container for container in containers if
-                          container.name.removeprefix("{}_".format(self.tag)).startswith(args.container_suffix)]
+                          container.name.removeprefix("{}_".format(self.tag)).startswith(self.args.container_suffix)]
         for container in containers:
             # check if running
             if container.status != "running":
                 continue
             try:
-                container.stop(timeout=args.timeout if "timeout" in args else 10)
+                container.stop(timeout=self.args.timeout if "timeout" in self.args else 10)
                 container.wait()
             except docker.errors.APIError:
                 container.kill()
             print("Stopped container {}".format(container.name))
 
-        if "only_stop" not in args or not args.only_stop:
+        if "only_stop" not in self.args or not self.args.only_stop:
             for container in containers:
                 container.remove(force=True)
                 print("Removed container {}".format(container.name))

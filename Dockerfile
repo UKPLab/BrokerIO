@@ -1,4 +1,4 @@
-FROM python:3.12.3-slim-bullseye
+FROM python:3.12.11-slim-bullseye
 
 # copy and install requirements
 WORKDIR /
