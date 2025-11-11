@@ -10,6 +10,7 @@ variables:
   #
   # This instructs Docker not to start over TLS.
   DOCKER_TLS_CERTDIR: ""
+  DOCKER_API_VERSION: "1.44"
   #DOCKER_TLS_CERTDIR: "/certs"
   GIT_SUBMODULE_STRATEGY: recursive
   TAG_LATEST: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:latest
