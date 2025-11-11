@@ -46,7 +46,12 @@ if __name__ == '__main__':
         except Exception as err:
             logging.error("Error in task {}: {}".format("taskRequest", data))
             logging.error(err)
-            sio.emit('taskResults', {'id': data['id'], 'error': {'code': 112, 'message': str(err)}})
+            output = {
+                'code': 112,
+                'clientId': data['clientId'] if 'clientId' in data else None,
+                'message': str(err)
+            }
+            sio.emit('taskResults', {'id': data['id'], 'error': output})
 
 
     @sio.on('connect')

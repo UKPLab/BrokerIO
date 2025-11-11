@@ -101,7 +101,13 @@ class Tasks(Collection):
             task['error'] = data['error']
             task['updated'] = datetime.now().isoformat()
             self.collection.update(task)
-            await self.socketio.emit("error", {'id': key, 'code': 112, 'error': data['error']}, room=task['rid'])
+            output = {
+                'id': key,
+                'clientId': task['request']['clientId'] if 'clientId' in task['request'] else None,
+                'code': 112,
+                'error': data['error']
+            }
+            await self.socketio.emit("error", output, room=task['rid'])
             return
 
         if ('status' in data
