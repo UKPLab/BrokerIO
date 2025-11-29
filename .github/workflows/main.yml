@@ -1,0 +1,48 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  release:
+    types: [published]
+
+env:
+  DOCKER_TLS_CERTDIR: ""
+  GIT_SUBMODULE_STRATEGY: recursive
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:24.0.7-dind
+        options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y make
+      - name: Show Docker Info
+        run: |
+          docker info
+          docker version
+      - name: Generate Key & Build
+        run: |
+          openssl genrsa -out private_key.pem 2048
+          make docker
+          sleep 2
+          while [ "`docker inspect -f '{{.State.Health.Status}}' brokerio-arangodb-1`" != "healthy" ]; do sleep 2; done
+          make ENV=main test-build
+          docker wait brokerio-docs_asyncapi-1
+          docker wait brokerio-docs_sphinx-1
+          tar -czvf ${{ github.workspace }}/doc_api.tar.gz ./docs/html
+          tar -czvf ${{ github.workspace }}/doc_main.tar.gz ./docs/build
+      - name: Upload Docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: |
+            doc_main.tar.gz
+            doc_api.tar.gz
