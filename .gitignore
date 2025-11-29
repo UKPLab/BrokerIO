@@ -20,4 +20,4 @@ private_key.pem
 
 email-mappings.py
 gitleaks-clean.sh
-
+.mailmap
