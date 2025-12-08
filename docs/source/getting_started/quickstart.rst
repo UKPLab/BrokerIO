@@ -3,6 +3,20 @@ Quickstart Guide
 
 This guide will help you get started with the Broker.
 
+If you intend to quickly use BrokerIO, it is available as a `PyPi package <https://pypi.org/project/BrokerIO/>`_  and can be installed via ::
+
+    pip install brokerio 
+
+and then run via::
+
+    brokerio broker start --db_url "http://localhost:8529" --redis_url "redis://localhost:6379" --port 4852
+
+more info can be found via::
+
+    brokerio --help
+
+The rest of this documentation assumes that you want to develop brokerio and that you have a local clone of the respository that you are working within. 
+
 | You can either install the BrokerIO on your local machine via a pip or use the Broker as a service in Docker.
 | For a complete installation, please follow the instructions in :doc:`Installation <./installation>`.
 
