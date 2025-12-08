@@ -1,3 +1,8 @@
 [build-system]
-requires = ["setuptools >= 40.9.0", "wheel"]
+requires = ["setuptools>=61.0", "wheel", "setuptools_scm[toml]>=8.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# This tells setuptools to look for a version using setuptools_scm's logic
+# The `write-to` is optional but helpful for debugging/runtime version checks
+versioning = { write-to = "my_project_name/_version.py" }
