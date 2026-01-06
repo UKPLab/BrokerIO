@@ -33,6 +33,26 @@ or directly build brokerIO as a service with docker compose (all required databa
 ```bash
 docker compose -f docker-compose.yml -p "brokerio" up --build -d
 ```
+## Backup and Export of the Database
+
+To backup the broker ArangoDB execute the following commands in the project directory
+
+```bash
+mkdir -p db_dumps 
+docker exec brokerio-arangodb-1 sh -c 'arangodump --output-directory /tmp/dump > /dev/null && tar -cz -C /tmp/dump . && rm -rf /tmp/dump' > db_dumps/dump_$(date +%d-%m-%Y_%H_%M_%S).tar.gz
+```
+This will create a tar file from the dump directory that ArangoDB creates 
+To import a previously created dump, use the following command:
+ ```bash
+ cat db_dumps/dump_filename.tar.gz | docker exec -i brokerio-arangodb-1 sh -c 'mkdir -p /tmp/restore && tar -xz -C /tmp/restore && arangorestore --input-directory /tmp/restore --overwrite true && rm -rf /tmp/restore'
+```
+
+To export collections from the ArangoDB as JSONL format run: 
+```bash
+mkdir -p db_dumps 
+docker exec brokerio-arangodb-1 sh -c 'arangoexport --type jsonl --collection clients --collection roles --collection skills --collection tasks --collection users --output-directory /tmp/full_export > /dev/null && tar -cz -C /tmp/full_export . && rm -rf /tmp/full_export' > db_dumps/full_jsonl_$(date +%Y-%m-%d).tar.gz
+```
+This will create a tar file with a single JSONL file for each collection. Remove the ``--collection ...`` parameter of the collections you want to exclude from the export. 
 
 ## Features
 
